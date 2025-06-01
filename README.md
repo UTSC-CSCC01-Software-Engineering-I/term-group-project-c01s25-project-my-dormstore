@@ -56,8 +56,9 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
    ```bash
    git checkout -b feature/{feature-name}
    ```
-3. Commit your changes with clear messages
-4. Push to your fork and open a pull request
+3. Commit changes with clear commit messages
+4. Push and open a Pull Request into the <code>develop</code> branch
+5. Reference the related issue number (e.g., <code>Fixes #10</code> in PR description 
 
 ### Branching Strategy
 
