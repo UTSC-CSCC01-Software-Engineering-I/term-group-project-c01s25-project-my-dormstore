@@ -49,7 +49,7 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
     npm run dev (or npm start)
     ```
 
-## Contributing 
+## Contribution Guidelines
 
 1. Fork the repository
 2. Create a new feature branch:
