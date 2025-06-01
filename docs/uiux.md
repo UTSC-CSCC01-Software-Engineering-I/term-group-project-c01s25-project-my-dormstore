@@ -1,4 +1,4 @@
-#UI/UX Design
+UI/UX Design
 
 Here is the link to our UI: 
 
