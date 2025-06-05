@@ -1,0 +1,135 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inria Sans', sans-serif;
+}
+
+.top-bar {
+  background-color: #1a1a2e;
+  color: white;
+  text-align: center;
+  padding: 5px 0;
+  font-size: 14px;
+}
+
+h4 {
+  padding: 10px;
+  font-weight: normal;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: white;
+}
+
+.left-section {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-left: 30px;
+}
+
+.logo img {
+  height: 100px; 
+  width: auto;  
+}
+
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-bar input {
+  padding: 15px 16px 15px 40px; 
+  width: 280px;
+  border-radius: 30px;
+  border: 1px solid #ccc;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;      
+  width: 18px;
+  height: 18px;
+  pointer-events: none; 
+}
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 23px;
+  padding-right: 30px;
+}
+
+.header-icons span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.header-icons img {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+}
+
+.nav-bar {
+  display: flex;
+  justify-content: flex-start; 
+  align-items: center;
+  gap: 85px;  
+  background-color: white;
+  padding-left: 65px;
+  margin-bottom: 20px;
+}
+
+.nav-bar a {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  font-size: 18px;
+  font-family: 'Inria Sans', sans-serif;
+}
+
+.nav-bar a:hover {
+  color: #007BFF;
+}
+
+.content {
+  background-image: url('/public/Arlyne_James\ 2.png'); 
+  background-size: cover;
+  background-position: center;
+  color: #333;
+  text-align: center;
+  padding: 175px 20px;
+}
+
+.content h1 {
+  font-size: 65px;
+  font-weight: 1000;
+  color: rgb(47, 47, 47);
+  margin-bottom: 50px;
+}
+
+.cta-button {
+  background-color: #add8e6;
+  color: rgb(52, 52, 52);
+  border: none;
+  padding: 15px 30px;
+  font-size: 19px;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+.cta-button:hover {
+  background-color: #87ceeb;
+}
