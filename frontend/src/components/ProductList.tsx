@@ -19,6 +19,17 @@ export const ProductList = ({ products, onAddToCart }: ProductListProps) => {
   return (
     <div className="product-list">
       <div className="product-grid">
+        <style> 
+          {`
+            .product-grid {
+            grid-template-columns: repeat(2, 1fr);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 2rem;
+            }
+          `}
+        </style>
         {products.map((product) => (
           <ProductCard
             key={product.id}

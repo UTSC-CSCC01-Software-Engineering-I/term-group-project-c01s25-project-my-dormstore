@@ -28,5 +28,29 @@ export const sampleProducts: Product[] = [
     price: 24.99,
     image: "https://via.placeholder.com/300x200/f0f0f0/666?text=Organization+Package",
     description: "Keep your dorm organized with these storage solutions"
+  },
+  
+  {
+    id: 5,
+    name: "xyz",
+    price: 24.99,
+    image: "https://via.placeholder.com/300x200/f0f0f0/666?text=Organization+Package",
+    description: "Keep your dorm organized with these storage solutions"
+  }, 
+  {
+    id: 6,
+    name: "xyz",
+    price: 24.99,
+    image: "https://via.placeholder.com/300x200/f0f0f0/666?text=Organization+Package",
+    description: "Keep your dorm organized with these storage solutions"
+  },
+
+  {
+    id: 7,
+    name: "xyz",
+    price: 24.99,
+    image: "https://via.placeholder.com/300x200/f0f0f0/666?text=Organization+Package",
+    description: "Keep your dorm organized with these storage solutions"
   }
+  
 ]; 
