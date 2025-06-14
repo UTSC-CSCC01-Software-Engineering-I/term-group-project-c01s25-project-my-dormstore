@@ -81,6 +81,10 @@ export default function Register() {
                         CREATE AN ACCOUNT
                     </button>
 
+                    <p className="register-link">
+                        Already have an account? <a href="/login">Login here</a>
+                    </p>
+
                     <p className="terms">
                         By signing or joining, you agree to the <a href="https://mydormstore.ca/policies/terms-of-service">Terms and Privacy Policy</a>
                     </p>
