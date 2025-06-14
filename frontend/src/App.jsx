@@ -23,7 +23,7 @@ function App() {
         )}
       </div>
     </CartProvider>
-  );
+ );
 }
 
 export default App;
