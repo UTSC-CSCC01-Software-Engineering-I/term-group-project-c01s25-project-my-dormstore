@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
+import { useCart } from "../contexts/CartContext";
 
-export default function Header() {
+export default function Header({ onShowCart }) {
+  const { totalItems } = useCart();
+
+
   return (
     <header className="header">
       <div className="left-section">
@@ -23,7 +27,8 @@ export default function Header() {
         <span>
           <img src="/check_box.png" alt="Checklist icon" />
         </span>
-        <span>
+        <span onClick={onShowCart} style={{ cursor: 'pointer' }}>
+
           <img src="/shopping.png" alt="Cart icon" />
         </span>
       </div>
