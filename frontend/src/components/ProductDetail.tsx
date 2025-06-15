@@ -1,7 +1,5 @@
-// src/components/ProductDetail.tsx
 import { useParams, useNavigate } from 'react-router-dom'
 import { sampleProducts } from '../data/sampleProducts'
-import { Product } from '../types/Product'
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>()
