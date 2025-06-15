@@ -5,10 +5,11 @@ import NavBar from "./components/NavBar";
 import HomePage from "./pages/Homepage/Homepage"; 
 import OurStory from "./pages/OurStoryBlog/OurStory/OurStory";
 import Blog from "./pages/OurStoryBlog/Blog/Blog";
-// import Ambassador from "./pages/OurStoryBlog/Ambassador/Ambassador";
-import "./App.css"; // your main styles
+import Ambassador from "./pages/OurStoryBlog/Ambassador/Ambassador";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import BlogDetail from "./pages/OurStoryBlog/Blog/BlogDetail";
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import "./App.css";
 
 function App() {
   return (
@@ -22,7 +23,7 @@ function App() {
                 <Route path="/our-story" element={<OurStory />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:id" element={<BlogDetail />} />
-                {/* <Route path="/ambassador" element={<Ambassador />} /> */}
+                <Route path="/ambassador" element={<Ambassador />} />
             </Routes>
       </div>
     </Router>
