@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Product } from '../types/Product';
+import { sampleProducts } from '../data/sampleProducts';
 
 // extend product type to include quantity for cart items
 interface CartItem extends Product {
@@ -21,7 +22,10 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 //? component that will wrap our app
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  //! Dummy Info for now, initialize with the first sample product for dev/testing
+  const [items, setItems] = useState<CartItem[]>([
+    { ...sampleProducts[0], quantity: 1 }
+  ]);
 
   const addToCart = (product: Product) => {
     setItems(currentItems => {
