@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { ProductList } from './components/ProductList'
+import ProductDetail from './components/ProductDetail'
 import { sampleProducts } from './data/sampleProducts'
+import { Routes, Route } from 'react-router-dom'
 
 function App() {
   const [message, setMessage] = useState('Loading...')
@@ -30,7 +32,24 @@ function App() {
       <div>
         <h2>Arrive Move In Ready</h2>
         <p>Check off your list with dorm ready bundles just for your dorm.</p>
-        <ProductList products={sampleProducts} onAddToCart={handleAddToCart} />
+        <Routes>
+        {/* list view at “/” */}
+        <Route
+          path="/"
+          element={
+            <ProductList
+              products={sampleProducts}
+              onAddToCart={handleAddToCart}
+            />
+          }
+        />
+
+        {/* detail view at “/products/:id” */}
+        <Route
+          path="/products/:id"
+          element={<ProductDetail />}
+        />
+      </Routes>
       </div>
 
       <div>

@@ -1,4 +1,5 @@
 import { Product } from '../types/Product';
+import {Link} from 'react-router-dom'
 
 interface ProductCardProps {
   product: Product;
@@ -12,27 +13,28 @@ export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
 
   return (
     <div className="product-card">
-      <div className="product-image-container">
-        <img 
-          src={product.image} 
-          alt={product.name}
-          className="product-image"
-        />
-      </div>
-      
-      <div className="product-info">
-        <h3 className="product-name">{product.name}</h3>
-        <div className="product-footer">
-          <span className="product-price">${product.price}</span>
-          <button 
-            className="add-to-cart-btn"
-            onClick={handleAddToCart}
-            aria-label={`Add ${product.name} to cart`}
-          >
-            Add to Cart
-          </button>
+      <Link to={`/products/${product.id}`} className="product-link">
+        <div className="product-image-container">
+          <img
+            src={product.image}
+            alt={product.name}
+            className="product-image"
+          />
         </div>
-      </div>
+      </Link>
+        <div className="product-info">
+          <h3 className="product-name">{product.name}</h3>
+          <div className="product-footer">
+            <span className="product-price">${product.price}</span>
+            <button
+              className="add-to-cart-btn"
+              onClick={handleAddToCart}
+              aria-label={`Add ${product.name} to cart`}
+            >
+              Add to Cart
+            </button>
+          </div>
+        </div>
     </div>
   );
 }; 
