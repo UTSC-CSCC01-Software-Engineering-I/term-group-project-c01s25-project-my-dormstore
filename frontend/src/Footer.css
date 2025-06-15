@@ -1,0 +1,170 @@
+
+.site-footer {
+    width: 100%;
+    background-color: #f2f2f2;      
+    color: #333;
+    font-family: 'Inria Sans', sans-serif;
+    font-size: 14px;
+  }
+  
+  .footer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px 20px;
+  }
+  
+  .footer-col {
+    flex: 1;
+    min-width: 160px;
+    margin-bottom: 20px;
+  }
+  
+  .footer-col h4 {
+    margin: 0 0 12px;
+    padding: 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #1f1f1f;
+  }
+  
+  .footer-col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .footer-col li + li {
+    margin-top: 10px;
+  }
+  
+  .footer-col a {
+    color: #2b2b2b;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .footer-col a:hover {
+    color: #000;
+    text-decoration: underline;
+  }
+  
+  .footer-divider {
+    width: 100%;
+    height: 1px;
+    background-color: #d9d9d9;
+  }
+  
+  .footer-icons {
+    display: flex;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f2f2f2;
+  }
+  
+  .footer-icons .social-icons {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 20px;
+  }
+  
+  .footer-icons .payment-icons {
+    flex: 1 0 auto;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+  
+  .footer-icons .lang-switcher {
+    flex: 0 0 auto;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border: 1px solid #888;
+    border-radius: 24px;
+    background: transparent;
+    font-size: 13px;
+    color: #2b2b2b;
+    transition: background-color 0.2s ease;
+  }
+  
+  .footer-icons img {
+    height: 28px;
+    width: auto;
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  
+  .footer-icons img:hover {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+  }
+  
+  .footer-icons .lang-switcher:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .footer-icons .lang-switcher img {
+    height: 16px;
+  }
+  
+
+  .footer-bottom {
+    position: relative;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+    background-color: #e6e6e6;    
+    border-top: 1px solid #d9d9d9;
+    padding: 36px 0;
+    margin-top: 20px;             
+  }
+  
+  .footer-bottom .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .footer-content span {
+    color: #2b2b2b;
+    font-size: 13px;
+  }
+  
+  .footer-content .legal-links {
+    display: flex;
+  }
+  
+  .footer-content .legal-links a {
+    position: relative;
+    padding: 0 8px;
+    color: #2b2b2b;
+    text-decoration: none;
+    font-size: 13px;
+  }
+
+  .footer-content .legal-links a:hover {
+    color: #000;
+    text-decoration: underline;
+  }  
+  
+  .footer-content .legal-links a + a::before {
+    content: "|";
+    position: absolute;
+    left: 0;
+    color: #999;
+  }
+  
+  .footer-content .legal-links a:hover {
+    color: #000;
+  }
+  

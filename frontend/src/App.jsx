@@ -3,6 +3,7 @@ import TopBar from "./components/TopBar";
 import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import HomePage from "./pages/Homepage/Homepage"; 
+import Footer from "./components/Footer";
 import "./App.css"; // your main styles
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
       <Header />
       <NavBar />
       <HomePage />
+      <Footer />
     </div>
   );
 }
