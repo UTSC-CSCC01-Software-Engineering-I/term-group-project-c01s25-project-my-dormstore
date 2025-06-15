@@ -1,6 +1,6 @@
 import React from "react";
 import "./CartScreen.css";
-import { useCart } from "../contexts/CartContext";
+import { useCart } from "../contexts/CartContext.tsx";
 
 export default function CartScreen() {
   const { items, removeFromCart, updateQuantity, totalPrice } = useCart();

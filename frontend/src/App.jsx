@@ -4,7 +4,7 @@ import Header from "./components/Header";
 import NavBar from "./components/NavBar";
 import HomePage from "./pages/Homepage/Homepage"; 
 import Footer from "./components/Footer";
-import { CartProvider } from "./contexts/CartContext";
+import { CartProvider } from "./contexts/CartContext.tsx";
 import CartScreen from "./components/CartScreen";
 import "./App.css"; // your main styles
 

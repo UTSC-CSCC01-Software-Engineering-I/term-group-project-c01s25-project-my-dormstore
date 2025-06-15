@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useCart } from "../contexts/CartContext";
+import { useCart } from "../contexts/CartContext.tsx";
 
 export default function Header({ onShowCart }) {
   const { totalItems } = useCart();
