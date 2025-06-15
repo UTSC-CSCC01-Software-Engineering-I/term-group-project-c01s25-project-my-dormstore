@@ -32,12 +32,12 @@ function AppContent() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const token = localStorage.getItem("token");  // Get token from storage
+        const token = localStorage.getItem("token");  
   
         const res = await fetch("http://localhost:5000/me", {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,  // 🔐 Include token here!
+            "Authorization": `Bearer ${token}`, 
           },
         });
   
