@@ -2,7 +2,7 @@ import React from "react";
 import Content from "../../components/Content";
 import "./Homepage.css";
 
-export default function HomePage() {
+const HomePage = () => {
   return (
     <main>
         <Content />
@@ -148,3 +148,4 @@ export default function HomePage() {
     </main>
   );
 }
+export default HomePage;
