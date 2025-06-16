@@ -37,7 +37,17 @@ We didn’t allocate enough time for planning how to manage cart state globally,
 1. **Improve merge coordination and PR timing**  
 We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint deadline) to allow time for reviews and conflict resolution.
 
-2. **
+2. **Clear Task Ownership and Prioritization**
+<br>Each task will have a designated owner and a priority label (e.g., High, Medium, Low) to improve accountability and help the team focus on the most critical items first.</br>
+
+3. **Time Management Reflection and Adjustments**
+<br>We will reflect on individual and team-level delays from Sprint 1 and discuss time estimation accuracy during retrospectives. The goal is to improve delivery pacing and avoid last-minute rushes.</br>
+
+4. **Improved Technical Documentation and Sharing**
+<br>Each developer will be responsible for writing brief notes on their component (e.g., setup steps, known issues, functionality overview), which will be compiled in a shared folder for easier collaboration.</br>
+
+5. **Ensure Latest Develop Branch is Fetched Before Merging**
+<br>To prevent merge conflicts and ensure compatibility with the latest project state, all contributors must fetch and sync the latest develop branch into their feature branches before opening a pull request.</br>
 
 ## Product - Review
 
