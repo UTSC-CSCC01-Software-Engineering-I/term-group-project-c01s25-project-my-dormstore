@@ -51,7 +51,7 @@ We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint dea
 
   ![login](./images/Register.png)
 
-  #### mydormstore user database
+  #### mydormstore database 
 
   ![login](./images/database.png)
 
