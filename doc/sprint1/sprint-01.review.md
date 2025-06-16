@@ -100,6 +100,7 @@ We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint dea
 We planned to implement the user check-out page during this sprint, but it was delayed due to merge conflicts when integrating into the `develop` branch. Although we attempted to address it, we didn’t have enough time to finish and test it properly. Completing this feature will be a priority in the next sprint.
 
 **Join Ambassador Backend**
+
 We realized this was something we might want to implement near the end of Sprint 1. Since there wasn’t enough time, we’ve decided to move it to Sprint 2.
 
 
