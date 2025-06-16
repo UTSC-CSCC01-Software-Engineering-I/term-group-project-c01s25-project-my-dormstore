@@ -22,10 +22,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 //? component that will wrap our app
 export function CartProvider({ children }: { children: ReactNode }) {
-  //! Dummy Info for now, initialize with the first sample product for dev/testing
-  const [items, setItems] = useState<CartItem[]>([
-    { ...sampleProducts[0], quantity: 1 }
-  ]);
+  const [items, setItems] = useState<CartItem[]>([]);
 
   const addToCart = (product: Product) => {
     setItems(currentItems => {
