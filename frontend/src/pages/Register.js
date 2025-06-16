@@ -4,6 +4,7 @@ import "./Login.css";
 export default function Register() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
   
     const handleRegister = async () => {
       if (!email || !password) {
@@ -62,15 +63,15 @@ export default function Register() {
 
                     <label>Password</label>
                     <div className="pswd-wrapper">
-                        <input
-                            type="password"
-                            className="input-password2"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                        <span className="eye-icon">
-                            <img src="/eye.png" alt="Eye icon" />
-                        </span>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className="input-password2"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <span className="eye-icon" onClick={() => setShowPassword(!showPassword)} style={{ cursor: "pointer" }}>
+                        <img src={showPassword ? "/eye.png" : "/eye-off.png"} alt="Toggle visibility" />
+                      </span>
                     </div>
 
                     <div className="pswd-rules">
