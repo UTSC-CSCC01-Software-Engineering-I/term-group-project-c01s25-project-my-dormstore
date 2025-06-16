@@ -62,7 +62,7 @@ We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint dea
 
 - **Basic Cart Functionality**  
 
-  Users can add and remove items from the cart. Cart state is managed using context and properly reflected in the UI.
+  Users can add and remove items from the cart. Cart state is managed using context.
 
   ![cart](./images/Cart.png)
 
