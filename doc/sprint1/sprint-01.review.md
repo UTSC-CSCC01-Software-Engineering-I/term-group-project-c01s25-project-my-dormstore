@@ -12,17 +12,17 @@
 
 ## Process - Reflection
 
-(Optional) Short introduction
-
-#### Decisions that turned out well
-
-List process-related (i.e. team organization) decisions that, in retrospect, turned out to be successful.
+Our team did a combination of virtual and physical meet for this sprint and continued building the core features of our dorm store web app. While we encountered some technical challenges, mainly around integration and cart state management, we made solid progress on authentication, layout, and cart features. We also improved our collaboration flow compared to the previous sprint.
 
 
- * 2 - 4 decisions.
- * Ordered from most to least important.
- * Explain why (i.e. give a supporting argument) you consider a decision to be successful.
- * Feel free to refer/link to process artifact(s).
+#### Decisions that turned out well:
+
+- **Component-based front-end development**
+<br>Focusing on building and testing reusable UI components (e.g., TopBar, NavBar, Footer) allowed us to work more efficiently and maintain a consistent design system. This decision reduced rework and improved front-end scalability.</br>
+
+- **Combining virtual and in-person meetings**
+<br>Mixing remote and in-person meetings gave us flexibility while maintaining productivity. In-person work sessions were especially effective for debugging and integration, while virtual stand-ups helped with regular coordination.</br>
+
 
 #### Decisions that did not turn out as well as we hoped
 
