@@ -43,4 +43,5 @@ pids
 *.pid.lock
 
 # Coverage directory used by tools like istanbul
-coverage/ 
+coverage/ frontend/node_modules/
+frontend/package-lock.json
