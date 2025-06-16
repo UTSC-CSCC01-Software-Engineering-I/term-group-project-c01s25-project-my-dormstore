@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import TopBar from "./components/TopBar";
 import NavBar from "./components/NavBar";
 import HomePage from "./pages/Homepage/Homepage"; 
@@ -13,6 +15,7 @@ import OurStory from "./pages/OurStoryBlog/OurStory/OurStory";
 import Blog from "./pages/OurStoryBlog/Blog/Blog";
 import Ambassador from "./pages/OurStoryBlog/Ambassador/Ambassador";
 import BlogDetail from "./pages/OurStoryBlog/Blog/BlogDetail";
+import Profile from "./pages/Profile";
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import "./App.css"; // your main styles
@@ -21,10 +24,32 @@ function AppContent() {
   const [showCart, setShowCart] = useState(false);
   const location = useLocation();
   const { totalItems } = useCart();
-  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
   // Hide layout components on login and register pages
   const hidelayoutRoutes = ["/login", "/register"];
   const hidelayout = hidelayoutRoutes.includes(location.pathname);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const token = localStorage.getItem("token");  
+  
+        const res = await fetch("http://localhost:5000/me", {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`, 
+          },
+        });
+  
+        setIsLoggedIn(res.ok);
+      } catch (err) {
+        setIsLoggedIn(false);
+      }
+    }
+  
+    checkAuth();
+  }, []);
 
   return (
     <CartProvider>
@@ -48,8 +73,14 @@ function AppContent() {
               <span>
                 <img src="/language.png" alt="Language icon" /> CA | English
               </span>
-              <span>
-                <img src="/user.png" alt="User icon" />
+              <span onClick={() => {
+                if (isLoggedIn) {
+                  navigate("/profile"); 
+                } else {
+                  navigate("/login");
+                }
+                }} style={{ cursor: 'pointer' }}>
+                  <img src="/user.png" alt="User icon" />
               </span>
               <span>
                 <img src="/check_box.png" alt="Checklist icon" />
@@ -79,9 +110,10 @@ function AppContent() {
           <Route path="/ambassador" element={<Ambassador />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-                  </Routes>
-        )}
-        
+
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+)}        
         {!hidelayout && <Footer />}
       </div>
     </CartProvider>

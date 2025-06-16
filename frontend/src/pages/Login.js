@@ -18,11 +18,12 @@ export default function Login() {
                 "Content-Type": "application/json",
             },
                 credentials: "include",
-            body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ email, password }),
             });
 
             const data = await response.json();
             if (response.ok) {
+                localStorage.setItem("token", data.token);
                 alert("Login successful");
                 window.location.href = "/"; 
             } else {

@@ -35,6 +35,23 @@ async function connectToPG() {
 }
 connectToPG();
 
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; 
+
+  if (!token) {
+    return res.status(401).json({ error: 'Missing token' });
+  }
+
+  jwt.verify(token, "secret-key", (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+    req.user = user;
+    next();
+  });
+}
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
@@ -90,6 +107,22 @@ app.post("/loginUser", async (req, res) => {
       }
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/me", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const result = await pool.query("SELECT id, email FROM users WHERE id = $1", [userId]);
+  
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "User not found" });
+      }
+  
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Something went wrong" });
     }
   });
 
