@@ -64,6 +64,10 @@ We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint dea
 
   Users can add and remove items from the cart. Cart state is managed using context and properly reflected in the UI.
 
+  ![cart](./images/Cart.png)
+
+  ![Cartaddandremove](./images/cartAddandRremove.png)
+
 
 #### Goals and/or tasks that were planned but not met/completed:
 
