@@ -5,7 +5,7 @@ export default function NavBar() {
   return (
     <nav className="nav-bar">
       <a href="#">Shop Packages</a>
-      <a href="#">Shop by Items</a>
+      <Link to="/products">Shop by Items</Link>
       <Link to="/our-story">Our Story & Blog</Link>
       <a href="#">Customer Service</a>
     </nav>

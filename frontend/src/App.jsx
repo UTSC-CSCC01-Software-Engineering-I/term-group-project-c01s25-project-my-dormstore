@@ -8,7 +8,8 @@ import HomePage from "./pages/Homepage/Homepage";
 import Footer from "./components/Footer";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import { CartProvider } from "./contexts/CartContext.tsx";
+import ProductListPage from "./pages/ProductListPage";
+import { CartProvider, useCart } from "./contexts/CartContext.tsx";
 import CartScreen from "./components/CartScreen";
 import OurStory from "./pages/OurStoryBlog/OurStory/OurStory";
 import Blog from "./pages/OurStoryBlog/Blog/Blog";
@@ -22,9 +23,9 @@ import "./App.css"; // your main styles
 function AppContent() {
   const [showCart, setShowCart] = useState(false);
   const location = useLocation();
+  const { totalItems } = useCart();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
-
   // Hide layout components on login and register pages
   const hidelayoutRoutes = ["/login", "/register"];
   const hidelayout = hidelayoutRoutes.includes(location.pathname);
@@ -84,26 +85,35 @@ function AppContent() {
               <span>
                 <img src="/check_box.png" alt="Checklist icon" />
               </span>
-              <span onClick={() => setShowCart(true)} style={{ cursor: 'pointer' }}>
+              <span onClick={() => setShowCart(true)} style={{ cursor: 'pointer', position: 'relative' }}>
                 <img src="/shopping.png" alt="Cart icon" />
+                {totalItems > 0 && (
+                  <span style={{ marginLeft: '5px', fontSize: '14px' }}>
+                    ({totalItems})
+                  </span>
+                )}
               </span>
             </div>
           </header>
         )}
         
         {!hidelayout && <NavBar />}
-        
+        {showCart ? (
+          <CartScreen />
+        ) : (
         <Routes>
-          <Route path="/" element={showCart ? <CartScreen /> : <HomePage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductListPage />} />
           <Route path="/our-story" element={<OurStory />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogDetail />} />
           <Route path="/ambassador" element={<Ambassador />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
           <Route path="/profile" element={<Profile />} />
         </Routes>
-        
+)}        
         {!hidelayout && <Footer />}
       </div>
     </CartProvider>
@@ -113,7 +123,9 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <CartProvider>
+        <AppContent />
+      </CartProvider>
     </BrowserRouter>
   );
 }
