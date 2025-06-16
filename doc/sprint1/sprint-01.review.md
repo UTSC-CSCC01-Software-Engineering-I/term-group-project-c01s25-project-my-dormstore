@@ -80,11 +80,17 @@ We planned to implement the user check-out page during this sprint, but it was d
 
 Going into the next iteration, our main insights are:
 
- * 2 - 4 items
- * Short (no more than one short paragraph per item)
- * High-level concepts that should guide your work for the next iteration.
- * These concepts should help you decide on where to focus your efforts.
- * Can be related to product and/or process.
 
+- **Prioritize early integration to reduce merge conflicts**  
+  Waiting until the final days to merge major branches created avoidable conflicts. Next sprint we’ll encourage smaller, more frequent merges into `develop`.
+
+- **Establish shared understanding of global state early**  
+  Misalignment on cart state management delayed progress. We’ll begin the sprint with a brief planning session to define our state structure and ownership.
+
+- **Time-box individual features more strictly**  
+  Several tasks exceeded their estimates and disrupted overall sprint pacing. We’ll scope work more realistically and trim scope if necessary to finish on time.
+
+- **Maintain daily check-ins plus a mid-sprint sync**  
+  Daily stand-ups kept communication flowing; adding a mid-sprint sync will help us realign priorities and surface blockers earlier.
 
 
