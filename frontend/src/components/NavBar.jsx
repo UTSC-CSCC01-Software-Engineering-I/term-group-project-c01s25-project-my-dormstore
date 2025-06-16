@@ -22,14 +22,14 @@ export default function NavBar() {
   };
 
   const packageCategories = [
-    { name: "View All", image: "/images/viewall.png", link: "/view-all" },
+    { name: "View All", image: "/images/viewall.png", link: "/products" },
     { name: "Bedding", image: "/images/bathroom.png", link: "/bathroom" },
     { name: "Living", image: "/images/living.png", link: "/living" },
     { name: "Caring", image: "/images/caring.png", link: "/caring" },
   ]
 
   const categories = [
-    { name: "View All", image: "/images/viewall.png", link: "/view-all" },
+    { name: "View All", image: "/images/viewall.png", link: "/products" },
     { name: "Bedding", image: "/images/bedding.png", link: "/bedding" },
     { name: "Tech", image: "/images/tech.png", link: "/tech" },
     { name: "Storage", image: "/images/storage.png", link: "/storage" },
