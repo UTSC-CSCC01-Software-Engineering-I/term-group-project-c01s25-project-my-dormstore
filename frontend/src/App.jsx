@@ -14,6 +14,7 @@ import CartScreen from "./components/CartScreen";
 import OurStory from "./pages/OurStoryBlog/OurStory/OurStory";
 import Blog from "./pages/OurStoryBlog/Blog/Blog";
 import Ambassador from "./pages/OurStoryBlog/Ambassador/Ambassador";
+import ProductDetail from "./components/ProductDetail.tsx";
 import BlogDetail from "./pages/OurStoryBlog/Blog/BlogDetail";
 import Profile from "./pages/Profile";
 
@@ -103,7 +104,8 @@ function AppContent() {
         ) : (
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductListPage />} />
+          <Route path="/products" element={<ProductListPage/>} />
+          <Route path="/products/:id" element={<ProductDetail/>} />
           <Route path="/our-story" element={<OurStory />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogDetail />} />
