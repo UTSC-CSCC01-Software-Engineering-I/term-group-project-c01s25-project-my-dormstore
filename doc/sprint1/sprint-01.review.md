@@ -51,6 +51,10 @@ We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint dea
 
   ![login](./images/Register.png)
 
+  #### mydormstore user database
+
+  ![login](./images/database.png)
+
 - **Frontend Framework Setup**  
 
   Core UI structure built using React. Layout is responsive and reusable components like `TopBar`, `NavBar`, and `Footer` are functioning.
