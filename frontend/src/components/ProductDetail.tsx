@@ -1,15 +1,18 @@
 import react from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { sampleProducts } from '../data/sampleProducts.ts'
-import { Product } from '../types/Product'
-import { useState } from 'react'
+import { useCart } from '../contexts/CartContext.tsx'
 import './ProductDetail.css'
 
 export default function ProductDetail()  {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const product = sampleProducts.find(p => p.id === Number(id))
+
+  const { addToCart } = useCart()
   const [quantity, setQuantity] = useState(1)
+  
 
   if (!product) {
     return (
@@ -20,6 +23,9 @@ export default function ProductDetail()  {
         </button>
       </div>
     )
+  }
+  const handleAddToCart = () => {
+    addToCart(product.id, quantity)
   }
 
   return (
@@ -93,7 +99,8 @@ export default function ProductDetail()  {
             <span>{quantity}</span>
             <button onClick={() => setQuantity(q => q + 1)}>+</button>
           </div>
-          <button className="add-to-cart-button">
+          <button onClick={handleAddToCart}
+          className="add-to-cart-button">
             Add To Cart
           </button>
         </div>
