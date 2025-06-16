@@ -71,9 +71,10 @@ We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint dea
 
 #### Goals and/or tasks that were planned but not met/completed:
 
- * From most to least important.
- * For each goal/task, explain why it was not met/completed.      
-   e.g. Did you change your mind, or did you just not get to it yet?
+**Check-out Page**  
+
+We planned to implement the user check-out page during this sprint, but it was delayed due to merge conflicts when integrating into the `develop` branch. Although we attempted to address it, we didn’t have enough time to finish and test it properly. Completing this feature will be a priority in the next sprint.
+
 
 ## Meeting Highlights
 
