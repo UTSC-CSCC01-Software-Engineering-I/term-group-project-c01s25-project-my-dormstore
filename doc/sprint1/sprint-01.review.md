@@ -47,9 +47,18 @@ We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint dea
 
   Implemented and tested login/register functionality using JWT for authentication. `/me` endpoint confirms session handling.
 
+  ![register](./images/Login.png)
+
+  ![login](./images/Register.png)
+
 - **Frontend Framework Setup**  
 
   Core UI structure built using React. Layout is responsive and reusable components like `TopBar`, `NavBar`, and `Footer` are functioning.
+
+  ![Home](./images/Home.png)
+
+  ![ourStory](./images/ourStory.png)
+
 
 - **Basic Cart Functionality**  
 
