@@ -14,7 +14,7 @@
     flex-wrap: wrap;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 40px 20px 20px;
+    padding: 60px 15px 40px;
   }
   
   .footer-col {
@@ -24,7 +24,7 @@
   }
   
   .footer-col h4 {
-    margin: 0 0 12px;
+    margin: 0 0 23px;
     padding: 0;
     font-size: 18px;
     font-weight: bold;
@@ -38,7 +38,7 @@
   }
   
   .footer-col li + li {
-    margin-top: 10px;
+    margin-top: 20px;
   }
   
   .footer-col a {
@@ -70,13 +70,14 @@
   .footer-icons .social-icons {
     flex: 0 0 auto;
     display: flex;
-    gap: 20px;
+    gap: 25px;
   }
   
   .footer-icons .payment-icons {
-    flex: 1 0 auto;
+    flex: 0 0 auto;
     display: flex;
-    gap: 16px;
+    gap: 35px;
+    margin-left: 45px;
     justify-content: center;
   }
   
@@ -86,11 +87,11 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 16px;
+    padding: 7px 17px;
     border: 1px solid #888;
     border-radius: 24px;
     background: transparent;
-    font-size: 13px;
+    font-size: 15px;
     color: #2b2b2b;
     transition: background-color 0.2s ease;
   }

@@ -11,10 +11,11 @@
 .blog-banner-grid {
   position: relative;
   display: flex;
-  height: 350px;
+  height: 450px;
   overflow: hidden;
-  margin-bottom: 60px;
+  margin-bottom: 70px;
   border-radius: 12px;
+  margin-top: 56px;
 }
 
 .banner-img-box {
@@ -58,8 +59,8 @@
 .blog-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 32px;
-  margin-bottom: 40px;
+  gap: 40px;
+  margin-bottom: 55px;
 }
 
 .blog-card {
@@ -72,6 +73,7 @@
   justify-content: space-between;
   position: relative;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  margin-bottom: 25px;
 }
 
 .blog-card:hover {
