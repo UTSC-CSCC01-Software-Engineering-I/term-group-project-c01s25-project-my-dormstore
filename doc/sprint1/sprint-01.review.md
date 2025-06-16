@@ -60,6 +60,26 @@ We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint dea
   ![ourStory](./images/ourStory.png)
 
 
+  #### Our Story
+  
+  Users can find a page to read the user story
+  
+  ![ourStory](./images/ourStory.png)
+
+
+  #### Blog Page
+
+  Users can find a path/blog to read some of the blogs of mydormstore
+
+  ![blog](./images/blog.png)
+
+
+  #### Ambassador Page
+
+  Users can find a path/ambassador to find the form to fill in to join the ambassador program
+
+  ![ambassador](./images/ambassador.png)
+
 - **Basic Cart Functionality**  
 
   Users can add and remove items from the cart. Cart state is managed using context.
