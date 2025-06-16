@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import TopBar from "./components/TopBar";
 import NavBar from "./components/NavBar";
 import HomePage from "./pages/Homepage/Homepage"; 
@@ -62,7 +63,9 @@ function AppContent() {
           <header className="header">
             <div className="left-section">
               <div className="logo">
-                <img src="/mydormstroe_log.webp" alt="My Dorm Store Logo" />
+                <Link to="/">
+                  <img src="/mydormstroe_log.webp" alt="My Dorm Store Logo" className="logo" />
+                </Link>
               </div>
               <div className="search-bar">
                 <img src="/search.png" className="search-icon" alt="Search Icon" />
