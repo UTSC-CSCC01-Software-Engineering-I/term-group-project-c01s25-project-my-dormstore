@@ -145,12 +145,14 @@ h4 {
   cursor: pointer;
 }
 
+
 .nav-title.active-tab {
   border-bottom: 4px solid #add8e6; 
 }
 
 .mega-menu-scroll {
   display: flex;
+  top: 100%;
   overflow-x: auto;
   padding: 20px 20px 20px 60px;
   background-color: white;
