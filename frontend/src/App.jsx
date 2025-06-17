@@ -18,6 +18,8 @@ import Ambassador from "./pages/OurStoryBlog/Ambassador/Ambassador";
 import ProductDetail from "./components/ProductDetail.tsx";
 import BlogDetail from "./pages/OurStoryBlog/Blog/BlogDetail";
 import Profile from "./pages/Profile";
+import ChecklistPage from "./pages/ChecklistPage";
+
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import "./App.css"; // your main styles
@@ -86,7 +88,7 @@ function AppContent() {
                 }} style={{ cursor: 'pointer' }}>
                   <img src="/user.png" alt="User icon" />
               </span>
-              <span>
+              <span onClick={() => navigate("/checklist")} style={{ cursor: 'pointer' }}>
                 <img src="/check_box.png" alt="Checklist icon" />
               </span>
               <span onClick={() => setShowCart(true)} style={{ cursor: 'pointer', position: 'relative' }}>
@@ -115,8 +117,8 @@ function AppContent() {
           <Route path="/ambassador" element={<Ambassador />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
           <Route path="/profile" element={<Profile />} />
+          <Route path="/checklist" element={<ChecklistPage />} />
         </Routes>
 )}        
         {!hidelayout && <Footer />}
