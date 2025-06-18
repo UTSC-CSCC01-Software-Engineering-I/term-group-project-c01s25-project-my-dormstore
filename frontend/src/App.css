@@ -230,5 +230,64 @@ h4 {
   background-color: #87ceeb;
 }
 
+.language-dropdown {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  max-height: 250px; 
+}
+
+.language-dropdown img {
+  vertical-align: middle;
+}
+
+.dropdown-container {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 260px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  padding: 12px;
+}
+
+.dropdown-search {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 25px;
+  border: 2px solid #0b1444;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.dropdown-menu {
+  list-style: none;
+  max-height: 250px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown-menu li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+}
 
 
+.country {
+  flex: 1;
+}
+
+.currency {
+  flex-shrink: 0;
+  text-align: right;
+  margin-left: 12px;
+}
