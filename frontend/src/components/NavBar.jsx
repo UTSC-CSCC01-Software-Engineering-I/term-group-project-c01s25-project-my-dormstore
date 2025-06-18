@@ -7,7 +7,7 @@ export default function NavBar() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
   const location = useLocation();
-
+ 
   const isFixedDropdownPage = location.pathname === "/products";
 
   const handleMouseEnter = (menu) => {
@@ -112,8 +112,8 @@ export default function NavBar() {
             <div className="dropdown-content">
               <Link to="/visualizer">Dorm Visualizer</Link>
               <Link to="/checklist">Move-in Checklist</Link>
-              <Link to="/order-status">Order Status</Link>
-              <Link to="/track-orders">Track My Orders</Link>
+              <Link to="/order-status#order-status">Order Status</Link>
+              <Link to="/order-status#order-tracking">Track My Orders</Link>
               <Link to="/live-chat">Live Chat</Link>
               <Link to="/contact">Contact Us</Link>
             </div>

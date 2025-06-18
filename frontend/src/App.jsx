@@ -18,6 +18,7 @@ import BlogDetail from "./pages/OurStoryBlog/Blog/BlogDetail";
 import Profile from "./pages/Profile";
 import ChecklistPage from "./pages/ChecklistPage";
 import { countryCurrency } from "./data/countryCurrency";
+import OrderTrack from "./pages/OrderTrack.jsx";
 
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -169,6 +170,7 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/checklist" element={<ChecklistPage />} />
+          <Route path="/order-status" element={<OrderTrack />} />
         </Routes>
       )}
 

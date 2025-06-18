@@ -5,6 +5,10 @@
   font-family: 'Inria Sans', sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 .top-bar {
   background-color: #1a1a2e;
   color: white;
