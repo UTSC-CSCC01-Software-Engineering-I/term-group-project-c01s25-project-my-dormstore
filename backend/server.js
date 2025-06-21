@@ -7,7 +7,7 @@ import 'dotenv/config';
 
 const { Pool } = pg;
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5001;
 
 // CORS setup
 app.use(cors({
@@ -125,5 +125,64 @@ app.post("/loginUser", async (req, res) => {
       res.status(500).json({ error: "Something went wrong" });
     }
   });
+
+// Get user's cart items
+app.get("/cart", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const result = await pool.query(
+      "SELECT id, product_id, quantity, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
+      [userId]
+    );
+    res.json({ cartItems: result.rows });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to retrieve cart items" });
+  }
+});
+
+// Add item to cart
+app.post("/cart", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { product_id, quantity = 1 } = req.body;
+
+    if (!product_id) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+    if (quantity < 1) {
+      return res.status(400).json({ error: "Quantity must be at least 1" });
+    }
+    const existingItem = await pool.query(
+      "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2",
+      [userId, product_id]
+    );
+    if (existingItem.rows.length > 0) {
+      // update existing item quantity
+      const newQuantity = existingItem.rows[0].quantity + quantity;
+      const result = await pool.query(
+        "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND product_id = $3 RETURNING *",
+        [newQuantity, userId, product_id]
+      );
+      
+      res.json({ 
+        message: "Cart item updated", 
+        cartItem: result.rows[0] 
+      });
+    } else {
+      const result = await pool.query(
+        "INSERT INTO cart_items (user_id, product_id, quantity) VALUES ($1, $2, $3) RETURNING *",
+        [userId, product_id, quantity]
+      );
+      res.status(201).json({ 
+        message: "Item added to cart", 
+        cartItem: result.rows[0] 
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to add item to cart" });
+  }
+});
 
 
