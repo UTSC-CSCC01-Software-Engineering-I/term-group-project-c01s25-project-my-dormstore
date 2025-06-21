@@ -24,8 +24,11 @@ export default function Login() {
             const data = await response.json();
             if (response.ok) {
                 localStorage.setItem("token", data.token);
+                localStorage.setItem("userEmail", email);  
+
                 alert("Login successful");
-                window.location.href = "/"; 
+                window.location.href = "/";
+
             } else {
                  alert(data.error || "Login failed");
             }

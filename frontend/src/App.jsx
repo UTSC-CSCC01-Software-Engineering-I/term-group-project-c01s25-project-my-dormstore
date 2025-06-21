@@ -19,7 +19,7 @@ import Profile from "./pages/Profile";
 import ChecklistPage from "./pages/ChecklistPage";
 import { countryCurrency } from "./data/countryCurrency";
 import OrderTrack from "./pages/OrderTrack.jsx";
-
+import UserForm from "./components/userForm.jsx";
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
@@ -34,6 +34,7 @@ function AppContent() {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("CA | English");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showUserForm, setShowUserForm] = useState(false);
 
 
   const hidelayoutRoutes = ["/login", "/register"];
@@ -61,6 +62,17 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
+    if (isLoggedIn) {
+      const email = localStorage.getItem("userEmail");
+      const userInfo = email && JSON.parse(localStorage.getItem(`userInfo_${email}`));
+      const isIncomplete = !userInfo || !userInfo.firstname || !userInfo.lastname || !userInfo.school || !userInfo.dorm;
+      if (isIncomplete) {
+        setShowUserForm(true);
+      }
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
     function handleClickOutside(event) {
       if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
         setShowLanguageMenu(false);
@@ -73,9 +85,20 @@ function AppContent() {
     };
   }, []);
   
-  
   return (
     <div className="App">
+      {showUserForm && (
+        <UserForm
+          onClose={() => setShowUserForm(false)}
+          onSubmit={(data) => {
+            const email = localStorage.getItem("userEmail");
+            if (email) {
+              localStorage.setItem(`userInfo_${email}`, JSON.stringify(data));
+            }
+            setShowUserForm(false);
+          }}
+        />
+      )}
       {!hidelayout && <TopBar />}
 
       {!hidelayout && (

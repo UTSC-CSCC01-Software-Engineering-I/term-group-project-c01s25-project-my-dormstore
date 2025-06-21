@@ -239,7 +239,7 @@
 .profile-title {
     font-size: 40px;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     color: #2c3e50;
   
 }
@@ -247,8 +247,19 @@
 .profile-info {
     font-size: 18px;
     line-height: 1.6;
-    color: #34495e;
- 
+    color: #34495e; 
+}
+
+.profile-info .section-title {
+    font-size: 30px;
+    margin-bottom: 10px;
+    color: #2c3e50;
+    padding-top: 18px;
+    padding-bottom: 8px;
+}
+
+.profile-info p {
+    margin-top: 10px;
 }
   
 .profile-label {
@@ -264,10 +275,10 @@
 
 .section-title {
     font-size: 30px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     color: #2c3e50;
     padding-top: 18px;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
   
 }
   
@@ -287,3 +298,53 @@
     background-color: #f9f9f9;
   
 }
+
+.profile-info button {
+  background-color: #e4eef8;
+  color: rgb(87, 86, 86);
+  padding: 10px 16px;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 6px;
+  margin-top: 15px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: background 0.3s ease;
+}
+
+.profile-info button:hover {
+  background-color: #2c5d82;
+  color: white;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.signout-button {
+  background-color: #bddcf4;
+  color: rgb(87, 86, 86);
+  border: none;
+  padding: 22px 25px;
+  border-radius: 9px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 700;
+  transition: background 0.3s ease;
+}
+
+.signout-button:hover {
+  background-color: #2c5d82;
+  color: white;
+}
+
+.signout-topright {
+  position: absolute;
+  top: 247px; 
+  right: 50px; 
+  z-index: 999;
+}
+
+
