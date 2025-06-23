@@ -14,7 +14,7 @@
 .user-form-content {
   background: #fff;
   padding: 25px 40px;
-  border-radius: 12px;
+  border-radius: 13px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 400px;
@@ -23,8 +23,9 @@
 
 .user-form-content h2 {
   font-size: 1.8rem;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   color: #2c3e50;
+  margin-top: 5px;
 }
 
 .user-form-content label {
@@ -50,7 +51,7 @@
 }
 
 .user-form-content button {
-  padding: 14px;
+  padding: 12px;
   border-radius: 20px;
   border: none;
   background-color: #cde0f3;
@@ -59,7 +60,7 @@
   font-weight: 900;
   width: 320px;
   cursor: pointer;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   transition: background-color 0.3s ease;
 }
 

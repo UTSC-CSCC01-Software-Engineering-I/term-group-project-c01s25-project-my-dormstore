@@ -1,72 +1,257 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import UserForm from "../components/userForm";
 import "./Login.css";
 
 export default function Profile() {
-    const [userInfo, setUserInfo] = useState(null);
-    const [showForm, setShowForm] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
+  const [editEmail, setEditEmail] = useState(false);
+  const [editPassword, setEditPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-    const orders = [
-      { id: 1, item: "Dorm Bedding Set", date: "2025-06-12", status: "Delivered" },
-      { id: 2, item: "Desk Lamp", date: "2025-06-10", status: "Shipped" }
-    ];
 
-    useEffect(() => {
-      const email = localStorage.getItem("userEmail");
-      const saved = email ? localStorage.getItem(`userInfo_${email}`) : null;      
-      if (saved) {
-        setUserInfo(JSON.parse(saved));
+  const orders = [
+    { id: 1, item: "Dorm Bedding Set", date: "2025-06-12", status: "Delivered" },
+    { id: 2, item: "Desk Lamp", date: "2025-06-10", status: "Shipped" }
+  ];
+
+  useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+    const saved = email ? localStorage.getItem(`userInfo_${email}`) : null;
+    if (saved) {
+      setUserInfo(JSON.parse(saved));
+    }
+  }, [showForm]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userEmail");
+    window.location.href = "/";
+  };
+
+  const handleUpdateEmail = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch("/api/user/update-email", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email: newEmail }),
+      });
+      const data = await res.json();
+      alert(data.message);
+      if (data.success) {
+        localStorage.setItem("userEmail", newEmail);
+        setEditEmail(false);
+        setNewEmail("");
       }
-    }, [showForm]); 
+    } catch (err) {
+      alert("Failed to update email.");
+    }
+  };
 
-    const handleLogout = () => {
-      localStorage.removeItem("token");
-      localStorage.removeItem("userEmail");
-      window.location.href = "/";
-    };    
+  const handleUpdatePassword = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch("/api/user/update-password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+      const data = await res.json();
+      alert(data.message);
+      if (data.success) {
+        setEditPassword(false);
+        setCurrentPassword("");
+        setNewPassword("");
+      }
+    } catch (err) {
+      alert("Failed to update password.");
+    }
+  };
 
-    return (
-      <div className="profile-container">
-        <div className="profile-header">
-          <h2 className="profile-title">My Profile</h2>
-        </div>        
+  return (
+    <div className="profile-layout">
+      <div className="profile-sidebar">
+        <button
+          className={`sidebar-btn ${activeTab === "profile" ? "active" : ""}`}
+          onClick={() => setActiveTab("profile")}
+        >
+          Profile
+        </button>
+        <button
+          className={`sidebar-btn ${activeTab === "account-settings" ? "active" : ""}`}
+          onClick={() => setActiveTab("account-settings")}
+        >
+          Account Settings
+        </button>
+        <button
+          className={`sidebar-btn ${activeTab === "orders" ? "active" : ""}`}
+          onClick={() => setActiveTab("orders")}
+        >
+          Purchase History
+        </button>
+      </div>
+
+      <div className="profile-main">
         <div className="signout-topright">
-          <button className="signout-button" onClick={handleLogout}>LOGOUT</button>
+          <button className="signout-button" onClick={handleLogout}>
+            LOGOUT
+          </button>
         </div>
-        <div className="profile-info">
-          {userInfo ? (
-          <>
-            <h3 className="section-title">User Information</h3>
-            <p><strong>First Name:</strong> {userInfo.firstname}</p>
-            <p><strong>Last Name:</strong> {userInfo.lastname}</p>
-            <p><strong>School:</strong> {userInfo.school}</p>
-            <p><strong>Dorm:</strong> {userInfo.dorm}</p>
-          </>
-        ) : (
-          <p>No user info submitted yet.</p>
+
+        {activeTab === "profile" && (
+          <div className="profile-info">
+            <h2 className="profile-title">My Profile</h2>
+            {userInfo ? (
+              <>
+                <p><strong>First Name:</strong> {userInfo.firstname}</p>
+                <p><strong>Last Name:</strong> {userInfo.lastname}</p>
+                <p><strong>School:</strong> {userInfo.school}</p>
+                <p><strong>Dorm:</strong> {userInfo.dorm}</p>
+              </>
+            ) : (
+              <p>No user info submitted yet.</p>
+            )}
+            <button onClick={() => setShowForm(true)}>EDIT</button>
+            {showForm && <UserForm onClose={() => setShowForm(false)} />}
+          </div>
         )}
 
-        <button onClick={() => setShowForm(true)}>EDIT</button>
+        {activeTab === "account-settings" && (
+          <div>
+            <h2 className="profile-title">Account Settings</h2>
+            <div className="account-box">
 
-        {showForm && <UserForm onClose={() => setShowForm(false)} />}
+          {editEmail ? (
+            <div className="edit-account-form">
+              <label>
+                Current Email:
+                <input
+                  type="email"
+                  value={localStorage.getItem("userEmail")}
+                  disabled
+                />
+            </label>
+            <label>
+              New Email:
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+              />
+            </label>
+            <div className="account-form-buttons">
+              <button onClick={handleUpdateEmail}>Save</button>
+              <button onClick={() => setEditEmail(false)}>Cancel</button>
+            </div>
+          </div>
+        ) : editPassword ? null : (
+        <>
+          <div className="account-row">
+            <div>
+              <div className="account-label">Email</div>
+              <div className="account-value">{localStorage.getItem("userEmail")}</div>
+           </div>
+            <button className="account-edit" onClick={() => {
+              setEditEmail(true);
+              setEditPassword(false); 
+            }}>
+              Edit
+            </button>
+          </div>
+          <hr />
+        </>
+        )}
+
+        {editPassword ? (
+          <div className="edit-account-form">
+            <label>
+              Current Password:
+              <div className="password-field-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="password-input-box"
+                />
+                  <img
+                    src={showPassword ? "/eye.png" : "/eye-off.png"}
+                    alt="Toggle visibility"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="password-toggle-icon"
+                  />
+              </div>
+            </label>
+            <label>
+              New Password:
+              <div className="password-field-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="password-input-box"
+                />
+                  <img
+                    src={showPassword ? "/eye.png" : "/eye-off.png"}
+                    alt="Toggle visibility"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="password-toggle-icon"
+                  />
+              </div>
+            </label>
+            <div className="account-form-buttons">
+              <button onClick={handleUpdatePassword}>Save</button>
+              <button onClick={() => setEditPassword(false)}>Cancel</button>
+            </div>
+          </div>
+        ) : editEmail ? null : (
+        <>
+          <div className="account-row">
+            <div>
+              <div className="account-label">Password</div>
+              <div className="account-value">••••••••</div>
+            </div>
+            <button className="account-edit" onClick={() => {
+              setEditPassword(true);
+              setEditEmail(false); 
+            }}>
+              Edit
+            </button>
+          </div>
+        </>
+        )}
         </div>
-        <div className="profile-section">
-            <h3 className="section-title">My Account Settings</h3>
-            <h3 className="section-title">My Orders</h3>
+        </div>
+        )}
+
+        {activeTab === "orders" && (
+          <div className="profile-orders">
+            <h2 className="profile-title">Order History</h2>
             <ul className="order-list">
-                {orders.map(order => (
+              {orders.map((order) => (
                 <li key={order.id} className="order-item">
-                    <span>{order.item}</span>
-                    <span>{order.date}</span>
-                    <span>{order.status}</span>
+                  <span>{order.item}</span>
+                  <span>{order.date}</span>
+                  <span>{order.status}</span>
                 </li>
-                ))}
+              ))}
             </ul>
-            <h3 className="section-title">My Order History</h3>
-
-        </div>
-  
+          </div>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+}
