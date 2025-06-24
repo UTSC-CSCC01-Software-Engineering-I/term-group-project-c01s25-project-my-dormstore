@@ -1,4 +1,3 @@
-// src/pages/CheckoutPage/CheckoutPage.jsx
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -29,7 +28,6 @@ export default function CheckoutPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({ moveInDate, email, shipping });
-    // TODO: advance to payment step
   };
 
   return (

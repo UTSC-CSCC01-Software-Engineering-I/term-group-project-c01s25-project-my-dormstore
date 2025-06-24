@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState, useEffect, useRef } from "react";
 import {
   BrowserRouter,
@@ -47,12 +46,10 @@ function AppContent() {
   const hidelayoutRoutes = ["/login", "/register"];
   const hidelayout       = hidelayoutRoutes.includes(location.pathname);
 
-  // hide cart overlay whenever route changes
   useEffect(() => {
     setShowCart(false);
   }, [location.pathname]);
 
-  // check authentication
   useEffect(() => {
     async function checkAuth() {
       try {
@@ -71,7 +68,6 @@ function AppContent() {
     checkAuth();
   }, []);
 
-  // close language dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -201,7 +197,6 @@ function AppContent() {
         </>
       )}
 
-      {/* fly-down cart overlay */}
       {showCart && (
         <CartScreen
           onClose={() => setShowCart(false)}
