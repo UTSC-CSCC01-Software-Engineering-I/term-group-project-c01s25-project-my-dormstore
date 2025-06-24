@@ -258,4 +258,22 @@ app.delete("/cart", authenticateToken, async (req, res) => {
   }
 });
 
+  app.put("/api/user/update", authenticateToken, async (req, res) => {
+    const { email, password } = req.body;
+    const userId = req.user.userId;
+  
+    try {
+      if (email) {
+        await pool.query("UPDATE users SET email = $1 WHERE id = $2", [email, userId]);
+      }
+      if (password) {
+        const hashed = await bcrypt.hash(password, 10);
+        await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hashed, userId]);
+      }
+  
+      res.json({ message: "User updated successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
 

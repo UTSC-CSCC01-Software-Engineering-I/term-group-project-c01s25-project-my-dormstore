@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import Content from "../../components/Content";
 import "./Homepage.css";
 
@@ -30,11 +31,13 @@ const HomePage = () => {
                         </h3>
                         <p>The only package allowed to arrive before you do.</p>
                         <div className="display-arrow">  
+                            <Link to="/products">
                                 <img
                                     src="/images/arrow-circle-icon.png"
                                     alt="arrow icon"
                                     className="arrow-icon"
                                 />
+                            </Link>
                         </div>
                     </div>
 
@@ -42,21 +45,25 @@ const HomePage = () => {
                         <div className="feature-card">
                             <h3>Bedding that makes your dorm feel like home</h3>
                             <div className="display-arrow">  
-                                <img
+                                <Link to="/bedding">
+                                    <img
                                     src="/images/arrow-circle-icon.png"
                                     alt="arrow icon"
                                     className="arrow-icon"
-                                />
+                                    />
+                                </Link>
                             </div>
                         </div>
                         <div className="feature-card">
                             <h3>Everything your dorm room needs</h3>
                             <div className="display-arrow">  
-                                <img
-                                    src="/images/arrow-circle-icon.png"
-                                    alt="arrow icon"
-                                    className="arrow-icon"
-                                />
+                                <Link to="/products">
+                                    <img
+                                        src="/images/arrow-circle-icon.png"
+                                        alt="arrow icon"
+                                        className="arrow-icon"
+                                    />
+                                </Link>
                             </div> 
                         </div>
                     </div>
@@ -71,10 +78,13 @@ const HomePage = () => {
                     <p>From move-in day to midterms, we<br />
                     help you stay connected and<br />
                     support your student all year long.</p>
-                    <img
-                    src="/images/arrow-circle-icon.png"
-                    className="arrow-icon"
-                    />
+                    <Link to="/our-story">
+                        <img
+                            src="/images/arrow-circle-icon.png"
+                            alt="arrow icon"
+                            className="arrow-icon"
+                            />
+                    </Link>
                 </div>
 
                 <div className="parents-video">
@@ -93,10 +103,12 @@ const HomePage = () => {
             <section className="apartment-section">
                 <div className="apartment-text">
                     <h3>Off-Campus Apartment Living, Covered.</h3>
-                    <img
-                    src="/images/arrow-right.png"
-                    className="arrow-icon"
+                    <Link to="/products">
+                        <img
+                        src="/images/arrow-right.png"
+                        className="arrow-icon"
                     />
+                    </Link>
                 </div>
 
                 <div className="apartment-image-container">

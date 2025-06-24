@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+
 
 export default function Content() {
   return (
@@ -8,7 +10,9 @@ export default function Content() {
         <br />
         Into Your Home
       </h1>
-      <button className="cta-button">Learn More</button>
+      <Link to="/products" className="cta-button">
+        Learn More
+      </Link>
     </section>
   );
 }
