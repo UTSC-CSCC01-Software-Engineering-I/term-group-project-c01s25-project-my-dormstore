@@ -209,7 +209,7 @@ h4 {
   background-position: center;
   color: #333;
   text-align: center;
-  padding: 175px 20px;
+  padding: 187px 20px;
 }
 
 .content h1 {
@@ -228,6 +228,7 @@ h4 {
   font-weight: bold;
   border-radius: 30px;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .cta-button:hover {

@@ -20,6 +20,8 @@ import ChecklistPage from "./pages/ChecklistPage";
 import { countryCurrency } from "./data/countryCurrency";
 import OrderTrack from "./pages/OrderTrack.jsx";
 import UserForm from "./components/userForm.jsx";
+import ScrollToTop from "./components/ScrollToTop";
+
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
@@ -205,6 +207,7 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <CartProvider>
         <AppContent />
       </CartProvider>
