@@ -10,6 +10,7 @@
 
 .feature-video {
   flex: 1;
+  margin: 30px;
 }
 
 .feature-video-player {
@@ -22,8 +23,10 @@
   flex: 2;
   display: grid;
   grid-template-rows: auto auto;
-  gap: 24px;
+  gap: 25px;
   justify-content: space-between;
+  margin-top: 30px;
+  margin-bottom: 45px;
 }
 
 .feature-card {
@@ -58,10 +61,10 @@
 
 .arrow-icon {
   position: absolute;
-  bottom: 16px;
-  left: 16px;
-  width: 60px;
-  height: 60px;
+  bottom: 30px;
+  left: 30px;
+  width: 90px;
+  height: 90px;
   object-fit: contain;
   cursor: pointer;
   transition: transform 0.3s ease;
@@ -74,7 +77,9 @@
   gap: 40px;
   width: 100%;
   align-items: stretch;
+  margin-top: 35px;
 }
+
 
 .parents-text {
   flex: 6;
@@ -103,6 +108,7 @@
   font-weight: 500;
   font-style: normal;
   margin: 0; 
+  margin-left: 8px;
 }
 
 .parents-video {
@@ -123,6 +129,7 @@
   flex-direction: column;
   gap: 20px;
   align-items: flex-start;
+  margin-top: 65px;
 }
 
 .apartment-text {
@@ -138,6 +145,7 @@
   font-weight: 700;
   color: #2c2c2c;
   font-family: "Inria Sans", sans-serif;
+  margin-bottom: 14px;
 }
 
 .apartment-text .arrow-icon {
@@ -165,12 +173,13 @@
   padding: 80px 60px;
   background-color: #f1f1f1;
   text-align: center;
+  margin-top: 85px;
 }
 
 .campus-title {
   font-size: 50px;
   font-weight: 700;
-  margin-bottom: 40px;
+  margin-bottom: 90px;
   color: #2c2c2c;
   font-family: 'Inria Sans', sans-serif;
 }
@@ -209,7 +218,9 @@
   display: flex;
   flex-direction: column;
   gap: 40px; 
+  margin-top: 50px;
 }
+
 
 .gallery-row-upper {
   display: grid;

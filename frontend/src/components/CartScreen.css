@@ -1,17 +1,17 @@
 .cart-screen-container {
   display: flex;
-  max-width: 1200px;
-  margin: 40px auto;
+  justify-content: space-between;
+  margin: 45px 69px;
   gap: 40px;
-  padding: 0 24px;
 }
+
 
 .cart-main {
   flex: 2;
 }
 
 .cart-title {
-  font-size: 2rem;
+  font-size: 2.3rem;
   font-weight: bold;
   margin-bottom: 32px;
 }
