@@ -178,7 +178,7 @@ function AppContent() {
         </header>
       )}
 
-      {!hidelayout && <NavBar />}
+      {!hidelayout && <NavBar isLoggedIn={isLoggedIn} />}
 
       {showCart ? (
         <CartScreen />
