@@ -163,7 +163,7 @@ function AppContent() {
             >
               <img src="/user.png" alt="User icon" />
             </span>
-            <span onClick={() => navigate("/checklist")} style={{ cursor: "pointer" }}>
+            <span onClick={() => navigate(isLoggedIn ? "/checklist" : "/login")} style={{ cursor: "pointer" }}>
               <img src="/check_box.png" alt="Checklist icon" />
             </span>
             <span onClick={() => setShowCart(true)} style={{ cursor: "pointer", position: "relative" }}>
