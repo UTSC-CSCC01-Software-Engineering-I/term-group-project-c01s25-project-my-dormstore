@@ -185,4 +185,77 @@ app.post("/cart", authenticateToken, async (req, res) => {
   }
 });
 
+// update cart item quantity
+app.put("/cart/:itemId", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const itemId = parseInt(req.params.itemId);
+    const { quantity } = req.body;
+
+    // validate
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ error: "Quantity must be at least 1" });
+    }
+
+    const result = await pool.query(
+      "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3 RETURNING *",
+      [quantity, itemId, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Cart item not found or not authorized" });
+    }
+
+    res.json({ 
+      message: "Cart item quantity updated", 
+      cartItem: result.rows[0] 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update cart item" });
+  }
+});
+
+// Remove specific item from cart
+app.delete("/cart/:itemId", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const itemId = parseInt(req.params.itemId);
+
+    const result = await pool.query(
+      "DELETE FROM cart_items WHERE id = $1 AND user_id = $2 RETURNING *",
+      [itemId, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Cart item not found or not authorized" });
+    }
+    res.json({ 
+      message: "Item removed from cart", 
+      removedItem: result.rows[0] 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to remove cart item" });
+  }
+});
+
+app.delete("/cart", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const result = await pool.query(
+      "DELETE FROM cart_items WHERE user_id = $1 RETURNING *",
+      [userId]
+    );
+
+    res.json({ 
+      message: "Cart cleared successfully", 
+      removedItems: result.rows,
+      itemsRemoved: result.rows.length
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to clear cart" });
+  }
+});
+
 

@@ -44,7 +44,7 @@ function AppContent() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5000/me", {
+        const res = await fetch("http://localhost:5001/me", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -59,6 +59,11 @@ function AppContent() {
 
     checkAuth();
   }, []);
+
+  // close cart when navigating to different pages
+  useEffect(() => {
+    setShowCart(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     function handleClickOutside(event) {

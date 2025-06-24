@@ -12,7 +12,7 @@ export default function Login() {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/loginUser", {
+            const response = await fetch("http://localhost:5001/loginUser", {
                 method: "POST",
                 headers: {
                 "Content-Type": "application/json",
