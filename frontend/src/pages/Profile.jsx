@@ -59,17 +59,15 @@ export default function Profile() {
   const handleUpdatePassword = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("/api/user/update-password", {
+      const res = await fetch("http://localhost:5000/api/user/update", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
+        body: JSON.stringify({ password: newPassword }),
       });
+
       const data = await res.json();
       alert(data.message);
       if (data.success) {
