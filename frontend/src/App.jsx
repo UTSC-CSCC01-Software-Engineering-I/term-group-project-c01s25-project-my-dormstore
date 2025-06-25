@@ -47,7 +47,7 @@ function AppContent() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5000/me", {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/me`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
