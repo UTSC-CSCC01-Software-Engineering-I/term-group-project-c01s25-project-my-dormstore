@@ -21,7 +21,9 @@ export default function Profile() {
 
   const fetchUserInfo = async () => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      return;
+    }
   
     try {
       const res = await fetch("http://localhost:5000/me", {
