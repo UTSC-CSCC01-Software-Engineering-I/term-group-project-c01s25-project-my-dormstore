@@ -284,7 +284,7 @@ app.delete("/cart", authenticateToken, async (req, res) => {
         await pool.query("UPDATE users SET last_name = $1 WHERE id = $2", [last_name, userId]);
       }
       if (school) {
-        await pool.query("UPDATE users SET school = $1 WHERE id = $2", [school, userId]); // ✅ this line was missing
+        await pool.query("UPDATE users SET school = $1 WHERE id = $2", [school, userId]);
       }
   
       res.json({ message: "User updated successfully", success: true });
