@@ -73,7 +73,9 @@ function AppContent() {
       const email = localStorage.getItem("userEmail");
       const userInfo = email && JSON.parse(localStorage.getItem(`userInfo_${email}`));
       const isIncomplete = !userInfo || !userInfo.firstname || !userInfo.lastname || !userInfo.school || !userInfo.dorm;
-      if (isIncomplete) {
+
+      const completed = localStorage.getItem(`completed_${email}`);
+      if (!completed || isIncomplete) {
         setShowUserForm(true);
       }
     }
@@ -101,6 +103,7 @@ function AppContent() {
             const email = localStorage.getItem("userEmail");
             if (email) {
               localStorage.setItem(`userInfo_${email}`, JSON.stringify(data));
+              localStorage.setItem(`completed_${email}`, "true"); 
             }
             setShowUserForm(false);
           }}

@@ -113,13 +113,16 @@ app.post("/loginUser", async (req, res) => {
   app.get("/me", authenticateToken, async (req, res) => {
     try {
       const userId = req.user.userId;
-      const result = await pool.query("SELECT id, email FROM users WHERE id = $1", [userId]);
+      const result = await pool.query(
+        "SELECT id, email, dorm, first_name, last_name, school FROM users WHERE id = $1",
+        [userId]
+      );
   
       if (result.rows.length === 0) {
         return res.status(404).json({ error: "User not found" });
       }
   
-      res.json(result.rows[0]);
+      res.json(result.rows[0]);  
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Something went wrong" });
@@ -258,8 +261,9 @@ app.delete("/cart", authenticateToken, async (req, res) => {
   }
 });
 
+
   app.put("/api/user/update", authenticateToken, async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, dorm, first_name, last_name, school } = req.body; // ✅ include school
     const userId = req.user.userId;
   
     try {
@@ -270,10 +274,25 @@ app.delete("/cart", authenticateToken, async (req, res) => {
         const hashed = await bcrypt.hash(password, 10);
         await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hashed, userId]);
       }
+      if (dorm) {
+        await pool.query("UPDATE users SET dorm = $1 WHERE id = $2", [dorm, userId]);
+      }
+      if (first_name) {
+        await pool.query("UPDATE users SET first_name = $1 WHERE id = $2", [first_name, userId]);
+      }
+      if (last_name) {
+        await pool.query("UPDATE users SET last_name = $1 WHERE id = $2", [last_name, userId]);
+      }
+      if (school) {
+        await pool.query("UPDATE users SET school = $1 WHERE id = $2", [school, userId]); // ✅ this line was missing
+      }
   
-      res.json({ message: "User updated successfully" });
+      res.json({ message: "User updated successfully", success: true });
     } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Failed to update user" });
     }
   });
+  
+  
 

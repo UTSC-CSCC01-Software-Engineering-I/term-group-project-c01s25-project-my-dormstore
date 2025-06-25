@@ -4,42 +4,82 @@ import { SchoolOptions } from "../data/SchoolOptions";
 import { DormOptions } from "../data/DormOptions";
 import "./userForm.css";
 
-export default function UserForm({ onClose }) {
+export default function UserForm({ userInfo, onClose, onProfileUpdated }) {
   const [firstname, setFirstName] = useState("");
   const [lastname, setLastName] = useState("");
   const [school, setSchool] = useState("");
   const [dorm, setDorm] = useState("");
 
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
-    if (!email) return;
+    if (userInfo) {
+      setFirstName(userInfo.firstname || "");
+      setLastName(userInfo.lastname || "");
+      setSchool(userInfo.school || "");
+      setDorm(userInfo.dorm || "");
+    } else {
+      const email = localStorage.getItem("userEmail");
+      if (!email) return;
   
-    const storedInfo = localStorage.getItem(`userInfo_${email}`);
-    if (storedInfo) {
-      const { firstname, lastname, school, dorm } = JSON.parse(storedInfo);
-      setFirstName(firstname || "");
-      setLastName(lastname || "");
-      setSchool(school || "");
-      setDorm(dorm || "");
+      const storedInfo = localStorage.getItem(`userInfo_${email}`);
+      if (storedInfo) {
+        const { firstname, lastname, school, dorm } = JSON.parse(storedInfo);
+        setFirstName(firstname || "");
+        setLastName(lastname || "");
+        setSchool(school || "");
+        setDorm(dorm || "");
+      }
     }
-  }, []);
+  }, [userInfo]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const formData = {
-      firstname,
-      lastname,
+    const token = localStorage.getItem("token");
+    if (!token) return;
+  
+    const userData = {
+      first_name: firstname,
+      last_name: lastname,
       school,
       dorm,
     };
-
-    const email = localStorage.getItem("userEmail");
     
-    if (email) {
-      localStorage.setItem(`userInfo_${email}`, JSON.stringify(formData));
-    }    
-    onClose(); 
+  
+    try {
+      const res = await fetch("http://localhost:5000/api/user/update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      });
+  
+      if (!res.ok) {
+        const error = await res.json();
+        alert("Failed to update: " + error.error);
+        return;
+      }
+
+      const email = localStorage.getItem("userEmail");
+      if (email) {
+        const fullUserData = {
+          ...userData,
+          email,
+        };
+        localStorage.setItem(`userInfo_${email}`, JSON.stringify(fullUserData));  
+      }
+
+      localStorage.setItem(`completed_${email}`, "true");
+
+
+      if (onProfileUpdated) {
+        onProfileUpdated(); 
+      }
+      onClose();          
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
   };
 
   return (

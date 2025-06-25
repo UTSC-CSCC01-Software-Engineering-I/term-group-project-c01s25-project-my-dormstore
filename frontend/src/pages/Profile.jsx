@@ -19,12 +19,37 @@ export default function Profile() {
     { id: 2, item: "Desk Lamp", date: "2025-06-10", status: "Shipped" }
   ];
 
-  useEffect(() => {
-    const email = localStorage.getItem("userEmail");
-    const saved = email ? localStorage.getItem(`userInfo_${email}`) : null;
-    if (saved) {
-      setUserInfo(JSON.parse(saved));
+  const fetchUserInfo = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+  
+    try {
+      const res = await fetch("http://localhost:5000/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!res.ok) {
+        throw new Error("Failed to fetch user");
+      }
+  
+      const data = await res.json();
+  
+      setUserInfo({
+        firstname: data.first_name || "",
+        lastname: data.last_name || "",
+        school: data.school || "", 
+        dorm: data.dorm || "",
+      });
+  
+    } catch (err) {
+      console.error("Error fetching user info:", err);
     }
+  };
+
+  useEffect(() => {
+    fetchUserInfo();
   }, [showForm]);
 
   const handleLogout = () => {
@@ -124,7 +149,19 @@ export default function Profile() {
               <p>No user info submitted yet.</p>
             )}
             <button onClick={() => setShowForm(true)}>EDIT</button>
-            {showForm && <UserForm onClose={() => setShowForm(false)} />}
+            {showForm && (
+              <UserForm 
+                userInfo={userInfo} 
+                onClose={() => setShowForm(false)} 
+                onProfileUpdated={() => {
+                  const email = localStorage.getItem("userEmail");
+                  const saved = email ? localStorage.getItem(`userInfo_${email}`) : null;
+                  if (saved) {
+                    setUserInfo(JSON.parse(saved)); 
+                  }
+                }}
+              />
+            )}
           </div>
         )}
 
