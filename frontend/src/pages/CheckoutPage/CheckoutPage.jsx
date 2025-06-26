@@ -57,6 +57,7 @@ export default function CheckoutPage() {
 
         <section className="checkout-section">
           <div className="section-title">Shipping address</div>
+
           <div className="two-col">
             <input
               name="firstName"
@@ -73,20 +74,25 @@ export default function CheckoutPage() {
               required
             />
           </div>
-          <input
-            name="phone"
-            placeholder="Phone number"
-            value={shipping.phone}
-            onChange={handleChange}
-            required
-          />
-          <input
-            name="address"
-            placeholder="Address (apt, suite, etc.)"
-            value={shipping.address}
-            onChange={handleChange}
-            required
-          />
+
+          <div className="two-col">
+            <input
+              name="phone"
+              type="tel"
+              placeholder="Phone number"
+              value={shipping.phone}
+              onChange={handleChange}
+              required
+            />
+            <input
+              name="address"
+              placeholder="Address (apt, suite, etc.)"
+              value={shipping.address}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
           <div className="three-col">
             <input
               name="city"
@@ -110,6 +116,7 @@ export default function CheckoutPage() {
               required
             />
           </div>
+
           <label className="checkbox-label">
             <input
               type="checkbox"
@@ -149,6 +156,3 @@ export default function CheckoutPage() {
     </form>
   );
 }
-
-
-

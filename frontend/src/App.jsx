@@ -12,6 +12,9 @@ import { CartProvider, useCart } from "./contexts/CartContext.tsx";
 import TopBar          from "./components/TopBar";
 import NavBar          from "./components/NavBar";
 import Footer          from "./components/Footer";
+import CheckoutHeader  from "./pages/CheckoutPage/CheckoutHeader";
+import CheckoutFooter  from "./pages/CheckoutPage/CheckoutFooter";
+
 import HomePage        from "./pages/Homepage/Homepage";
 import ProductListPage from "./pages/ProductListPage";
 import ProductDetail   from "./components/ProductDetail.tsx";
@@ -43,8 +46,12 @@ function AppContent() {
   const [selectedLanguage, setSelectedLanguage] = useState("CA | English");
   const [searchTerm, setSearchTerm]           = useState("");
 
-  const hidelayoutRoutes = ["/login", "/register"];
+  // hide default chrome on these routes:
+  const hidelayoutRoutes = ["/login", "/register", "/checkout"];
   const hidelayout       = hidelayoutRoutes.includes(location.pathname);
+
+  // custom checkout flag
+  const isCheckout = location.pathname === "/checkout";
 
   useEffect(() => {
     setShowCart(false);
@@ -84,9 +91,12 @@ function AppContent() {
 
   return (
     <div className="App">
-      {!hidelayout && <TopBar />}
+      {isCheckout
+        ? <CheckoutHeader />
+        : (!hidelayout && <TopBar />)
+      }
 
-      {!hidelayout && (
+      {(!hidelayout && !isCheckout) && (
         <>
           <header className="header">
             <div className="left-section">
@@ -205,22 +215,25 @@ function AppContent() {
       )}
 
       <Routes>
-        <Route path="/"            element={<HomePage />} />
-        <Route path="/products"    element={<ProductListPage />} />
+        <Route path="/"             element={<HomePage />} />
+        <Route path="/products"     element={<ProductListPage />} />
         <Route path="/products/:id" element={<ProductDetail />} />
-        <Route path="/our-story"   element={<OurStory />} />
-        <Route path="/blog"        element={<Blog />} />
-        <Route path="/blog/:id"    element={<BlogDetail />} />
-        <Route path="/ambassador"  element={<Ambassador />} />
-        <Route path="/login"       element={<Login />} />
-        <Route path="/register"    element={<Register />} />
-        <Route path="/profile"     element={<Profile />} />
-        <Route path="/checklist"   element={<ChecklistPage />} />
+        <Route path="/our-story"    element={<OurStory />} />
+        <Route path="/blog"         element={<Blog />} />
+        <Route path="/blog/:id"     element={<BlogDetail />} />
+        <Route path="/ambassador"   element={<Ambassador />} />
+        <Route path="/login"        element={<Login />} />
+        <Route path="/register"     element={<Register />} />
+        <Route path="/profile"      element={<Profile />} />
+        <Route path="/checklist"    element={<ChecklistPage />} />
         <Route path="/order-status" element={<OrderTrack />} />
-        <Route path="/checkout"    element={<CheckoutPage />} />
+        <Route path="/checkout"     element={<CheckoutPage />} />
       </Routes>
 
-      {!hidelayout && <Footer />}
+      {isCheckout
+        ? <CheckoutFooter />
+        : (!hidelayout && <Footer />)
+      }
     </div>
   );
 }
