@@ -1,0 +1,43 @@
+.success-container {
+    max-width: 600px;
+    margin: 80px auto;
+    text-align: center;
+    font-family: 'Inria Sans', sans-serif;
+    color: #333;
+  }
+  
+  .success-icon {
+    font-size: 64px;
+    color: #2a7ae2;
+    margin-bottom: 24px;
+  }
+  
+  .success-container h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  
+  .success-container p {
+    font-size: 1rem;
+    margin: 4px 0;
+  }
+  
+  .btn-continue {
+    margin-top: 32px;
+    padding: 14px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: #add8e6;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .btn-continue:hover {
+    background: #87ceeb;
+  }
+  

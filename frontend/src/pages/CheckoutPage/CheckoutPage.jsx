@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./CheckoutPage.css";
+import { useNavigate } from "react-router-dom";
 
 export default function CheckoutPage() {
   const [moveInDate, setMoveInDate] = useState(new Date());
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
   const [shipping, setShipping] = useState({
     firstName: "",
     lastName: "",
@@ -28,6 +30,8 @@ export default function CheckoutPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({ moveInDate, email, shipping });
+    // navigate to payment step
+    navigate("/checkout/payment");
   };
 
   return (

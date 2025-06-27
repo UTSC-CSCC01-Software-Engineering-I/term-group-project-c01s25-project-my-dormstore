@@ -29,6 +29,11 @@ import Ambassador      from "./pages/OurStoryBlog/Ambassador/Ambassador";
 import BlogDetail      from "./pages/OurStoryBlog/Blog/BlogDetail";
 import CheckoutPage    from "./pages/CheckoutPage/CheckoutPage.jsx";
 import CartScreen      from "./components/CartScreen";
+import CheckoutPaymentPage from "./pages/CheckoutPage/CheckoutPaymentPage.jsx";
+import ReviewPage            from "./pages/CheckoutPage/ReviewPage.jsx";
+import SuccessPage  from "./pages/CheckoutPage/SuccessPage.jsx";
+
+
 
 import { countryCurrency } from "./data/countryCurrency";
 
@@ -46,12 +51,10 @@ function AppContent() {
   const [selectedLanguage, setSelectedLanguage] = useState("CA | English");
   const [searchTerm, setSearchTerm]           = useState("");
 
-  // hide default chrome on these routes:
-  const hidelayoutRoutes = ["/login", "/register", "/checkout"];
+  const hidelayoutRoutes = ["/login", "/register", "/checkout", "/checkout/payment", "/checkout/review"];
   const hidelayout       = hidelayoutRoutes.includes(location.pathname);
 
-  // custom checkout flag
-  const isCheckout = location.pathname === "/checkout";
+  const isCheckout = ["/checkout", "/checkout/payment", "/checkout/review"].includes(location.pathname);
 
   useEffect(() => {
     setShowCart(false);
@@ -228,6 +231,9 @@ function AppContent() {
         <Route path="/checklist"    element={<ChecklistPage />} />
         <Route path="/order-status" element={<OrderTrack />} />
         <Route path="/checkout"     element={<CheckoutPage />} />
+        <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
+        <Route path="/checkout/review"  element={<ReviewPage />} />
+        <Route path="/checkout/success"  element={<SuccessPage />} />
       </Routes>
 
       {isCheckout
