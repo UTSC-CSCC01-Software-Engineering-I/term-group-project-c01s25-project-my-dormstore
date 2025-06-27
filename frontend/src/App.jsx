@@ -46,20 +46,44 @@ function AppContent() {
     async function checkAuth() {
       try {
         const token = localStorage.getItem("token");
-
+  
         const res = await fetch(`${process.env.REACT_APP_API_URL}/me`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-
-        setIsLoggedIn(res.ok);
+  
+        if (res.ok) {
+          setIsLoggedIn(true);
+          const data = await res.json();
+          const email = data.email;
+          const userData = {
+            firstname: data.first_name,
+            lastname: data.last_name,
+            dorm: data.dorm,
+            school: data.school,
+            email,
+          };
+  
+          localStorage.setItem("userEmail", email);
+          localStorage.setItem(`userInfo_${email}`, JSON.stringify(userData));
+  
+          const isIncomplete =
+            !userData.firstname || !userData.lastname || !userData.school || !userData.dorm;
+          const completed = localStorage.getItem(`completed_${email}`);
+          if (!completed || isIncomplete) {
+            setShowUserForm(true);
+          }
+        } else {
+          setIsLoggedIn(false);
+        }
       } catch (err) {
+        console.error(err);
         setIsLoggedIn(false);
       }
     }
-
+  
     checkAuth();
   }, []);
 
@@ -67,19 +91,6 @@ function AppContent() {
   useEffect(() => {
     setShowCart(false);
   }, [location.pathname]);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      const email = localStorage.getItem("userEmail");
-      const userInfo = email && JSON.parse(localStorage.getItem(`userInfo_${email}`));
-      const isIncomplete = !userInfo || !userInfo.firstname || !userInfo.lastname || !userInfo.school || !userInfo.dorm;
-
-      const completed = localStorage.getItem(`completed_${email}`);
-      if (!completed || isIncomplete) {
-        setShowUserForm(true);
-      }
-    }
-  }, [isLoggedIn]);
 
   useEffect(() => {
     function handleClickOutside(event) {
