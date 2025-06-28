@@ -63,7 +63,7 @@ export default function OrderTrackingPage() {
         try {
           const queryParams = new URLSearchParams({
             orderNumber: trackingOrderNumber,
-            emailOrPhone: trackingEmail, // must match backend param name
+            emailOrPhone: trackingEmail, 
           });
       
           const res = await fetch(
