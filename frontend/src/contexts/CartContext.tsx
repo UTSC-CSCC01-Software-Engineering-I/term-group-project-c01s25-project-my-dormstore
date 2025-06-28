@@ -36,6 +36,16 @@ const getAuthHeaders = () => {
   };
 };
 
+// guest cart persistence
+const saveCartToStorage = (cartItems: CartItem[]) => {
+  localStorage.setItem('guestCart', JSON.stringify(cartItems));
+};
+
+const loadCartFromStorage = (): CartItem[] => {
+  const saved = localStorage.getItem('guestCart');
+  return saved ? JSON.parse(saved) : [];
+};
+
 
 // Backend API functions
 const cartAPI = {
@@ -94,18 +104,15 @@ const cartAPI = {
 
 //? component that will wrap our app
 export function CartProvider({ children }: { children: ReactNode }) {
-  //! Dummy Info for now, initialize with the first sample product for dev/testing
-  const [items, setItems] = useState<CartItem[]>([
-    { ...sampleProducts[0], quantity: 1 }
-  ]);
+  // Initialize with empty cart no matter what
+  const [items, setItems] = useState<CartItem[]>([]);
 
-  // Load cart from backend if user is logged in
   useEffect(() => {
     async function loadCart() {
       if (isUserLoggedIn()) {
+        // Logged in
         try {
           const data = await cartAPI.getCart();
-
           setItems(
             data.cartItems.map((item: any) => ({
               ...sampleProducts.find(p => p.id === item.product_id),
@@ -116,6 +123,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         } catch (err) {
           setItems([]);
         }
+      } else {
+        // Not logged in
+        const savedCart = loadCartFromStorage();
+        setItems(savedCart);
       }
     }
     loadCart();
@@ -143,16 +154,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems(currentItems => {
         // if product already exists in cart
         const existingItem = currentItems.find(item => item.id === product.id);
+        let newItems;
         if (existingItem) {
           // if exists increase quantity by 1
-          return currentItems.map(item =>
+          newItems = currentItems.map(item =>
             item.id === product.id
               ? { ...item, quantity: item.quantity + 1 }
               : item
           );
+        } else {
+          // new item
+          newItems = [...currentItems, { ...product, quantity: 1 }];
         }
-        // new item
-        return [...currentItems, { ...product, quantity: 1 }];
+        // Save to localStorage
+        saveCartToStorage(newItems);
+        return newItems;
       });
     }
   };
@@ -177,10 +193,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
           // fallback
         });
     } else {
-      // Not logged in: use local state
-      setItems(currentItems => 
-        currentItems.filter(item => item.id !== productId)
-      );
+      // Not logged in: use local state and save to localStorage
+      setItems(currentItems => {
+        const newItems = currentItems.filter(item => item.id !== productId);
+        // Save to localStorage
+        saveCartToStorage(newItems);
+        return newItems;
+      });
     }
   };
 
@@ -213,13 +232,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeFromCart(productId);
         return;
       }
-      setItems(currentItems =>
-        currentItems.map(item =>
+      setItems(currentItems => {
+        const newItems = currentItems.map(item =>
           item.id === productId
             ? { ...item, quantity }
             : item
-        )
-      );
+        );
+        // Save to localStorage
+        saveCartToStorage(newItems);
+        return newItems;
+      });
     }
   };
 
@@ -251,6 +273,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
     } else {
       setItems([]);
+      // Clear from localStorage too
+      saveCartToStorage([]);
     }
   };
 
