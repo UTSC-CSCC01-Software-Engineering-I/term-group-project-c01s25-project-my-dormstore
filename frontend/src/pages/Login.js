@@ -4,6 +4,8 @@ import "./Login.css";
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -24,8 +26,11 @@ export default function Login() {
             const data = await response.json();
             if (response.ok) {
                 localStorage.setItem("token", data.token);
+                localStorage.setItem("userEmail", email);  
+
                 alert("Login successful");
-                window.location.href = "/"; 
+                window.location.href = "/";
+
             } else {
                  alert(data.error || "Login failed");
             }
@@ -62,12 +67,17 @@ export default function Login() {
                     />
                     
                     <label>Password</label>
-                    <input
-                        type="password"
-                        className="input-password"
+                    <div className="pswd-wrapper">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className="input-password3"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                    />
+                      />
+                      <span className="eye-icon2" onClick={() => setShowPassword(!showPassword)} style={{ cursor: "pointer" }}>
+                        <img src={showPassword ? "/eye.png" : "/eye-off.png"} alt="Toggle visibility" />
+                      </span>
+                    </div>
 
                     <button className="signin-btn" onClick={handleLogin}>
                         SIGN IN
