@@ -294,5 +294,44 @@ app.delete("/cart", authenticateToken, async (req, res) => {
     }
   });
   
+  app.post("/api/order-updates", async (req, res) => {
+    const { orderName, email, update } = req.body;
+  
+    if (!orderName || !email || !update) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+  
+    try {
+      await pool.query(
+        "INSERT INTO order_updates (order_name, email, update_text) VALUES ($1, $2, $3)",
+        [orderName, email, update]
+      );
+      res.status(200).json({ message: "Update saved" });
+    } catch (err) {
+      console.error("Database insert error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  app.get('/api/order-tracking', async (req, res) => {
+    const { orderNumber, emailOrPhone } = req.query;
+  
+    try {
+      const result = await pool.query(
+        `SELECT * FROM orders 
+         WHERE order_number = $1 AND (email = $2 OR phone = $2)`,
+        [orderNumber, emailOrPhone]
+      );
+  
+      if (result.rows.length > 0) {
+        res.status(200).json(result.rows[0]);
+      } else {
+        res.status(404).json({ message: "Order not found" });
+      }
+    } catch (err) {
+      console.error("Tracking error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  });
   
 
