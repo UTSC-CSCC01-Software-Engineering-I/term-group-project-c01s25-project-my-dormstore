@@ -7,12 +7,14 @@ export default function OrderTrackingPage() {
     const location = useLocation();
     const orderStatusRef = useRef(null);
     const orderTrackingRef = useRef(null);
+    const [trackingResult, setTrackingResult] = useState(null);
+
 
     
     const [form, setForm] = useState({
         orderName: "",
         email: "",
-        content: "",
+        orderUpdate: "",
         trackingOrderNumber: "",
         trackingEmail: "",
      });
@@ -21,14 +23,75 @@ export default function OrderTrackingPage() {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmitUpdate = (e) => {
+    const handleSubmitUpdate = async (e) => {
         e.preventDefault();
-        alert("Order update submitted:\n" + JSON.stringify(form, null, 2));
+        try {
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/order-updates`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              orderName: form.orderName,
+              email: form.email,
+              update: form.orderUpdate,
+            }),
+          });
+      
+          if (response.ok) {
+            alert("Order update submitted successfully!");
+            setForm({ ...form, orderUpdate: "" }); 
+          } else {
+            alert("Failed to submit update.");
+          }
+        } catch (error) {
+          console.error("Error submitting update:", error);
+          alert("An error occurred.");
+        }
+      
     };
+      
 
-    const handleTrackOrder = () => {
-        alert("Tracking order for: " + form.trackingOrderNumber);
+    const handleTrackOrder = async () => {
+        const { trackingOrderNumber, trackingEmail } = form;
+      
+        if (!trackingOrderNumber || !trackingEmail) {
+          alert("Please enter both order number and email/phone.");
+          return;
+        }
+      
+        try {
+          const queryParams = new URLSearchParams({
+            orderNumber: trackingOrderNumber,
+            emailOrPhone: trackingEmail, // must match backend param name
+          });
+      
+          const res = await fetch(
+            `${process.env.REACT_APP_API_URL}/api/order-tracking?${queryParams}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+      
+          if (res.ok) {
+            const data = await res.json();
+            setTrackingResult({ success: true, data });
+          } else if (res.status === 404) {
+            setTrackingResult({ success: false, message: "Order not found." });
+          } else {
+            setTrackingResult({ success: false, message: "An error occurred." });
+          }
+        } catch (error) {
+          console.error("Tracking error:", error);
+          setTrackingResult({ success: false, message: "Network error." });
+        }
+      
     };
+      
+      
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -77,9 +140,9 @@ export default function OrderTrackingPage() {
                 />
             </div>
             <textarea
-                name="content"
-                placeholder="Content"
-                value={form.content}
+                name="orderUpdate"
+                placeholder="Order Update"
+                value={form.orderUpdate}
                 onChange={handleChange}
             />
             <button type="submit">Submit</button>
@@ -90,10 +153,6 @@ export default function OrderTrackingPage() {
         <div className="tracking-grid">
             <div className="tracking-box">
                 <label>
-                    <div className="label-row">
-                        <span>Order Number</span>
-                        <span>Tracking Number</span>
-                    </div>
                     <input
                         type="text"
                         name="trackingOrderNumber"
@@ -109,6 +168,19 @@ export default function OrderTrackingPage() {
                         onChange={handleChange}
                     />    
                     <button onClick={handleTrackOrder}>Track Your Order</button>
+                    {trackingResult && (
+                        <div className="tracking-result-box">
+                            {trackingResult.success ? (
+                                <p>
+                                    📦 Order <strong>{trackingResult.data.order_number}</strong> for{" "}
+                                    <strong>{trackingResult.data.email}</strong> is currently{" "}
+                                    <strong style={{ color: "blue" }}>{trackingResult.data.status}</strong>.
+                                </p>
+                            ) : (
+                                <p style={{ color: "red" }}>❌ {trackingResult.message}</p>
+                            )}
+                        </div>
+                    )}
                 </label>
             </div>
             <div className="tracking-image-container">
