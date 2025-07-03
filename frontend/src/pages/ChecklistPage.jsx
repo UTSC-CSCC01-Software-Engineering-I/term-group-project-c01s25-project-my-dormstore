@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import UserForm from "../components/userForm"; 
 import "./ChecklistPage.css";
+import { DormChecklistItems } from "../data/dormChecklistItems";
+
 
 export default function ChecklistPage() {
   const [items, setItems] = useState([
@@ -46,7 +48,10 @@ export default function ChecklistPage() {
       });
   
       const data = await response.json();
+      const updatedDorm = data.dorm || dorm;
       setSelectedDorm(data.dorm || "");
+      setItems(DormChecklistItems[updatedDorm] || DormChecklistItems["default"]);
+
     } catch (err) {
       console.error("Failed to update dorm:", err);
     }
@@ -67,6 +72,8 @@ export default function ChecklistPage() {
   
       const data = await response.json();
       setSelectedDorm(data.dorm || "");
+      setItems(DormChecklistItems[data.dorm] || DormChecklistItems["default"]);
+
   
       if (data.first_name || data.last_name) {
         setUserName(`${data.first_name || ""} ${data.last_name || ""}`.trim());
