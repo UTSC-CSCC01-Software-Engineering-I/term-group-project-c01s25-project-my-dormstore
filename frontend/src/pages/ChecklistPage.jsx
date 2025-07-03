@@ -78,7 +78,6 @@ export default function ChecklistPage() {
       if (data.first_name || data.last_name) {
         setUserName(`${data.first_name || ""} ${data.last_name || ""}`.trim());
       } else {
-        // fallback: get from localStorage
         const email = localStorage.getItem("userEmail");
         const info = email && localStorage.getItem(`userInfo_${email}`);
         if (info) {
@@ -99,7 +98,7 @@ export default function ChecklistPage() {
   
     window.addEventListener("storage", handleStorageChange);
   
-    fetchUser(); // initial load
+    fetchUser(); 
   
     return () => {
       window.removeEventListener("storage", handleStorageChange);
@@ -113,7 +112,7 @@ export default function ChecklistPage() {
       {showForm && (
         <UserForm
             onClose={() => setShowForm(false)}
-            onProfileUpdated={fetchUser} // ✅ PASS THIS FUNCTION!
+            onProfileUpdated={fetchUser} 
         />
         )}
         <div className="greeting">
