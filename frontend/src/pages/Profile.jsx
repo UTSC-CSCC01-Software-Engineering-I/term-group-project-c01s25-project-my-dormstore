@@ -86,7 +86,7 @@ export default function Profile() {
   const handleUpdatePassword = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/user/update", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/user/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

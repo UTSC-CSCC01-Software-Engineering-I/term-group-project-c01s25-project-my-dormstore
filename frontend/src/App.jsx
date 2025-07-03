@@ -21,6 +21,7 @@ import { countryCurrency } from "./data/countryCurrency";
 import OrderTrack from "./pages/OrderTrack.jsx";
 import UserForm from "./components/userForm.jsx";
 import ScrollToTop from "./components/ScrollToTop";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -39,7 +40,7 @@ function AppContent() {
   const [showUserForm, setShowUserForm] = useState(false);
 
 
-  const hidelayoutRoutes = ["/login", "/register"];
+  const hidelayoutRoutes = ["/login", "/register", "/forgot-password"];
   const hidelayout = hidelayoutRoutes.includes(location.pathname);
 
   useEffect(() => {
@@ -215,6 +216,7 @@ function AppContent() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/checklist" element={<ChecklistPage />} />
           <Route path="/order-status" element={<OrderTrack />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
       )}
 
