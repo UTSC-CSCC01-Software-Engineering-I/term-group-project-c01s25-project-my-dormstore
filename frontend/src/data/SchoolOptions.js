@@ -110,4 +110,11 @@ export const SchoolOptions = [
   { value: "University of Prince Edward Island", label: "University of Prince Edward Island" },
   { value: "Yukon University", label: "Yukon University" },
   ];
+
+  const sortedOptions = SchoolOptions.sort((a, b) => a.label.localeCompare(b.label));
+  console.log(JSON.stringify(sortedOptions, null, 2));
+
+  const uniqueOptions = Array.from(
+    new Map(sortedOptions.map(option => [option.value, option])).values()
+  );
   

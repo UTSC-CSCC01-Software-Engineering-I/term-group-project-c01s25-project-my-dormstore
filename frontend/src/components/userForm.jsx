@@ -122,11 +122,16 @@ export default function UserForm({ userInfo, onClose, onProfileUpdated }) {
           <label>
             Dorm:
             <Select
-                options={DormOptions}
-                value={DormOptions.find((opt) => opt.value === dorm)}
-                onChange={(selected) => setDorm(selected ? selected.value : "")}
-                placeholder="Select your dorm"
-                isClearable
+              options={
+                DormOptions.find((opt) => opt.school === school)?.dorms.map((d) => ({
+                  value: d,
+                  label: d,
+                })) || []
+              }
+              value={dorm ? { value: dorm, label: dorm } : null}
+              onChange={(selected) => setDorm(selected ? selected.value : "")}
+              placeholder="Select your dorm"
+              isClearable
             />
           </label>
           <br />
