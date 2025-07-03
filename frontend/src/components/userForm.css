@@ -8,7 +8,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  z-index: 9999;
+  overflow: visible;
+
 }
 
 .user-form-content {
@@ -19,6 +21,8 @@
   width: 100%;
   max-width: 400px;
   text-align: left;
+  overflow: visible;
+  position: relative;
 }
 
 .user-form-content h2 {

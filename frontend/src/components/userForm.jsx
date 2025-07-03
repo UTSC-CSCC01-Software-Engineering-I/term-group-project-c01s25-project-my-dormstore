@@ -122,11 +122,18 @@ export default function UserForm({ userInfo, onClose, onProfileUpdated }) {
           <label>
             Dorm:
             <Select
+              menuPortalTarget={document.body}               
+              menuPosition="fixed"                          
+              styles={{
+                menuPortal: base => ({ ...base, zIndex: 9999 }),
+                menu: base => ({
+                  ...base,
+                  maxHeight: '300px',       
+                  overflowY: 'auto',        
+                }),
+              }}
               options={
-                DormOptions.find((opt) => opt.school === school)?.dorms.map((d) => ({
-                  value: d,
-                  label: d,
-                })) || []
+                DormOptions.find(opt => opt.school === school)?.dorms.map(d => ({ value: d, label: d })) || []
               }
               value={dorm ? { value: dorm, label: dorm } : null}
               onChange={(selected) => setDorm(selected ? selected.value : "")}
