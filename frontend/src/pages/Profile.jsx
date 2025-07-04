@@ -92,10 +92,15 @@ export default function Profile() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ password: newPassword }),
+        body: JSON.stringify({ currentPassword, password: newPassword }),
       });
 
       const data = await res.json();
+      if (!res.ok) {
+        // show specific error if current password is wrong or other issue
+        alert(data.message || "Failed to update password.");
+        return;
+      }
       alert(data.message);
       if (data.success) {
         setEditPassword(false);
@@ -103,7 +108,8 @@ export default function Profile() {
         setNewPassword("");
       }
     } catch (err) {
-      alert("Failed to update password.");
+      console.error("Error updating password:", err);
+      alert("Failed to update password. Please try again.");
     }
   };
 

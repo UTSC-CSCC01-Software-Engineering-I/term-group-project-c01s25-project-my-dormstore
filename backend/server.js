@@ -263,10 +263,23 @@ app.delete("/cart", authenticateToken, async (req, res) => {
 
 
   app.put("/api/user/update", authenticateToken, async (req, res) => {
-    const { email, password, dorm, first_name, last_name, school } = req.body; // ✅ include school
+    const { email, password, currentPassword, dorm, first_name, last_name, school } = req.body;
     const userId = req.user.userId;
   
     try {
+      if (password && currentPassword) {
+        const userResult = await pool.query("SELECT password FROM users WHERE id = $1", [userId]);
+        const user = userResult.rows[0];
+        
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+          return res.status(403).json({ message: "Current password is incorrect", success: false });
+        }
+  
+        const hashed = await bcrypt.hash(password, 10);
+        await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hashed, userId]);
+      }
+
       if (email) {
         await pool.query("UPDATE users SET email = $1 WHERE id = $2", [email, userId]);
       }
