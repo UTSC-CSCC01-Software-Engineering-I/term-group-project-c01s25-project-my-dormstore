@@ -19,11 +19,17 @@ This release focuses on refining and expanding the dorm shopping experience for 
 
 ### Metrics for Measurements
 
-- % of users who complete onboarding form after first login.  
-- % decrease in item mismatch errors after compatibility checks.  
-- Checkout abandonment rate before vs. after streamlined UI.  
-- Response time and accuracy of order tracking.  
-- Positive user feedback from UAT sessions or surveys.
+- Personalization & Profile Form
+  - Users are prompted with the form only on their first login.
+  - Submitted profile data (first name, school, dorm) is saved and shown correctly on the Profile page.
+  - Profile info (school & dorm) is used to generate personalized checklist content.
+- Interactive Checklist
+  - Checklist updates dynamically based on the selected dorm.
+  - Personalized greeting is rendered using user’s first name.
+- Account Settings (Email & Password)
+  - Email and password fields are displayed with an option to edit.
+  - Email updates are reflected immediately after submission.
+  - Password changes are securely hashed and stored in the database.
 
 ----------------
 
