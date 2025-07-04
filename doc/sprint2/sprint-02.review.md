@@ -50,17 +50,12 @@ Each task will have a designated owner and a priority label (e.g., High, Medium,
 
 #### Goals and/or tasks that were met/completed:
 
-- **User Authentication**  
+- **Developed and integrated the Personalization Form**  
 
- Implemented and tested login/register functionality using JWT for authentication. `/me` endpoint confirms session handling.
+- **Implemented the Interactive Checklist**  
 
-- **Frontend Framework Setup**  
+- **Built the Profile and Account Settings Pages**  
 
- Core UI structure built using React. Layout is responsive and reusable components like `TopBar`, `NavBar`, and `Footer` are functioning.
-
-- **Basic Cart Functionality**  
-
-Users can add and remove items from the cart. Cart state is managed using context and properly reflected in the UI.
 
 
 
