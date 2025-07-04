@@ -41,6 +41,8 @@ This release focuses on refining and expanding the dorm shopping experience for 
 - **Account Settings Management**
   - Users can view and edit their email and password from the profile
   - Ensures users can maintain secure and up-to-date contact information.
+- **Save Cart for Later**
+  - Enables guest users to save their carts and students to check out later.
 - **Order Tracking**
   - Students can enter their order number and email/phone to view order status.
 - **Streamlined Checkout**
