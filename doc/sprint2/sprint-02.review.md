@@ -50,11 +50,21 @@ Each task will have a designated owner and a priority label (e.g., High, Medium,
 
 #### Goals and/or tasks that were met/completed:
 
-- **Developed and integrated the Personalization Form**  
+- **Developed and integrated the Personalization Form**
 
-- **Implemented the Interactive Checklist**  
+![profile](./images/profile.png)
 
-- **Built the Profile and Account Settings Pages**  
+![userform](./images/userForm.png)
+
+- **Implemented the Interactive Checklist**
+
+![checklist](./images/checklist.png)
+
+
+- **Built the Profile and Account Settings Pages**
+
+![accountSetting](./images/accountSetting.png)
+
 
 
 
