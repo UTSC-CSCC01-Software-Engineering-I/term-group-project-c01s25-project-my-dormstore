@@ -7,7 +7,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node --env-file=.env server.js",
-    "dev": "nodemon --env-file=.env server.js"
+    "dev": "nodemon --env-file=.env server.js",
+    "setup-db": "node --env-file=.env scripts/setup-database.js",
+    "clear-products": "node --env-file=.env scripts/clear-products.js",
+    "add-categories": "node --env-file=.env scripts/add-categories.js",
+    "add-products": "node --env-file=.env scripts/add-products.js",
+    "add-packages-tables": "node --env-file=.env scripts/add-packages-table.js",
+    "add-all-packages": "node --env-file=.env scripts/add-all-packages.js"
   },
   "keywords": [],
   "author": "",
