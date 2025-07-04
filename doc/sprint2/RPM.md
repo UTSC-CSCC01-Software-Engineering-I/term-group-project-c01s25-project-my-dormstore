@@ -41,7 +41,8 @@ This release focuses on refining and expanding the dorm shopping experience for 
 - **Order Tracking**
   - Students can enter their order number and email/phone to view order status.
 - **Streamlined Checkout**
-  - **Item Compatibility**
+  - Simplified UI with clear progress indicators for checkout steps.
+- **Item Compatibility**
   - The cart automatically checks if selected items match the student’s dorm requirements.
   - Notifies students when an item is incompatible and suggests alternatives.
   - Re-evaluates compatibility when the dorm profile is updated
