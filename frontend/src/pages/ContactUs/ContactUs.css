@@ -1,0 +1,145 @@
+.contact-us-container {
+  font-family: 'Helvetica Neue', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header */
+.contact-header {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.header-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.contact-header .overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(232, 232, 232, 0.4);
+  z-index: 1;
+}
+
+.contact-header h1 {
+  position: relative;
+  z-index: 2;
+  font-size: 40px;
+  text-align: center;
+  background-color: #E7F3FB;
+  color: black;
+  padding: 20px 40px;
+  border-radius: 12px;
+}
+
+/* Main Section - Two Columns */
+.contact-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: center;
+  align-items: stretch;
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+}
+
+/* Shared card styles for both sides */
+.info-card,
+.contact-form {
+  flex: 1 1 500px; 
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 30px 35px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+/* Left side (info) */
+.info-card h2 {
+  font-size: 24px;
+  color: #0077cc;
+  margin-bottom: 15px;
+}
+
+.info-card p {
+  font-size: 16px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+  padding: 10px;
+}
+
+.info-card a {
+  color: #0077cc;
+  text-decoration: underline;
+}
+
+/* Right side (form) */
+.contact-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+.form-row input {
+  flex: 1;
+}
+
+.contact-form input,
+.contact-form textarea {
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border 0.2s ease;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: #0077cc;
+}
+
+.contact-form button {
+  background-color: #E7F3FB;
+  color: black;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font: bold;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.contact-form button:hover {
+  background-color: #b7def8;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .contact-main {
+    flex-direction: column;
+  }
+}
