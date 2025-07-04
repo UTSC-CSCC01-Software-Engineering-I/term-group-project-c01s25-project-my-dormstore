@@ -38,6 +38,9 @@ This release focuses on refining and expanding the dorm shopping experience for 
   - Provides a categorized list of required and recommended items per dorm.
   - Helps students ensure they don’t miss essential supplies.
   - Dynamically adjusts based on selected dorm.
+- **Account Settings Management**
+  - Users can view and edit their email and password from the profile
+  - Ensures users can maintain secure and up-to-date contact information.
 - **Order Tracking**
   - Students can enter their order number and email/phone to view order status.
 - **Streamlined Checkout**
