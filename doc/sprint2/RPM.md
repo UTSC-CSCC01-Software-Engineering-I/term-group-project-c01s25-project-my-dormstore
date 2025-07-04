@@ -30,6 +30,12 @@ This release focuses on refining and expanding the dorm shopping experience for 
   - Email and password fields are displayed with an option to edit.
   - Email updates are reflected immediately after submission.
   - Password changes are securely hashed and stored in the database.
+- Save Cart for Later
+  - Logged-in students can leave and return to find their cart items unchanged.
+  - Guest users can add items to cart and see them persist across page reloads.
+- Cart Item Compatibility
+- Checkout Page UI
+- Streamlined Checkout Experience
 
 ----------------
 
