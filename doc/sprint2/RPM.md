@@ -2,7 +2,7 @@
 
 ### Release Name: Sprint 2
 
-—
+----------------
 
 ## Release Objectives
 
@@ -25,7 +25,7 @@ This release focuses on refining and expanding the dorm shopping experience for 
 - Response time and accuracy of order tracking.  
 - Positive user feedback from UAT sessions or surveys.
 
-—
+----------------
 
 ## Release Scope
 
@@ -43,19 +43,19 @@ This release focuses on refining and expanding the dorm shopping experience for 
 - **Mobile responsiveness**  
 - **Admin dashboard for tracking user submissions**
 
-—
+----------------
 
 ## Bug Fixes
 
 - 
 
-—
+----------------
 
 ## Non-Functional Requirements
 
 - All responses to form submissions and cart actions must occur within 2 seconds.
 
-—
+----------------
 
 ## Dependencies and Limitations
 
@@ -63,7 +63,7 @@ This release focuses on refining and expanding the dorm shopping experience for 
 - Dorm item compatibility relies on accurate dorm requirement datasets.  
 - Form submission depends on session token availability.
 
--
+----------------
 
 ## Deployment Considerations (Optional)
 
