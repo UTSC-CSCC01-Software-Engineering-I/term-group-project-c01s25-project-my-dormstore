@@ -42,7 +42,7 @@ We didn’t allocate enough time for planning how to manage cart state globally,
 
 We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint deadline) to allow time for reviews and conflict resolution.
 
-2. ** Clear Task Ownership and Prioritization**
+2. **Clear Task Ownership and Prioritization**
 
 Each task will have a designated owner and a priority label (e.g., High, Medium, Low) to improve accountability and help the team focus on the most critical items first.
 
