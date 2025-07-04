@@ -31,17 +31,32 @@ This release focuses on refining and expanding the dorm shopping experience for 
 
 ### Included Features
 
-- **Personalization Form**  
-- **Item Compatibility**  
-- **Order Tracking**  
-- **Interactive Checklist**  
+- **Personalization Form**
+  - Students fill out school and dorm information upon first login to receive tailored recommendations.
+  - Enhances user experience by customizing the checklist and product display.
+- **Interactive Checklist**
+  - Provides a categorized list of required and recommended items per dorm.
+  - Helps students ensure they don’t miss essential supplies.
+  - Dynamically adjusts based on selected dorm.
+- **Order Tracking**
+  - Students can enter their order number and email/phone to view order status.
 - **Streamlined Checkout**
+  - **Item Compatibility**
+  - The cart automatically checks if selected items match the student’s dorm requirements.
+  - Notifies students when an item is incompatible and suggests alternatives.
+  - Re-evaluates compatibility when the dorm profile is updated
 
 ### Excluded Features
 
-- **Payment processing integration**  
-- **Mobile responsiveness**  
+- **Payment processing integration**
+  - Deferred due to security concerns and scope limitations.
+  - Will be considered in future sprints after user authentication is fully stable.
+- **Mobile responsiveness**
+  - Current layout is optimized for desktop use only.
+  - Mobile support will be addressed in a future UI/UX sprint.
 - **Admin dashboard for tracking user submissions**
+  - Out of scope for Sprint 2 due to time constraints.
+  - Future plans include a dashboard to review form responses and order data.
 
 ----------------
 
