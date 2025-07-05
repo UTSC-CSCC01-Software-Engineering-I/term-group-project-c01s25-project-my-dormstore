@@ -214,9 +214,12 @@ export const DormChecklistItems = {
     { id: 7, label: "Tech essentials", checked: false },
   ],
   "default": [
-    { id: 1, label: "Queen size bed", checked: false },
-    { id: 2, label: "Laundry basket", checked: false },
-    { id: 3, label: "Extension cord", checked: false },
-    { id: 4, label: "Toiletries", checked: false },
+    { id: 1, label: "Bedding", checked: false },
+    { id: 2, label: "cleaning essentials", checked: false },
+    { id: 3, label: "Organization essentials", checked: false },
+    { id: 4, label: "Kitchen essentials", checked: false },
+    { id: 5, label: "Household essentials", checked: false },
+    { id: 6, label: "Laundry essentials", checked: false },
+    { id: 7, label: "Tech essentials", checked: false },
   ],
 };
