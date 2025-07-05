@@ -9,9 +9,24 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add some sample data for testing
-INSERT INTO products (name, price, description, rating) VALUES 
-    ('Laundry Essentials', 44.99, 'This package includes everything you will need for your clean and dirty laundry.', 4.0),
-    ('Kitchen Package', 99.95, 'Complete kitchen essentials for your dorm room', 3.5),
-    ('Cleaning Package', 39.99, 'All the cleaning supplies you need for your dorm', 4.0)
-ON CONFLICT DO NOTHING; 
+-- users table
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  dorm VARCHAR(255),
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
+  school VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- order_updates table
+CREATE TABLE IF NOT EXISTS order_updates (
+  id SERIAL PRIMARY KEY,
+  order_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  update_text TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
