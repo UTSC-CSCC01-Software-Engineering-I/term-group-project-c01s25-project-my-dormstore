@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from '../types/Product';
-import { sampleProducts } from '../data/sampleProducts.ts';
+import { productService } from '../services/productService.ts';
 
 // extend product type to include quantity for cart items
 interface CartItem extends Product {
@@ -107,19 +107,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Initialize with empty cart no matter what
   const [items, setItems] = useState<CartItem[]>([]);
 
+  // Helper function to get product by ID
+  const getProductById = async (productId: number): Promise<Product | null> => {
+    try {
+      return await productService.getProductById(productId);
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     async function loadCart() {
       if (isUserLoggedIn()) {
         // Logged in
         try {
           const data = await cartAPI.getCart();
-          setItems(
-            data.cartItems.map((item: any) => ({
-              ...sampleProducts.find(p => p.id === item.product_id),
-              quantity: item.quantity,
-              backendId: item.id
-            })).filter(Boolean)
+          const cartItems = await Promise.all(
+            data.cartItems.map(async (item: any) => {
+              const product = await getProductById(item.product_id);
+              if (product) {
+                return {
+                  ...product,
+                  quantity: item.quantity,
+                  backendId: item.id
+                };
+              }
+              return null;
+            })
           );
+          setItems(cartItems.filter(Boolean));
         } catch (err) {
           setItems([]);
         }
@@ -137,14 +154,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // use backend
       cartAPI.addItem(product.id, 1)
         .then(() => cartAPI.getCart())
-        .then(data => {
-          setItems(
-            data.cartItems.map((item: any) => ({
-              ...sampleProducts.find(p => p.id === item.product_id),
-              quantity: item.quantity,
-              backendId: item.id
-            })).filter(Boolean)
+        .then(async data => {
+          const cartItems = await Promise.all(
+            data.cartItems.map(async (item: any) => {
+              const prod = await getProductById(item.product_id);
+              if (prod) {
+                return {
+                  ...prod,
+                  quantity: item.quantity,
+                  backendId: item.id
+                };
+              }
+              return null;
+            })
           );
+          setItems(cartItems.filter(Boolean));
         })
         .catch(() => {
           // fallback
@@ -180,14 +204,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!item || !item.backendId) return;
       cartAPI.removeItem(item.backendId)
         .then(() => cartAPI.getCart())
-        .then(data => {
-          setItems(
-            data.cartItems.map((item: any) => ({
-              ...sampleProducts.find(p => p.id === item.product_id),
-              quantity: item.quantity,
-              backendId: item.id
-            })).filter(Boolean)
+        .then(async data => {
+          const cartItems = await Promise.all(
+            data.cartItems.map(async (item: any) => {
+              const prod = await getProductById(item.product_id);
+              if (prod) {
+                return {
+                  ...prod,
+                  quantity: item.quantity,
+                  backendId: item.id
+                };
+              }
+              return null;
+            })
           );
+          setItems(cartItems.filter(Boolean));
         })
         .catch(() => {
           // fallback
@@ -215,14 +246,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       cartAPI.updateItem(item.backendId, quantity)
         .then(() => cartAPI.getCart())
-        .then(data => {
-          setItems(
-            data.cartItems.map((item: any) => ({
-              ...sampleProducts.find(p => p.id === item.product_id),
-              quantity: item.quantity,
-              backendId: item.id
-            })).filter(Boolean)
+        .then(async data => {
+          const cartItems = await Promise.all(
+            data.cartItems.map(async (item: any) => {
+              const prod = await getProductById(item.product_id);
+              if (prod) {
+                return {
+                  ...prod,
+                  quantity: item.quantity,
+                  backendId: item.id
+                };
+              }
+              return null;
+            })
           );
+          setItems(cartItems.filter(Boolean));
         })
         .catch(() => {
           // fallback
@@ -259,14 +297,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (isUserLoggedIn()) {
       cartAPI.clearCart()
         .then(() => cartAPI.getCart())
-        .then(data => {
-          setItems(
-            data.cartItems.map((item: any) => ({
-              ...sampleProducts.find(p => p.id === item.product_id),
-              quantity: item.quantity,
-              backendId: item.id
-            })).filter(Boolean)
+        .then(async data => {
+          const cartItems = await Promise.all(
+            data.cartItems.map(async (item: any) => {
+              const prod = await getProductById(item.product_id);
+              if (prod) {
+                return {
+                  ...prod,
+                  quantity: item.quantity,
+                  backendId: item.id
+                };
+              }
+              return null;
+            })
           );
+          setItems(cartItems.filter(Boolean));
         })
         .catch(() => {
           setItems([]);

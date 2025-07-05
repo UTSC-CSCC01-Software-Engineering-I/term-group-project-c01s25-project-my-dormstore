@@ -337,9 +337,18 @@ app.delete("/cart", authenticateToken, async (req, res) => {
 // Products API endpoints
 app.get("/api/products", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products ORDER BY category, name"
-    );
+    const { category } = req.query;
+    let query, params;
+    
+    if (category) {
+      query = "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
+      params = [category];
+    } else {
+      query = "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products ORDER BY category, name";
+      params = [];
+    }
+    
+    const result = await pool.query(query, params);
     res.json({ products: result.rows });
   } catch (error) {
     console.error("Error fetching products:", error);
