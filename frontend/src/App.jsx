@@ -207,6 +207,14 @@ function AppContent() {
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductListPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />
+          {/* Category routes */}
+          <Route path="/bedding" element={<ProductListPage key="bedding" category="Bedding" />} />
+          <Route path="/bathroom" element={<ProductListPage key="bathroom" category="Bathroom" />} />
+          <Route path="/tech" element={<ProductListPage key="tech" category="Tech" />} />
+          <Route path="/storage" element={<ProductListPage key="storage" category="Storage" />} />
+          <Route path="/laundry" element={<ProductListPage key="laundry" category="Laundry" />} />
+          <Route path="/desk" element={<ProductListPage key="desk" category="Desk" />} />
+          <Route path="/decor" element={<ProductListPage key="decor" category="Decor" />} />
           <Route path="/our-story" element={<OurStory />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogDetail />} />

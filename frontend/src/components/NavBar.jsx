@@ -27,7 +27,7 @@ export default function NavBar({ isLoggedIn }) {
 
   const packageCategories = [
     { name: "View All", image: "/images/viewall.png", link: "/products" },
-    { name: "Bedding", image: "/images/bathroom.png", link: "/bathroom" },
+    { name: "Bedding", image: "/images/bedding.png", link: "/bedding" },
     { name: "Living", image: "/images/living.png", link: "/living" },
     { name: "Caring", image: "/images/caring.png", link: "/caring" },
   ];
@@ -35,6 +35,7 @@ export default function NavBar({ isLoggedIn }) {
   const categories = [
     { name: "View All", image: "/images/viewall.png", link: "/products" },
     { name: "Bedding", image: "/images/bedding.png", link: "/bedding" },
+    { name: "Bathroom", image: "/images/bathroom.png", link: "/bathroom" },
     { name: "Tech", image: "/images/tech.png", link: "/tech" },
     { name: "Storage", image: "/images/storage.png", link: "/storage" },
     { name: "Laundry", image: "/images/laundry.png", link: "/laundry" },

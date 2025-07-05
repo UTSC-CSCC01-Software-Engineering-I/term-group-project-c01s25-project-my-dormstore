@@ -346,5 +346,80 @@ app.delete("/cart", authenticateToken, async (req, res) => {
       res.status(500).json({ error: "Server error" });
     }
   });
+
+// Products API endpoints
+app.get("/api/products", async (req, res) => {
+  try {
+    const { category } = req.query;
+    let query, params;
+    
+    if (category) {
+      query = "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
+      params = [category];
+    } else {
+      query = "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products ORDER BY category, name";
+      params = [];
+    }
+    
+    const result = await pool.query(query, params);
+    res.json({ products: result.rows });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
+// Get single product by ID
+app.get("/api/products/:id", async (req, res) => {
+  try {
+    const productId = parseInt(req.params.id);
+    const result = await pool.query(
+      "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products WHERE id = $1",
+      [productId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    
+    res.json({ product: result.rows[0] });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({ error: "Failed to fetch product" });
+  }
+});
+
+// Packages API endpoints
+app.get("/api/packages", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, name, price, category, description, rating, created_at, updated_at FROM packages ORDER BY category, name"
+    );
+    res.json({ packages: result.rows });
+  } catch (error) {
+    console.error("Error fetching packages:", error);
+    res.status(500).json({ error: "Failed to fetch packages" });
+  }
+});
+
+// Get single package by ID
+app.get("/api/packages/:id", async (req, res) => {
+  try {
+    const packageId = parseInt(req.params.id);
+    const result = await pool.query(
+      "SELECT id, name, price, category, description, rating, created_at, updated_at FROM packages WHERE id = $1",
+      [packageId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Package not found" });
+    }
+    
+    res.json({ package: result.rows[0] });
+  } catch (error) {
+    console.error("Error fetching package:", error);
+    res.status(500).json({ error: "Failed to fetch package" });
+  }
+});
   
 
