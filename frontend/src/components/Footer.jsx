@@ -43,22 +43,12 @@ export default function Footer() {
 
       <div className="footer-icons">
         <div className="social-icons">
-        <a
-          href="https://www.instagram.com/mydormstore/"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Instagram"
-        >
+          <a href="#" aria-label="Instagram">
           <img src="https://cdn.simpleicons.org/instagram" alt="Instagram" />
           </a>
-        <a
-          href="https://www.tiktok.com/@mydormstore"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="TikTok"
-        >
-          <img src="https://cdn.simpleicons.org/tiktok" alt="TikTok" />
-        </a>      
+          <a href="#" aria-label="TikTok">
+          <img src="https://cdn.simpleicons.org/tiktok"    alt="TikTok"    />
+          </a>
         </div>
 
         <div className="payment-icons">
@@ -70,6 +60,8 @@ export default function Footer() {
         <img src="https://cdn.simpleicons.org/mastercard"      alt="Mastercard"   />
         <img src="https://cdn.simpleicons.org/paypal"          alt="PayPal"       />
         <img src="https://cdn.simpleicons.org/visa"            alt="Visa"         />
+        <img src="https://cdn.simpleicons.org/shopify"         alt="Shopify"      />
+
         </div>
 
         <button className="lang-switcher">
