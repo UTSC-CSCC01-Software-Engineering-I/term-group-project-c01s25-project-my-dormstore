@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 
 let timeoutId = null;
 
-export default function NavBar() {
+export default function NavBar({ isLoggedIn }) {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
   const location = useLocation();
@@ -27,14 +27,14 @@ export default function NavBar() {
 
   const packageCategories = [
     { name: "View All", image: "/images/viewall.png", link: "/products" },
-    { name: "Bedding", image: "/images/bathroom.png", link: "/bathroom" },
+    { name: "Bedding", image: "/images/bedding.png", link: "/bedding" },
     { name: "Living", image: "/images/living.png", link: "/living" },
     { name: "Caring", image: "/images/caring.png", link: "/caring" },
   ];
 
   const categories = [
     { name: "View All", image: "/images/viewall.png", link: "/products" },
-    { name: "Bedding", image: "/images/bedding.png", link: "/bedding" },
+    { name: "Bathroom", image: "/images/bathroom.png", link: "/bathroom" },
     { name: "Tech", image: "/images/tech.png", link: "/tech" },
     { name: "Storage", image: "/images/storage.png", link: "/storage" },
     { name: "Laundry", image: "/images/laundry.png", link: "/laundry" },
@@ -111,7 +111,11 @@ export default function NavBar() {
           {activeDropdown === "service" && (
             <div className="dropdown-content">
               <Link to="/visualizer">Dorm Visualizer</Link>
-              <Link to="/checklist">Move-in Checklist</Link>
+              {isLoggedIn && (
+                <Link to="/checklist" className="nav-link">
+                  Move-in Checklist
+                </Link>
+              )}          
               <Link to="/order-status#order-status">Order Status</Link>
               <Link to="/order-status#order-tracking">Track My Orders</Link>
               <Link to="/live-chat">Live Chat</Link>

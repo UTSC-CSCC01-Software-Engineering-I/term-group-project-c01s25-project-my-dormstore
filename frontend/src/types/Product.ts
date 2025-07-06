@@ -2,11 +2,14 @@ export interface Product {
   id: number;
   name: string;
   price: number;
-  image: string;
+  category?: string;
+  image?: string;
   description: string;
   rating: number;
   variant?: Variant[];
   included?: string[];
+  created_at?: string;
+  updated_at?: string;
 } 
 
 export interface Variant {

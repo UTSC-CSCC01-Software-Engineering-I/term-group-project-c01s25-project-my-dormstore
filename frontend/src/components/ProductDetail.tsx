@@ -1,23 +1,54 @@
 import react from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { sampleProducts } from '../data/sampleProducts.ts'
+import { productService } from '../services/productService.ts'
 import { useCart } from '../contexts/CartContext.tsx'
+import { Product } from '../types/Product'
 import './ProductDetail.css'
 
 export default function ProductDetail()  {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const product = sampleProducts.find(p => p.id === Number(id))
+  const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const { addToCart } = useCart()
   const [quantity, setQuantity] = useState(1)
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true)
+        const fetchedProduct = await productService.getProductById(Number(id))
+        setProduct(fetchedProduct)
+        setError(null)
+      } catch (err) {
+        setError('Failed to load product')
+        console.error('Error fetching product:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProduct()
+  }, [id])
   
 
-  if (!product) {
+  if (loading) {
+    return (
+      <div className="product-detail">
+        <h2>Loading product...</h2>
+      </div>
+    )
+  }
+
+  if (error || !product) {
     return (
       <div className="product-detail not-found">
-        <h2>Product not found</h2>
+        <h2>{error || "Product not found"}</h2>
         <button className="back-button" onClick={() => navigate(-1)}>
           ← Back
         </button>
@@ -25,7 +56,9 @@ export default function ProductDetail()  {
     )
   }
   const handleAddToCart = () => {
-    addToCart(product.id, quantity)
+    if (product) {
+      addToCart(product)
+    }
   }
 
   return (
