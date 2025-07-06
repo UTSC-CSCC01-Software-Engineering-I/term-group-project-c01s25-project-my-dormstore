@@ -22,6 +22,8 @@ import OrderTrack from "./pages/OrderTrack.jsx";
 import UserForm from "./components/userForm.jsx";
 import ScrollToTop from "./components/ScrollToTop";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ContactUs from "./pages/ContactUs/ContactUs.jsx";
+
 
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -225,6 +227,7 @@ function AppContent() {
           <Route path="/checklist" element={<ChecklistPage />} />
           <Route path="/order-status" element={<OrderTrack />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/contact" element={<ContactUs />} />
         </Routes>
       )}
 

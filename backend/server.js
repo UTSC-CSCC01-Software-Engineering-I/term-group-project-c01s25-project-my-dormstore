@@ -422,4 +422,25 @@ app.get("/api/packages/:id", async (req, res) => {
   }
 });
   
+  // Contact form endpoint
+  app.post("/api/contact", async (req, res) => {
+  const { name, phone, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const result = await pool.query(
+      "INSERT INTO contact_messages (name, phone, email, message) VALUES ($1, $2, $3, $4) RETURNING *",
+      [name, phone, email, message]
+    );
+
+    res.status(201).json({ message: "Message received!", data: result.rows[0] });
+  } catch (err) {
+    console.error("Error saving contact message:", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 
