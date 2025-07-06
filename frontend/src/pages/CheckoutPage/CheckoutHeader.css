@@ -1,0 +1,31 @@
+.checkout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 30px;   
+  background: #fff;      
+  border-bottom: 1px solid #e6e6e6; 
+}
+
+.checkout-header .logo img {
+  display: block;
+  height: 40px;         
+  object-fit: contain;
+}
+
+.checkout-header .header-icons {
+  display: flex;
+  align-items: center;
+  gap: 24px;           
+}
+
+.checkout-header .icon-link img {
+  display: block;
+  width: 24px;           
+  height: 24px;
+  cursor: pointer;
+}
+
+.checkout-header .icon-link:hover img {
+  opacity: 0.8;
+}
