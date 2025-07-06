@@ -23,7 +23,7 @@ const Ambassador = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5001/api/ambassador/register", {
+      const res = await fetch("http://localhost:5000/api/ambassador/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
