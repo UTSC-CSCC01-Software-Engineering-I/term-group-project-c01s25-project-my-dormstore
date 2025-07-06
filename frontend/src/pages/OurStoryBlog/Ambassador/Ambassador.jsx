@@ -1,7 +1,55 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Ambassador.css";
 
 const Ambassador = () => {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await fetch("http://localhost:5001/api/ambassador/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.error || "Something went wrong.");
+      } else {
+        setMessage("✅ Successfully registered!");
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        });
+      }
+    } catch (err) {
+      setMessage("❌ Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="ambassador-page">
       <div className="ambassador-left">
@@ -46,35 +94,57 @@ const Ambassador = () => {
           </div>
         </div>
 
-        <form className="ambassador-form">
-          <label>
-            FIRST NAME<span className="required-asterisk">*</span>
-          </label>
-          <input type="text" required />
+        <form className="ambassador-form" onSubmit={handleSubmit}>
+          <label>FIRST NAME*</label>
+          <input
+            type="text"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            required
+          />
 
-          <label>
-            LAST NAME<span className="required-asterisk">*</span>
-          </label>
-          <input type="text" required />
+          <label>LAST NAME*</label>
+          <input
+            type="text"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            required
+          />
 
-          <label>
-            EMAIL<span className="required-asterisk">*</span>
-          </label>
-          <input type="email" required />
+          <label>EMAIL*</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
 
-          <label>
-            PASSWORD<span className="required-asterisk">*</span>
-          </label>
-          <input type="password" required />
+          <label>PASSWORD*</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
 
-          <label>
-            CONFIRM PASSWORD<span className="required-asterisk">*</span>
-          </label>
-          <input type="confirmpassword" required />
+          <label>CONFIRM PASSWORD*</label>
+          <input
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+          />
 
-          <button type="submit" className="submit-button">
-            JOIN
+          <button type="submit" className="submit-button" disabled={loading}>
+            {loading ? "Submitting..." : "JOIN"}
           </button>
+
+          {message && <p className="form-message">{message}</p>}
         </form>
       </div>
     </main>
