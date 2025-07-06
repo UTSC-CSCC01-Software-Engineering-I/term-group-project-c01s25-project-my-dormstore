@@ -1,0 +1,30 @@
+.checkout-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f2f2f2;
+    padding: 35px 40px;       
+    font-size: 16px;          
+    color: #333;
+    border-top: 1px solid #ddd;
+  }
+  
+  .footer-links {
+    display: flex;
+    align-items: center;
+    gap: 12px;                
+  }
+  
+  .footer-links .pipe {
+    color: #999;
+  }
+  
+  .footer-links a {
+    color: #333;
+    text-decoration: none;
+  }
+  
+  .footer-links a:hover {
+    text-decoration: underline;
+  }
+  
