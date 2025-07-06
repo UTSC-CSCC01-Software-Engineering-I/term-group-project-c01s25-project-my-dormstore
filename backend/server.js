@@ -421,25 +421,46 @@ app.get("/api/packages/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch package" });
   }
 });
+  
+  // Contact form endpoint
+  app.post("/api/contact", async (req, res) => {
+  const { name, phone, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const result = await pool.query(
+      "INSERT INTO contact_messages (name, phone, email, message) VALUES ($1, $2, $3, $4) RETURNING *",
+      [name, phone, email, message]
+    );
+
+    res.status(201).json({ message: "Message received!", data: result.rows[0] });
+  } catch (err) {
+    console.error("Error saving contact message:", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
 
 // Register Ambassador
 app.post("/api/ambassador/register", async (req, res) => {
   const { firstName, lastName, email, password, confirmPassword } = req.body;
-  console.log("🔥 Got request body:", req.body);
+  console.log("Got request body:", req.body);
 
   if (!firstName || !lastName || !email || !password || !confirmPassword) {
-    console.log("❌ Missing fields");
+    console.log("Missing fields");
     return res.status(400).json({ error: "All fields are required." });
   }
 
   if (password !== confirmPassword) {
-    console.log("❌ Passwords do not match");
+    console.log("Passwords do not match");
     return res.status(400).json({ error: "Passwords do not match." });
   }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("✅ Password hashed");
+    console.log("Password hashed");
 
     const result = await pool.query(
       `INSERT INTO ambassadors (first_name, last_name, email, password)
@@ -448,11 +469,11 @@ app.post("/api/ambassador/register", async (req, res) => {
       [firstName, lastName, email, hashedPassword]
     );
 
-    console.log("✅ Ambassador inserted:", result.rows[0]);
+    console.log("Ambassador inserted:", result.rows[0]);
 
     res.status(201).json({ message: "Ambassador registered", ambassador: result.rows[0] });
   } catch (err) {
-    console.error("❌ Ambassador registration error:", err);
+    console.error("Ambassador registration error:", err);
     res.status(500).json({ error: "Failed to register ambassador" });
   }
 });
