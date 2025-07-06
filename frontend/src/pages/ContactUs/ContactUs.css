@@ -136,6 +136,11 @@
 .contact-form button:hover {
   background-color: #b7def8;
 }
+.status-msg {
+  margin-top: 10px;
+  font-weight: 500;
+  color: #0077cc;
+}
 
 /* Responsive */
 @media screen and (max-width: 768px) {

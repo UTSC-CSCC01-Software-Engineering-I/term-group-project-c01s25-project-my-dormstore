@@ -1,7 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './ContactUs.css';
 
 const ContactUs = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    message: ''
+  });
+
+  const [statusMsg, setStatusMsg] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatusMsg('');
+
+    try {
+      const response = await fetch('http://localhost:5001/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setStatusMsg('✅ Message sent successfully!');
+        setFormData({ name: '', phone: '', email: '', message: '' });
+      } else {
+        const error = await response.json();
+        setStatusMsg(`❌ Failed: ${error.error}`);
+      }
+    } catch (err) {
+      setStatusMsg('❌ Network error. Please try again.');
+    }
+  };
+
   return (
     <div className="contact-us-container">
       {/* Top Banner */}
@@ -19,7 +61,7 @@ const ContactUs = () => {
           <p>
             For customer service inquiries, please fill out the form or reach out to us via the chat at the bottom-right corner.
           </p>
-          <p className='email-info'>
+          <p className="email-info">
             <strong>📧 Email us at:</strong> <br />
             <a href="mailto:contactus@mydormstore.ca">contactus@mydormstore.ca</a>
           </p>
@@ -31,15 +73,43 @@ const ContactUs = () => {
 
         {/* Right Column: Contact Form */}
         <div className="contact-form">
-          <form onSubmit={(e) => e.preventDefault()}>
+          <form onSubmit={handleSubmit}>
             <div className="form-row">
-              <input type="text" placeholder="Name" required />
-              <input type="tel" placeholder="Phone number" required />
+              <input
+                type="text"
+                name="name"
+                placeholder="Name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Phone number"
+                value={formData.phone}
+                onChange={handleChange}
+              />
             </div>
-            <input type="email" placeholder="Email" required />
-            <textarea placeholder="Message" rows="5" required></textarea>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+            <textarea
+              name="message"
+              placeholder="Message"
+              rows="5"
+              value={formData.message}
+              onChange={handleChange}
+              required
+            ></textarea>
             <button type="submit">SEND</button>
           </form>
+          {statusMsg && <p className="status-msg">{statusMsg}</p>}
         </div>
       </div>
     </div>
