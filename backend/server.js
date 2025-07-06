@@ -443,4 +443,37 @@ app.get("/api/packages/:id", async (req, res) => {
   }
 });
 
+// Register Ambassador
+app.post("/api/ambassador/register", async (req, res) => {
+  const { firstName, lastName, email, password, confirmPassword } = req.body;
+  console.log("Got request body:", req.body);
 
+  if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    console.log("Missing fields");
+    return res.status(400).json({ error: "All fields are required." });
+  }
+
+  if (password !== confirmPassword) {
+    console.log("Passwords do not match");
+    return res.status(400).json({ error: "Passwords do not match." });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("Password hashed");
+
+    const result = await pool.query(
+      `INSERT INTO ambassadors (first_name, last_name, email, password)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, first_name, last_name, email, created_at`,
+      [firstName, lastName, email, hashedPassword]
+    );
+
+    console.log("Ambassador inserted:", result.rows[0]);
+
+    res.status(201).json({ message: "Ambassador registered", ambassador: result.rows[0] });
+  } catch (err) {
+    console.error("Ambassador registration error:", err);
+    res.status(500).json({ error: "Failed to register ambassador" });
+  }
+});
