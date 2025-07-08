@@ -1,23 +1,3 @@
-## Release Plan
-
-### Release Name: Sprint 1
-
----
-
-## Release Objectives
-
-### Specific Goals
-- Set up core UI components and establish the frontend frameworks  
-- Implement user authentication  
-- Implement basic cart functionality  
-
-### Metrics for Measurement
-- Successful user registration and login (backend returns correct JWT tokens)  
-- UI setups (React app runs successfully)  
-- Cart implementation (users can add/remove items)  
-
----
-=======
 # Release Plan
 
 ### Release Name: Sprint 2
