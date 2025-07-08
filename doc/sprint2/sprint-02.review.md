@@ -7,7 +7,7 @@
 
 ## Iteration 2 - Review & Retrospect
 
- * When: June 15, 2025
+ * When: July 8th, 2025
  * Where: Online (Discord)
 
 ## Process - Reflection
