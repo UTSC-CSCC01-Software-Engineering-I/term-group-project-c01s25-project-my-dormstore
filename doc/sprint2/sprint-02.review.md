@@ -34,22 +34,22 @@ We successfully completed all tasks except those assigned to the missing group m
 
 - **Insufficient time allocated for resolving merge conflicts**  
 
-Several merge conflicts occurred toward the end of the sprint due to overlapping work and last-minute merges, slowing integration.
+  Several merge conflicts occurred toward the end of the sprint due to overlapping work and last-minute merges, slowing integration.
 
 - **Delayed planning of cart state management**  
 
-We didn’t allocate enough time for planning how to manage cart state globally, resulting in inconsistent or conflicting cart behavior.
+  We didn’t allocate enough time for planning how to manage cart state globally, resulting in inconsistent or conflicting cart behavior.
 
 
 #### Planned changes
 
 - **Improve merge coordination and PR timing**  
 
-We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint deadline) to allow time for reviews and conflict resolution.
+  We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint deadline) to allow time for reviews and conflict resolution.
 
 - **Clear Task Ownership and Prioritization**
 
-Each task will have a designated owner and a priority label (e.g., High, Medium, Low) to improve accountability and help the team focus on the most critical items first.
+  Each task will have a designated owner and a priority label (e.g., High, Medium, Low) to improve accountability and help the team focus on the most   critical items first.
 
 ## Product - Review
 
