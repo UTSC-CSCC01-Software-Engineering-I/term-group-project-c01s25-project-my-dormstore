@@ -63,6 +63,10 @@ Sprint 2 aims to enhance the dorm shopping experience by introducing personalize
   - The cart automatically checks if selected items match the student’s dorm requirements.
   - Notifies students when an item is incompatible and suggests alternatives.
   - Re-evaluates compatibility when the dorm profile is updated
+    
+- **Contact us**
+ - The "Contact Us" page allows users to leave important messages or inquiries for the site administrators. This feature helps improve communication and ensures that user feedback or concerns are properly addressed. Submitted messages are sent to the backend and can be reviewed by the admin team for timely follow-up.
+  
 
 ### Excluded Features
 
