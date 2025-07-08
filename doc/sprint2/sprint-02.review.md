@@ -65,6 +65,13 @@ Each task will have a designated owner and a priority label (e.g., High, Medium,
 
 ![accountSetting](./images/accountSetting.png)
 
+- **Connected the backend of the ambassador's program with the frontend**
+![ambassador](./images/ambassador.png)
+
+- **Built both the frontend and backend of the contactus page**
+![contactus](./images/contact-us.png)
+
+
 
 
 
