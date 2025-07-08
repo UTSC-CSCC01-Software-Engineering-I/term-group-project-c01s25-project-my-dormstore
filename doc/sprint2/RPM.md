@@ -6,7 +6,7 @@
 
 ## Release Objectives
 
-This release focuses on refining and expanding the dorm shopping experience for students. The goal is to improve item compatibility, streamline the checkout process, and enable order tracking, thereby increasing overall usability and satisfaction.
+Sprint 2 aims to enhance the dorm shopping experience by introducing personalized onboarding through a user profile form, improving cart functionality with item compatibility checks, enabling users to edit their account information, and providing real-time order tracking. Additionally, the sprint focuses on streamlining the checkout process with a clearer UI and progress indicators, all to deliver a more intuitive, secure, and tailored experience for students.
 
 ### Specific Goals
 
