@@ -12,10 +12,9 @@
 
 ## Process - Reflection
 
-Our team continued to use a mix of virtual and in-person meetings during this sprint as we focused on building the core features of our dorm store web app. While we faced some technical challenges—particularly around integration and cart state management—we made strong progress on authentication, layout, and cart functionality.
+Throughout Sprint 2, our team made noticeable progress in communication, task delegation, and feature delivery compared to the first sprint. We collaborated more actively during development, and most members were consistent in providing updates and pushing changes on GitHub. Starting with a clear task breakdown helped us stay on track, and mid-sprint check-ins kept priorities aligned.
 
-Compared to the previous sprint, our collaboration improved significantly. Although the absence of one group member initially posed a challenge, the rest of the team quickly aligned, redistributed the missing tasks efficiently, and ultimately delivered great results.
-
+However, we did face some challenges. One team member became unresponsive partway through the sprint, which created uncertainty and required the remaining members to redistribute tasks with limited notice. Additionally, some technical misalignments—like inconsistent state management and delayed merges—caused friction during integration. Moving forward, we aim to establish better early sprint alignment and develop a plan for how to handle team inactivity or unplanned absences more effectively.
 
 #### Decisions that turned out well
 
