@@ -32,20 +32,16 @@ We successfully completed all tasks except those assigned to the missing group m
 
 #### Decisions that did not turn out as well as we hoped
 
-- **Insufficient time allocated for resolving merge conflicts**  
-
-  Several merge conflicts occurred toward the end of the sprint due to overlapping work and last-minute merges, slowing integration.
-
-- **Delayed planning of cart state management**  
+- **Delayed planning of **  
 
   We didn’t allocate enough time for planning how to manage cart state globally, resulting in inconsistent or conflicting cart behavior.
 
 
 #### Planned changes
 
-- **Improve merge coordination and PR timing**  
-
-  We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint deadline) to allow time for reviews and conflict resolution.
+- **Improve merge coordination and PR timing**
+  
+  Although our merging process went smoothly this time, we plan to implement a stricter pull request (PR) deadline, such as no merges within 24 hours of the sprint deadline to allow sufficient time for code reviews and conflict resolution.
 
 - **Clear Task Ownership and Prioritization**
 
