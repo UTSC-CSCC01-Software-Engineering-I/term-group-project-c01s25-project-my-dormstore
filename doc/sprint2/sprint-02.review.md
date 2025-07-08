@@ -19,35 +19,35 @@ Compared to the previous sprint, our collaboration improved significantly. Altho
 
 #### Decisions that turned out well
 
-1. **Component-based front-end development**
+- **Component-based front-end development**
 In Sprint 2, we decided to complete both the backend and frontend functionalities, ensuring that all features, including buttons across the website work properly. This full integration approach allowed us to deliver a more complete and interactive user experience while maintaining a consistent and scalable front-end structure.
 
-2. **Combining virtual and in-person meetings**  
+- **Combining virtual and in-person meetings**  
 We continued to hold a mix of virtual and in-person meetings. This hybrid approach gave us flexibility while maintaining strong productivity. In-person sessions were particularly effective for debugging and integration, while virtual stand-ups ensured consistent coordination.
 
-3.  **Prioritize early integration to reduce merge conflicts**  
+- **Prioritize early integration to reduce merge conflicts**  
 We successfully completed all tasks except those assigned to the missing group member. We merged all remaining work, committed the final functionalities to GitHub, and delivered a complete demo presentation.
 
 
 
 #### Decisions that did not turn out as well as we hoped
 
-1. **Insufficient time allocated for resolving merge conflicts**  
+- **Insufficient time allocated for resolving merge conflicts**  
 
 Several merge conflicts occurred toward the end of the sprint due to overlapping work and last-minute merges, slowing integration.
 
-2. **Delayed planning of cart state management**  
+- **Delayed planning of cart state management**  
 
 We didn’t allocate enough time for planning how to manage cart state globally, resulting in inconsistent or conflicting cart behavior.
 
 
 #### Planned changes
 
-1. **Improve merge coordination and PR timing**  
+- **Improve merge coordination and PR timing**  
 
 We'll implement a stricter PR deadline (e.g., no merges 24 hrs before sprint deadline) to allow time for reviews and conflict resolution.
 
-2. **Clear Task Ownership and Prioritization**
+- **Clear Task Ownership and Prioritization**
 
 Each task will have a designated owner and a priority label (e.g., High, Medium, Low) to improve accountability and help the team focus on the most critical items first.
 
