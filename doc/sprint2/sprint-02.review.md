@@ -31,9 +31,9 @@ We successfully completed all tasks except those assigned to the missing group m
 
 #### Decisions that did not turn out as well as we hoped
 
-- **Delayed planning of **  
+- **Delayed planning of cart checkout**  
 
-  We didn’t allocate enough time for planning how to manage cart state globally, resulting in inconsistent or conflicting cart behavior.
+  We are still in the process of determining the best approach for implementing the card checkout functionality, which has led to some inconsistencies and conflicts in cart behavior.
 
 
 #### Planned changes
