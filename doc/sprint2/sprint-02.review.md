@@ -14,7 +14,7 @@
 
 Throughout Sprint 2, our team made noticeable progress in communication, task delegation, and feature delivery compared to the first sprint. We collaborated more actively during development, and most members were consistent in providing updates and pushing changes on GitHub. Starting with a clear task breakdown helped us stay on track, and mid-sprint check-ins kept priorities aligned.
 
-However, we did face some challenges. One team member became unresponsive partway through the sprint, which created uncertainty and required the remaining members to redistribute tasks with limited notice. Additionally, some technical misalignments—like inconsistent state management and delayed merges—caused friction during integration. Moving forward, we aim to establish better early sprint alignment and develop a plan for how to handle team inactivity or unplanned absences more effectively.
+However, we did face some challenges. One team member became unresponsive partway through the sprint, which created uncertainty and required the remaining members to redistribute tasks with limited notice. Additionally, some technical misalignments, such as inconsistent state management and delayed merges, caused friction during integration. Moving forward, we aim to establish better early sprint alignment and develop a plan for how to handle team inactivity or unplanned absences more effectively.
 
 #### Decisions that turned out well
 
