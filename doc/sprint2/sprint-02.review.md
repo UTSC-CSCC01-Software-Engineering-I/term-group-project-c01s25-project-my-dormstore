@@ -84,13 +84,17 @@ We successfully completed all tasks except those assigned to the missing group m
 #### Goals and/or tasks that were planned but not met/completed:
 
 - **Admin Dashboard**
-Initially planned to create a dashboard for administrators to view user form submissions and track order data, but was deprioritized due to time constraints and focus on user-facing features.
+
+  Initially planned to create a dashboard for administrators to view user form submissions and track order data, but was deprioritized due to time      constraints and focus on user-facing features.
 
 - **Payment Processing Integration**
-Planned to begin integration with a payment gateway; however, this was postponed to a future sprint to prioritize checklist personalization, account management, and order tracking.
+
+  Planned to begin integration with a payment gateway; however, this was postponed to a future sprint to prioritize checklist personalization,   account management, and order tracking.
 
 - **Mobile Responsiveness Improvements**
-While some UI components were tested on smaller screens, full mobile optimization was not completed and will be addressed in a future design-focused sprint.
+
+  While some UI components were tested on smaller screens, full mobile optimization was not completed and will be addressed in a future design- 
+  focused sprint.
 
 ## Meeting Highlights
 
