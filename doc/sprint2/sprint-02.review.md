@@ -12,16 +12,21 @@
 
 ## Process - Reflection
 
-Our team did a combination of virtual and physical meet for this sprint and continued building the core features of our dorm store web app. While we encountered some technical challenges, mainly around integration and cart state management, we made solid progress on authentication, layout, and cart features. We also improved our collaboration flow compared to the previous sprint.
+Our team continued to use a mix of virtual and in-person meetings during this sprint as we focused on building the core features of our dorm store web app. While we faced some technical challenges—particularly around integration and cart state management—we made strong progress on authentication, layout, and cart functionality.
+
+Compared to the previous sprint, our collaboration improved significantly. Although the absence of one group member initially posed a challenge, the rest of the team quickly aligned, redistributed the missing tasks efficiently, and ultimately delivered great results.
 
 
 #### Decisions that turned out well
 
-1.  **Component-based front-end development**  
-Focusing on building and testing reusable UI components (e.g., `TopBar`, `NavBar`, `Footer`) allowed us to work more efficiently and maintain a consistent design system. This decision reduced rework and improved front-end scalability.
+1. **Component-based front-end development**
+In Sprint 2, we decided to complete both the backend and frontend functionalities, ensuring that all features, including buttons across the website work properly. This full integration approach allowed us to deliver a more complete and interactive user experience while maintaining a consistent and scalable front-end structure.
 
 2. **Combining virtual and in-person meetings**  
-Mixing remote and in-person meetings gave us flexibility while maintaining productivity. In-person work sessions were especially effective for debugging and integration, while virtual stand-ups helped with regular coordination.
+We continued to hold a mix of virtual and in-person meetings. This hybrid approach gave us flexibility while maintaining strong productivity. In-person sessions were particularly effective for debugging and integration, while virtual stand-ups ensured consistent coordination.
+
+3.  **Prioritize early integration to reduce merge conflicts**  
+We successfully completed all tasks except those assigned to the missing group member. We merged all remaining work, committed the final functionalities to GitHub, and delivered a complete demo presentation.
 
 
 
