@@ -100,13 +100,15 @@ We successfully completed all tasks except those assigned to the missing group m
 
 Going into the next iteration, our main insights are:
 
-- **Prioritize early integration to reduce merge conflicts**  
-  Waiting until the final days to merge major branches created avoidable conflicts. Next sprint we’ll encourage smaller, more frequent merges into `develop`.
+- **Integrate early and often to avoid merge conflicts**  
+  Delaying major merges until the end of the sprint caused unnecessary conflicts and debugging overhead. In the next sprint, we’ll adopt a strategy of frequent, smaller merges into the develop branch to maintain stability.
 
-- **Establish shared understanding of global state early**  
-  Misalignment on cart state management delayed progress. We’ll begin the sprint with a brief planning session to define our state structure and ownership.
+- **Align on global state structure from the start**  
+  Miscommunication around cart and form state management led to redundant work and integration issues. We'll start the sprint with a shared review of state ownership, naming conventions, and where data should live (e.g., context, localStorage, backend).
 
-- **Time-box individual features more strictly**  
-  Several tasks exceeded their estimates and disrupted overall sprint pacing. We’ll scope work more realistically and trim scope if necessary to finish on time.
+- **Time-box tasks and manage scope more proactively**  
+  Some features (like compatibility rechecking and checklist filtering) took longer than expected and affected our sprint pacing. Next sprint, we’ll apply stricter time-boxing and be more willing to reduce scope if necessary to complete work on time.
+
+
 
 
