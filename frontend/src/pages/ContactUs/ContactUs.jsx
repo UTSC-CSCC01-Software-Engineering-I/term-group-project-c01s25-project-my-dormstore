@@ -24,7 +24,7 @@ const ContactUs = () => {
     setStatusMsg('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const response = await fetch('http://localhost:5001/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,16 +57,16 @@ const ContactUs = () => {
       <div className="contact-main">
         {/* Left Column: Info */}
         <div className="info-card">
-          <h2>📞 Need help? We're here for you.</h2>
+          <h2> Need help? We're here for you.</h2>
           <p>
             For customer service inquiries, please fill out the form or reach out to us via the chat at the bottom-right corner.
           </p>
           <p className="email-info">
-            <strong>📧 Email us at:</strong> <br />
+            <strong>Email us at:</strong> <br />
             <a href="mailto:contactus@mydormstore.ca">contactus@mydormstore.ca</a>
           </p>
           <p className="service-hours">
-            <strong>🕒 Customer service hours:</strong><br />
+            <strong>Customer service hours:</strong><br />
             Monday to Friday, 9am–6pm ET
           </p>
         </div>
