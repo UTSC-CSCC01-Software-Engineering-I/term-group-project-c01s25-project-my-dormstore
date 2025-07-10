@@ -85,3 +85,31 @@
 .checkout-container.payment .btn-review:hover {
   background: #87ceeb;
 }
+
+/* Billing address styling */
+.checkout-container.payment .billing-address {
+  margin-top: 20px;
+}
+
+.checkout-container.payment .billing-address .checkbox-label {
+  margin-bottom: 16px;
+}
+
+.checkout-container.payment .billing-address .address-block {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin-top: 12px;
+}
+
+.checkout-container.payment .billing-address .address-block p {
+  margin: 0;
+  font-size: 14px;
+  color: #495057;
+}
+
+.checkout-container.payment .billing-address .address-block p:first-child {
+  font-weight: 600;
+  margin-bottom: 4px;
+}

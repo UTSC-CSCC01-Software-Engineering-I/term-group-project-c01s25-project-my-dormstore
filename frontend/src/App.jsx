@@ -27,8 +27,7 @@ import CheckoutPage    from "./pages/CheckoutPage/CheckoutPage.jsx";
 import CheckoutPaymentPage from "./pages/CheckoutPage/CheckoutPaymentPage.jsx";
 import ReviewPage            from "./pages/CheckoutPage/ReviewPage.jsx";
 import SuccessPage  from "./pages/CheckoutPage/SuccessPage.jsx";
-import CheckoutHeader  from "./pages/CheckoutPage/CheckoutHeader";
-import CheckoutFooter  from "./pages/CheckoutPage/CheckoutFooter";
+import { CheckoutProvider } from "./contexts/CheckoutContext.tsx";
 
 
 
@@ -56,7 +55,7 @@ function AppContent() {
       try {
         const token = localStorage.getItem("token");
   
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/me`, {
+        const res = await fetch(`http://localhost:5001/me`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -251,7 +250,9 @@ function App() {
     <BrowserRouter>
       <ScrollToTop />
       <CartProvider>
-        <AppContent />
+        <CheckoutProvider>
+          <AppContent />
+        </CheckoutProvider>
       </CartProvider>
     </BrowserRouter>
   );
