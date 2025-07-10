@@ -197,4 +197,47 @@
       flex-direction: column;
     }
   }
+
+.balance-display {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.balance-display h3 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.balance-info p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+}
+
+.balance-info p strong {
+  color: #495057;
+}
+
+.insufficient-funds {
+  color: #dc3545 !important;
+  font-weight: 600;
+  margin-top: 8px !important;
+  padding: 8px;
+  background: #f8d7da;
+  border-radius: 4px;
+  border: 1px solid #f5c6cb;
+}
+
+.btn-next:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-next:disabled:hover {
+  background: #6c757d;
+}
   

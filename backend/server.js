@@ -114,7 +114,7 @@ app.post("/loginUser", async (req, res) => {
     try {
       const userId = req.user.userId;
       const result = await pool.query(
-        "SELECT id, email, dorm, first_name, last_name, school FROM users WHERE id = $1",
+        "SELECT id, email, dorm, first_name, last_name, school, phone, address, city, province, postal_code FROM users WHERE id = $1",
         [userId]
       );
   
@@ -263,7 +263,7 @@ app.delete("/cart", authenticateToken, async (req, res) => {
 
 
   app.put("/api/user/update", authenticateToken, async (req, res) => {
-    const { email, password, currentPassword, dorm, first_name, last_name, school } = req.body;
+    const { email, password, currentPassword, dorm, first_name, last_name, school, phone, address, city, province, postal_code } = req.body;
     const userId = req.user.userId;
   
     try {
@@ -298,6 +298,21 @@ app.delete("/cart", authenticateToken, async (req, res) => {
       }
       if (school) {
         await pool.query("UPDATE users SET school = $1 WHERE id = $2", [school, userId]);
+      }
+      if (phone) {
+        await pool.query("UPDATE users SET phone = $1 WHERE id = $2", [phone, userId]);
+      }
+      if (address) {
+        await pool.query("UPDATE users SET address = $1 WHERE id = $2", [address, userId]);
+      }
+      if (city) {
+        await pool.query("UPDATE users SET city = $1 WHERE id = $2", [city, userId]);
+      }
+      if (province) {
+        await pool.query("UPDATE users SET province = $1 WHERE id = $2", [province, userId]);
+      }
+      if (postal_code) {
+        await pool.query("UPDATE users SET postal_code = $1 WHERE id = $2", [postal_code, userId]);
       }
   
       res.json({ message: "User updated successfully", success: true });
@@ -354,10 +369,10 @@ app.get("/api/products", async (req, res) => {
     let query, params;
     
     if (category) {
-      query = "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
+      query = "SELECT id, name, price, description, rating, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
       params = [category];
     } else {
-      query = "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products ORDER BY category, name";
+      query = "SELECT id, name, price, description, rating, created_at, updated_at FROM products ORDER BY name";
       params = [];
     }
     
@@ -374,7 +389,7 @@ app.get("/api/products/:id", async (req, res) => {
   try {
     const productId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products WHERE id = $1",
+      "SELECT id, name, price, description, rating, created_at, updated_at FROM products WHERE id = $1",
       [productId]
     );
     
@@ -440,6 +455,281 @@ app.get("/api/packages/:id", async (req, res) => {
   } catch (err) {
     console.error("Error saving contact message:", err);
     res.status(500).json({ error: "Database error" });
+  }
+});
+
+// Get user's balance
+app.get("/api/user/balance", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    // Get or create user balance
+    let result = await pool.query(
+      "SELECT * FROM user_balance WHERE user_id = $1",
+      [userId]
+    );
+    
+    if (result.rows.length === 0) {
+      // Create initial balance for new user
+      result = await pool.query(
+        "INSERT INTO user_balance (user_id, balance, total_spent) VALUES ($1, $2, $3) RETURNING *",
+        [userId, 1000.00, 0.00]
+      );
+    }
+    
+    res.json({ 
+      balance: parseFloat(result.rows[0].balance),
+      totalSpent: parseFloat(result.rows[0].total_spent)
+    });
+  } catch (error) {
+    console.error("Error fetching user balance:", error);
+    res.status(500).json({ error: "Failed to fetch balance" });
+  }
+});
+
+// Add funds to user balance
+app.post("/api/user/balance/add", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { amount } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+    
+    const result = await pool.query(
+      `UPDATE user_balance 
+       SET balance = balance + $1, last_updated = CURRENT_TIMESTAMP 
+       WHERE user_id = $2 
+       RETURNING balance, total_spent`,
+      [amount, userId]
+    );
+    
+    if (result.rows.length === 0) {
+      // Create balance record if it doesn't exist
+      await pool.query(
+        "INSERT INTO user_balance (user_id, balance, total_spent) VALUES ($1, $2, $3)",
+        [userId, 1000.00 + parseFloat(amount), 0.00]
+      );
+      res.json({ 
+        balance: 1000.00 + parseFloat(amount),
+        totalSpent: 0.00,
+        message: "Balance updated successfully"
+      });
+    } else {
+      res.json({ 
+        balance: parseFloat(result.rows[0].balance),
+        totalSpent: parseFloat(result.rows[0].total_spent),
+        message: "Balance updated successfully"
+      });
+    }
+  } catch (error) {
+    console.error("Error updating balance:", error);
+    res.status(500).json({ error: "Failed to update balance" });
+  }
+});
+
+// Order creation endpoint with balance deduction
+app.post("/api/orders", authenticateToken, async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
+    const userId = req.user.userId;
+    const {
+      email,
+      firstName,
+      lastName,
+      phone,
+      address,
+      city,
+      province,
+      postalCode,
+      moveInDate,
+      paymentMethod,
+      subtotal,
+      tax,
+      shipping,
+      total,
+      billingAddress
+    } = req.body;
+
+    // Validate required fields
+    if (!email || !firstName || !lastName || !address || !city || !province || !postalCode) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Check user balance
+    let balanceResult = await client.query(
+      "SELECT * FROM user_balance WHERE user_id = $1",
+      [userId]
+    );
+    
+    if (balanceResult.rows.length === 0) {
+      // Create initial balance for new user
+      await client.query(
+        "INSERT INTO user_balance (user_id, balance, total_spent) VALUES ($1, $2, $3)",
+        [userId, 1000.00, 0.00]
+      );
+      balanceResult = await client.query(
+        "SELECT * FROM user_balance WHERE user_id = $1",
+        [userId]
+      );
+    }
+    
+    const currentBalance = parseFloat(balanceResult.rows[0].balance);
+    
+    if (currentBalance < total) {
+      return res.status(400).json({ 
+        error: "Insufficient funds", 
+        currentBalance: currentBalance,
+        requiredAmount: total,
+        shortfall: total - currentBalance
+      });
+    }
+
+    // Generate unique order number
+    const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // Create the order
+    const orderResult = await client.query(
+      `INSERT INTO orders (
+        order_number, user_id, email, first_name, last_name, phone,
+        address, city, province, postal_code, move_in_date,
+        subtotal, tax, shipping, total, payment_method,
+        billing_first_name, billing_last_name, billing_address, billing_city, billing_province, billing_postal_code
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+      RETURNING id, order_number`,
+      [
+        orderNumber, userId, email, firstName, lastName, phone,
+        address, city, province, postalCode, moveInDate,
+        subtotal, tax, shipping, total, paymentMethod,
+        billingAddress ? billingAddress.firstName : null,
+        billingAddress ? billingAddress.lastName : null,
+        billingAddress ? billingAddress.address : null,
+        billingAddress ? billingAddress.city : null,
+        billingAddress ? billingAddress.province : null,
+        billingAddress ? billingAddress.postalCode : null
+      ]
+    );
+
+    const orderId = orderResult.rows[0].id;
+    const orderNumberGenerated = orderResult.rows[0].order_number;
+
+    // Get cart items for this user
+    const cartResult = await client.query(
+      "SELECT ci.*, p.name as product_name, p.price as product_price FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.user_id = $1",
+      [userId]
+    );
+
+    // Create order items
+    for (const item of cartResult.rows) {
+      await client.query(
+        `INSERT INTO order_items (
+          order_id, product_id, product_name, product_price, quantity, subtotal
+        ) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          orderId, item.product_id, item.product_name, item.product_price,
+          item.quantity, item.product_price * item.quantity
+        ]
+      );
+    }
+
+    // Deduct from user balance and update total spent
+    await client.query(
+      `UPDATE user_balance 
+       SET balance = balance - $1, 
+           total_spent = total_spent + $1, 
+           last_updated = CURRENT_TIMESTAMP 
+       WHERE user_id = $2`,
+      [total, userId]
+    );
+
+    // Clear the user's cart
+    await client.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
+
+    await client.query('COMMIT');
+
+    // Get updated balance
+    const updatedBalanceResult = await client.query(
+      "SELECT balance, total_spent FROM user_balance WHERE user_id = $1",
+      [userId]
+    );
+
+    res.status(201).json({
+      message: "Order created successfully",
+      order: {
+        id: orderId,
+        orderNumber: orderNumberGenerated,
+        total: total
+      },
+      balance: {
+        remaining: parseFloat(updatedBalanceResult.rows[0].balance),
+        totalSpent: parseFloat(updatedBalanceResult.rows[0].total_spent)
+      }
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Order creation error:", error);
+    res.status(500).json({ error: "Failed to create order" });
+  } finally {
+    client.release();
+  }
+});
+
+// Get order details
+app.get("/api/orders/:orderId", authenticateToken, async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.orderId);
+    const userId = req.user.userId;
+
+    const orderResult = await pool.query(
+      `SELECT o.*, oi.* FROM orders o 
+       LEFT JOIN order_items oi ON o.id = oi.order_id 
+       WHERE o.id = $1 AND o.user_id = $2`,
+      [orderId, userId]
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Group order items
+    const order = {
+      ...orderResult.rows[0],
+      items: orderResult.rows.map(row => ({
+        product_id: row.product_id,
+        product_name: row.product_name,
+        product_price: row.product_price,
+        quantity: row.quantity,
+        subtotal: row.subtotal
+      }))
+    };
+
+    res.json({ order });
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    res.status(500).json({ error: "Failed to fetch order" });
+  }
+});
+
+// Get user's orders
+app.get("/api/orders", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const result = await pool.query(
+      `SELECT id, order_number, total, order_status, created_at 
+       FROM orders WHERE user_id = $1 ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    res.json({ orders: result.rows });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "Failed to fetch orders" });
   }
 });
 

@@ -1,25 +1,134 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./ReviewPage.css";
+import { useCart } from "../../contexts/CartContext.tsx";
+import { useCheckout } from "../../contexts/CheckoutContext.tsx";
 
 export default function ReviewPage() {
   const navigate = useNavigate();
+  const { items, totalPrice, clearCart } = useCart();
+  const { checkoutData } = useCheckout();
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [error, setError] = useState(null);
 
-  const moveInDate      = "Mon, May 20th";
-  const email           = "johndoe@gmail.com";
-  const deliveryAddress = "1265 Military Trail, Scarborough, ON M1C 1A4";
-  const paymentMethod   = "Visa ending in 1234";
+  // Format data from checkout context
+  const moveInDate = checkoutData.moveInDate.toLocaleDateString('en-US', { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+  const email = checkoutData.email;
+  const deliveryAddress = `${checkoutData.shipping.address}, ${checkoutData.shipping.city}, ${checkoutData.shipping.province} ${checkoutData.shipping.postalCode}`;
+  const billingAddress = checkoutData.payment.sameAsShipping 
+    ? deliveryAddress 
+    : `${checkoutData.payment.billingAddress?.address || ""}, ${checkoutData.payment.billingAddress?.city || ""}, ${checkoutData.payment.billingAddress?.province || ""} ${checkoutData.payment.billingAddress?.postalCode || ""}`;
+  const paymentMethod = checkoutData.payment.method === "card" 
+    ? `${checkoutData.payment.cardName} ending in ${checkoutData.payment.cardNumber.slice(-4)}`
+    : checkoutData.payment.method;
 
-  const handlePlaceOrder = e => {
+  // Calculate totals
+  const subtotal = totalPrice;
+  const shippingCost = 0; // Free shipping
+  const tax = subtotal * 0.13; // 13% tax rate
+  const total = subtotal + shippingCost + tax;
+
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
-    console.log("Placing final order…");
-    navigate("/checkout/success");
+    setIsPlacingOrder(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // Handle guest checkout or redirect to login
+        navigate("/login");
+        return;
+      }
+
+      const orderData = {
+        email: checkoutData.email,
+        firstName: checkoutData.shipping.firstName,
+        lastName: checkoutData.shipping.lastName,
+        phone: checkoutData.shipping.phone,
+        address: checkoutData.shipping.address,
+        city: checkoutData.shipping.city,
+        province: checkoutData.shipping.province,
+        postalCode: checkoutData.shipping.postalCode,
+        moveInDate: checkoutData.moveInDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        paymentMethod: paymentMethod,
+        subtotal: subtotal,
+        tax: tax,
+        shipping: shippingCost,
+        total: total,
+        // Include billing address if different from shipping
+        billingAddress: checkoutData.payment.sameAsShipping ? null : checkoutData.payment.billingAddress
+      };
+
+              const response = await fetch(`http://localhost:5001/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Order created successfully:", result);
+        
+        // Clear the cart
+        clearCart();
+        
+        // Navigate to success page with order number
+        navigate("/checkout/success", { 
+          state: { 
+            orderNumber: result.order.orderNumber,
+            balance: result.balance
+          }
+        });
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to create order:", errorData);
+        
+        if (errorData.error === "Insufficient funds") {
+          setError(`Insufficient funds. You need $${errorData.shortfall.toFixed(2)} more. Current balance: $${errorData.currentBalance.toFixed(2)}`);
+        } else {
+          setError("Failed to place order. Please try again.");
+        }
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      setError("An error occurred while placing your order. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
+
+  // If cart is empty, redirect to products page
+  if (items.length === 0) {
+    navigate("/products");
+    return null;
+  }
 
   return (
     <form className="checkout-container review" onSubmit={handlePlaceOrder}>
       <div className="checkout-left">
         <h2>Checkout</h2>
+
+        {/* Error Display */}
+        {error && (
+          <div className="error-message">
+            <p>{error}</p>
+            <button 
+              type="button" 
+              onClick={() => navigate("/checkout")}
+              className="btn-add-funds"
+            >
+              Add Funds
+            </button>
+          </div>
+        )}
 
         <section className="checkout-section review-item">
           <label>
@@ -48,6 +157,17 @@ export default function ReviewPage() {
           </label>
         </section>
 
+        {!checkoutData.payment.sameAsShipping && (
+          <section className="checkout-section review-item">
+            <label>
+              <input type="radio" readOnly checked />
+              <span className="review-label">Billing</span>
+              <span className="review-value">{billingAddress}</span>
+              <Link to="/checkout/payment" className="edit-link">Edit</Link>
+            </label>
+          </section>
+        )}
+
         <section className="checkout-section review-item">
           <label>
             <input type="radio" readOnly checked />
@@ -57,12 +177,16 @@ export default function ReviewPage() {
           </label>
         </section>
 
-        <button type="submit" className="btn-place-order">
-          PLACE ORDER
+        <button 
+          type="submit" 
+          className="btn-place-order"
+          disabled={isPlacingOrder}
+        >
+          {isPlacingOrder ? "PLACING ORDER..." : "PLACE ORDER"}
         </button>
 
         <p className="legal">
-          By placing an order, you agree to be bound by The Dorm Store’s{" "}
+          By placing an order, you agree to be bound by The Dorm Store's{" "}
           <Link to="/terms">Terms</Link> and{" "}
           <Link to="/privacy">Privacy Policy</Link>.
         </p>
@@ -70,19 +194,24 @@ export default function ReviewPage() {
 
       <div className="checkout-right">
         <h3>Order Summary</h3>
-        <div className="summary-item">
-          <img src="/images/basic-bedding.jpg" alt="Basic Bedding Package" />
-          <div>
-            <p className="item-title">Basic Bedding Package</p>
-            <p>$99.95</p>
-            <p>Qt: 1</p>
+        {items.map((item) => (
+          <div key={item.id} className="summary-item">
+            <img
+              src={item.image || "/images/basic-bedding.jpg"}
+              alt={item.name}
+            />
+            <div>
+              <p className="item-title">{item.name}</p>
+              <p>${item.price.toFixed(2)}</p>
+              <p>Qt: {item.quantity}</p>
+            </div>
           </div>
-        </div>
+        ))}
         <div className="summary-totals">
-          <div><span>Subtotal</span><span>$99.95</span></div>
+          <div><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
           <div><span>Shipping</span><span>Free</span></div>
-          <div><span>Tax</span><span>$12.99</span></div>
-          <div className="total"><span>Order total</span><span>$112.94</span></div>
+          <div><span>Tax</span><span>${tax.toFixed(2)}</span></div>
+          <div className="total"><span>Order total</span><span>${total.toFixed(2)}</span></div>
         </div>
       </div>
     </form>

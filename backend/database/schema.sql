@@ -21,6 +21,64 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- user_balance table for tracking spending like a banking app
+CREATE TABLE IF NOT EXISTS user_balance (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  balance DECIMAL(10,2) NOT NULL DEFAULT 1000.00, -- Starting balance of $1000
+  total_spent DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id)
+);
+
+-- cart_items table for shopping cart functionality
+CREATE TABLE IF NOT EXISTS cart_items (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, product_id)
+);
+
+-- orders table for completed orders
+CREATE TABLE IF NOT EXISTS orders (
+  id SERIAL PRIMARY KEY,
+  order_number VARCHAR(50) UNIQUE NOT NULL,
+  user_id INTEGER REFERENCES users(id),
+  email VARCHAR(255) NOT NULL,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  phone VARCHAR(50),
+  address TEXT NOT NULL,
+  city VARCHAR(255) NOT NULL,
+  province VARCHAR(255) NOT NULL,
+  postal_code VARCHAR(20) NOT NULL,
+  move_in_date DATE,
+  subtotal DECIMAL(10,2) NOT NULL,
+  tax DECIMAL(10,2) NOT NULL,
+  shipping DECIMAL(10,2) NOT NULL,
+  total DECIMAL(10,2) NOT NULL,
+  payment_method VARCHAR(100),
+  payment_status VARCHAR(50) DEFAULT 'pending',
+  order_status VARCHAR(50) DEFAULT 'processing',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- order_items table for items in each order
+CREATE TABLE IF NOT EXISTS order_items (
+  id SERIAL PRIMARY KEY,
+  order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  product_id INTEGER NOT NULL REFERENCES products(id),
+  product_name VARCHAR(255) NOT NULL,
+  product_price DECIMAL(10,2) NOT NULL,
+  quantity INTEGER NOT NULL,
+  subtotal DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- order_updates table
 CREATE TABLE IF NOT EXISTS order_updates (
   id SERIAL PRIMARY KEY,
