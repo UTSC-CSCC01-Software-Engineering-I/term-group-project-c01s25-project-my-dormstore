@@ -77,6 +77,9 @@ We successfully completed all tasks except those assigned to the missing group m
 
 ![contactus](./images/contact-db.png)
 
+- **Products show in the cart (add/remove/quantity beside the cart**
+
+![contactus](./images/products.png)
 
 
 
