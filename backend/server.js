@@ -7,7 +7,7 @@ import 'dotenv/config';
 
 const { Pool } = pg;
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5001;
 
 // CORS setup
 app.use(cors({
@@ -113,17 +113,367 @@ app.post("/loginUser", async (req, res) => {
   app.get("/me", authenticateToken, async (req, res) => {
     try {
       const userId = req.user.userId;
-      const result = await pool.query("SELECT id, email FROM users WHERE id = $1", [userId]);
+      const result = await pool.query(
+        "SELECT id, email, dorm, first_name, last_name, school FROM users WHERE id = $1",
+        [userId]
+      );
   
       if (result.rows.length === 0) {
         return res.status(404).json({ error: "User not found" });
       }
   
-      res.json(result.rows[0]);
+      res.json(result.rows[0]);  
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Something went wrong" });
     }
   });
 
+// Get user's cart items
+app.get("/cart", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const result = await pool.query(
+      "SELECT id, product_id, quantity, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
+      [userId]
+    );
+    res.json({ cartItems: result.rows });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to retrieve cart items" });
+  }
+});
 
+// Add item to cart
+app.post("/cart", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { product_id, quantity = 1 } = req.body;
+
+    if (!product_id) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+    if (quantity < 1) {
+      return res.status(400).json({ error: "Quantity must be at least 1" });
+    }
+    const existingItem = await pool.query(
+      "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2",
+      [userId, product_id]
+    );
+    if (existingItem.rows.length > 0) {
+      // update existing item quantity
+      const newQuantity = existingItem.rows[0].quantity + quantity;
+      const result = await pool.query(
+        "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND product_id = $3 RETURNING *",
+        [newQuantity, userId, product_id]
+      );
+      
+      res.json({ 
+        message: "Cart item updated", 
+        cartItem: result.rows[0] 
+      });
+    } else {
+      const result = await pool.query(
+        "INSERT INTO cart_items (user_id, product_id, quantity) VALUES ($1, $2, $3) RETURNING *",
+        [userId, product_id, quantity]
+      );
+      res.status(201).json({ 
+        message: "Item added to cart", 
+        cartItem: result.rows[0] 
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to add item to cart" });
+  }
+});
+
+// update cart item quantity
+app.put("/cart/:itemId", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const itemId = parseInt(req.params.itemId);
+    const { quantity } = req.body;
+
+    // validate
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ error: "Quantity must be at least 1" });
+    }
+
+    const result = await pool.query(
+      "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3 RETURNING *",
+      [quantity, itemId, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Cart item not found or not authorized" });
+    }
+
+    res.json({ 
+      message: "Cart item quantity updated", 
+      cartItem: result.rows[0] 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update cart item" });
+  }
+});
+
+// Remove specific item from cart
+app.delete("/cart/:itemId", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const itemId = parseInt(req.params.itemId);
+
+    const result = await pool.query(
+      "DELETE FROM cart_items WHERE id = $1 AND user_id = $2 RETURNING *",
+      [itemId, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Cart item not found or not authorized" });
+    }
+    res.json({ 
+      message: "Item removed from cart", 
+      removedItem: result.rows[0] 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to remove cart item" });
+  }
+});
+
+app.delete("/cart", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const result = await pool.query(
+      "DELETE FROM cart_items WHERE user_id = $1 RETURNING *",
+      [userId]
+    );
+
+    res.json({ 
+      message: "Cart cleared successfully", 
+      removedItems: result.rows,
+      itemsRemoved: result.rows.length
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to clear cart" });
+  }
+});
+
+
+  app.put("/api/user/update", authenticateToken, async (req, res) => {
+    const { email, password, currentPassword, dorm, first_name, last_name, school } = req.body;
+    const userId = req.user.userId;
+  
+    try {
+      if (password && currentPassword) {
+        const userResult = await pool.query("SELECT password FROM users WHERE id = $1", [userId]);
+        const user = userResult.rows[0];
+        
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+          return res.status(403).json({ message: "Current password is incorrect", success: false });
+        }
+  
+        const hashed = await bcrypt.hash(password, 10);
+        await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hashed, userId]);
+      }
+
+      if (email) {
+        await pool.query("UPDATE users SET email = $1 WHERE id = $2", [email, userId]);
+      }
+      if (password) {
+        const hashed = await bcrypt.hash(password, 10);
+        await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hashed, userId]);
+      }
+      if (dorm) {
+        await pool.query("UPDATE users SET dorm = $1 WHERE id = $2", [dorm, userId]);
+      }
+      if (first_name) {
+        await pool.query("UPDATE users SET first_name = $1 WHERE id = $2", [first_name, userId]);
+      }
+      if (last_name) {
+        await pool.query("UPDATE users SET last_name = $1 WHERE id = $2", [last_name, userId]);
+      }
+      if (school) {
+        await pool.query("UPDATE users SET school = $1 WHERE id = $2", [school, userId]);
+      }
+  
+      res.json({ message: "User updated successfully", success: true });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+  
+  app.post("/api/order-updates", async (req, res) => {
+    const { orderName, email, update } = req.body;
+  
+    if (!orderName || !email || !update) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+  
+    try {
+      await pool.query(
+        "INSERT INTO order_updates (order_name, email, update_text) VALUES ($1, $2, $3)",
+        [orderName, email, update]
+      );
+      res.status(200).json({ message: "Update saved" });
+    } catch (err) {
+      console.error("Database insert error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  app.get('/api/order-tracking', async (req, res) => {
+    const { orderNumber, emailOrPhone } = req.query;
+  
+    try {
+      const result = await pool.query(
+        `SELECT * FROM orders 
+         WHERE order_number = $1 AND (email = $2 OR phone = $2)`,
+        [orderNumber, emailOrPhone]
+      );
+  
+      if (result.rows.length > 0) {
+        res.status(200).json(result.rows[0]);
+      } else {
+        res.status(404).json({ message: "Order not found" });
+      }
+    } catch (err) {
+      console.error("Tracking error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  });
+
+// Products API endpoints
+app.get("/api/products", async (req, res) => {
+  try {
+    const { category } = req.query;
+    let query, params;
+    
+    if (category) {
+      query = "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
+      params = [category];
+    } else {
+      query = "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products ORDER BY category, name";
+      params = [];
+    }
+    
+    const result = await pool.query(query, params);
+    res.json({ products: result.rows });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
+// Get single product by ID
+app.get("/api/products/:id", async (req, res) => {
+  try {
+    const productId = parseInt(req.params.id);
+    const result = await pool.query(
+      "SELECT id, name, price, category, description, rating, created_at, updated_at FROM products WHERE id = $1",
+      [productId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    
+    res.json({ product: result.rows[0] });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({ error: "Failed to fetch product" });
+  }
+});
+
+// Packages API endpoints
+app.get("/api/packages", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, name, price, category, description, rating, created_at, updated_at FROM packages ORDER BY category, name"
+    );
+    res.json({ packages: result.rows });
+  } catch (error) {
+    console.error("Error fetching packages:", error);
+    res.status(500).json({ error: "Failed to fetch packages" });
+  }
+});
+
+// Get single package by ID
+app.get("/api/packages/:id", async (req, res) => {
+  try {
+    const packageId = parseInt(req.params.id);
+    const result = await pool.query(
+      "SELECT id, name, price, category, description, rating, created_at, updated_at FROM packages WHERE id = $1",
+      [packageId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Package not found" });
+    }
+    
+    res.json({ package: result.rows[0] });
+  } catch (error) {
+    console.error("Error fetching package:", error);
+    res.status(500).json({ error: "Failed to fetch package" });
+  }
+});
+  
+  // Contact form endpoint
+  app.post("/api/contact", async (req, res) => {
+  const { name, phone, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const result = await pool.query(
+      "INSERT INTO contact_messages (name, phone, email, message) VALUES ($1, $2, $3, $4) RETURNING *",
+      [name, phone, email, message]
+    );
+
+    res.status(201).json({ message: "Message received!", data: result.rows[0] });
+  } catch (err) {
+    console.error("Error saving contact message:", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// Register Ambassador
+app.post("/api/ambassador/register", async (req, res) => {
+  const { firstName, lastName, email, password, confirmPassword } = req.body;
+  console.log("Got request body:", req.body);
+
+  if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    console.log("Missing fields");
+    return res.status(400).json({ error: "All fields are required." });
+  }
+
+  if (password !== confirmPassword) {
+    console.log("Passwords do not match");
+    return res.status(400).json({ error: "Passwords do not match." });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("Password hashed");
+
+    const result = await pool.query(
+      `INSERT INTO ambassadors (first_name, last_name, email, password)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, first_name, last_name, email, created_at`,
+      [firstName, lastName, email, hashedPassword]
+    );
+
+    console.log("Ambassador inserted:", result.rows[0]);
+
+    res.status(201).json({ message: "Ambassador registered", ambassador: result.rows[0] });
+  } catch (err) {
+    console.error("Ambassador registration error:", err);
+    res.status(500).json({ error: "Failed to register ambassador" });
+  }
+});

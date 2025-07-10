@@ -1,18 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Login.css";
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
+    
+
 
     const handleLogin = async () => {
         if (!email || !password) {
             alert("Please enter both email and password.");
-        return;
+            return;
         }
 
         try {
-            const response = await fetch("http://localhost:5000/loginUser", {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/loginUser`, {
                 method: "POST",
                 headers: {
                 "Content-Type": "application/json",
@@ -24,8 +28,10 @@ export default function Login() {
             const data = await response.json();
             if (response.ok) {
                 localStorage.setItem("token", data.token);
+                localStorage.setItem("userEmail", email);  
+
                 alert("Login successful");
-                window.location.href = "/"; 
+                window.location.href = "/";
             } else {
                  alert(data.error || "Login failed");
             }
@@ -34,6 +40,14 @@ export default function Login() {
             alert("Something went wrong.");
         }
     };
+
+    useEffect(() => {
+        const savedEmail = localStorage.getItem("userEmail");
+        if (savedEmail) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+        }
+    }, []);
       
     return (
         <section className="login-container">
@@ -62,12 +76,31 @@ export default function Login() {
                     />
                     
                     <label>Password</label>
-                    <input
-                        type="password"
-                        className="input-password"
+                    <div className="pswd-wrapper">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className="input-password3"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                    />
+                      />
+                      <span className="eye-icon2" onClick={() => setShowPassword(!showPassword)} style={{ cursor: "pointer" }}>
+                        <img src={showPassword ? "/eye.png" : "/eye-off.png"} alt="Toggle visibility" />
+                      </span>
+                    </div>
+
+                    <div className="rem-for">
+                        <label className="rememberme">
+                            <input
+                                type="checkbox"
+                                checked={rememberMe}
+                                onChange={() => setRememberMe(!rememberMe)}
+                            />
+                            Remember me
+                        </label>
+                        <p className="forgot-link" onClick={() => window.location.href = "/forgot-password"}>
+                            Forgot password?
+                        </p>
+                    </div>
 
                     <button className="signin-btn" onClick={handleLogin}>
                         SIGN IN

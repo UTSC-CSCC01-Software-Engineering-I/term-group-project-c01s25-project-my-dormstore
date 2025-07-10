@@ -19,6 +19,17 @@ import Profile from "./pages/Profile";
 import ChecklistPage from "./pages/ChecklistPage";
 import { countryCurrency } from "./data/countryCurrency";
 import OrderTrack from "./pages/OrderTrack.jsx";
+import UserForm from "./components/userForm.jsx";
+import ScrollToTop from "./components/ScrollToTop";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ContactUs from "./pages/ContactUs/ContactUs.jsx";
+import CheckoutPage    from "./pages/CheckoutPage/CheckoutPage.jsx";
+import CheckoutPaymentPage from "./pages/CheckoutPage/CheckoutPaymentPage.jsx";
+import ReviewPage            from "./pages/CheckoutPage/ReviewPage.jsx";
+import SuccessPage  from "./pages/CheckoutPage/SuccessPage.jsx";
+import CheckoutHeader  from "./pages/CheckoutPage/CheckoutHeader";
+import CheckoutFooter  from "./pages/CheckoutPage/CheckoutFooter";
+
 
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -34,31 +45,61 @@ function AppContent() {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("CA | English");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showUserForm, setShowUserForm] = useState(false);
 
 
-  const hidelayoutRoutes = ["/login", "/register"];
+  const hidelayoutRoutes = ["/login", "/register", "/forgot-password", "/checkout", "/checkout/payment", "/checkout/review"];
   const hidelayout = hidelayoutRoutes.includes(location.pathname);
 
   useEffect(() => {
     async function checkAuth() {
       try {
         const token = localStorage.getItem("token");
-
-        const res = await fetch("http://localhost:5000/me", {
+  
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/me`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-
-        setIsLoggedIn(res.ok);
+  
+        if (res.ok) {
+          setIsLoggedIn(true);
+          const data = await res.json();
+          const email = data.email;
+          const userData = {
+            firstname: data.first_name,
+            lastname: data.last_name,
+            dorm: data.dorm,
+            school: data.school,
+            email,
+          };
+  
+          localStorage.setItem("userEmail", email);
+          localStorage.setItem(`userInfo_${email}`, JSON.stringify(userData));
+  
+          const isIncomplete =
+            !userData.firstname || !userData.lastname || !userData.school || !userData.dorm;
+          const completed = localStorage.getItem(`completed_${email}`);
+          if (!completed || isIncomplete) {
+            setShowUserForm(true);
+          }
+        } else {
+          setIsLoggedIn(false);
+        }
       } catch (err) {
+        console.error(err);
         setIsLoggedIn(false);
       }
     }
-
+  
     checkAuth();
   }, []);
+
+  // close cart when navigating to different pages
+  useEffect(() => {
+    setShowCart(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -73,9 +114,21 @@ function AppContent() {
     };
   }, []);
   
-  
   return (
     <div className="App">
+      {showUserForm && (
+        <UserForm
+          onClose={() => setShowUserForm(false)}
+          onSubmit={(data) => {
+            const email = localStorage.getItem("userEmail");
+            if (email) {
+              localStorage.setItem(`userInfo_${email}`, JSON.stringify(data));
+              localStorage.setItem(`completed_${email}`, "true"); 
+            }
+            setShowUserForm(false);
+          }}
+        />
+      )}
       {!hidelayout && <TopBar />}
 
       {!hidelayout && (
@@ -138,7 +191,7 @@ function AppContent() {
             >
               <img src="/user.png" alt="User icon" />
             </span>
-            <span onClick={() => navigate("/checklist")} style={{ cursor: "pointer" }}>
+            <span onClick={() => navigate(isLoggedIn ? "/checklist" : "/login")} style={{ cursor: "pointer" }}>
               <img src="/check_box.png" alt="Checklist icon" />
             </span>
             <span onClick={() => setShowCart(true)} style={{ cursor: "pointer", position: "relative" }}>
@@ -153,7 +206,7 @@ function AppContent() {
         </header>
       )}
 
-      {!hidelayout && <NavBar />}
+      {!hidelayout && <NavBar isLoggedIn={isLoggedIn} />}
 
       {showCart ? (
         <CartScreen />
@@ -162,6 +215,14 @@ function AppContent() {
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductListPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />
+          {/* Category routes */}
+          <Route path="/bedding" element={<ProductListPage key="bedding" category="Bedding" />} />
+          <Route path="/bathroom" element={<ProductListPage key="bathroom" category="Bathroom" />} />
+          <Route path="/tech" element={<ProductListPage key="tech" category="Tech" />} />
+          <Route path="/storage" element={<ProductListPage key="storage" category="Storage" />} />
+          <Route path="/laundry" element={<ProductListPage key="laundry" category="Laundry" />} />
+          <Route path="/desk" element={<ProductListPage key="desk" category="Desk" />} />
+          <Route path="/decor" element={<ProductListPage key="decor" category="Decor" />} />
           <Route path="/our-story" element={<OurStory />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogDetail />} />
@@ -171,6 +232,12 @@ function AppContent() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/checklist" element={<ChecklistPage />} />
           <Route path="/order-status" element={<OrderTrack />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/checkout"     element={<CheckoutPage />} />
+          <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
+          <Route path="/checkout/review"  element={<ReviewPage />} />
+          <Route path="/checkout/success"  element={<SuccessPage />} />
         </Routes>
       )}
 
@@ -182,6 +249,7 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <CartProvider>
         <AppContent />
       </CartProvider>

@@ -1,9 +1,17 @@
+// src/components/CartScreen.jsx
 import React from "react";
 import "./CartScreen.css";
 import { useCart } from "../contexts/CartContext.tsx";
+import { useNavigate } from "react-router-dom";
 
 export default function CartScreen() {
   const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    // simply navigate to the checkout route
+    navigate("/checkout");
+  };
 
   return (
     <div className="cart-screen-container">
@@ -15,19 +23,39 @@ export default function CartScreen() {
           ) : (
             items.map((item) => (
               <div className="cart-item-row" key={item.id}>
-                <img className="cart-item-image" src={item.image} alt={item.name} />
+                <img
+                  className="cart-item-image"
+                  src={item.image}
+                  alt={item.name}
+                />
                 <div className="cart-item-info">
                   <div className="cart-item-name">{item.name}</div>
                   {item.size && (
                     <div className="cart-item-size">Size: {item.size}</div>
                   )}
                   <div className="cart-item-qty-controls">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="qty-btn">-</button>
+                    <button
+                      onClick={() =>
+                        updateQuantity(item.id, item.quantity - 1)
+                      }
+                      className="qty-btn"
+                    >
+                      -
+                    </button>
                     <span className="cart-item-qty">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="qty-btn">+</button>
+                    <button
+                      onClick={() =>
+                        updateQuantity(item.id, item.quantity + 1)
+                      }
+                      className="qty-btn"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
-                <div className="cart-item-price">${(item.price * item.quantity).toFixed(2)}</div>
+                <div className="cart-item-price">
+                  ${(item.price * item.quantity).toFixed(2)}
+                </div>
                 <button
                   className="cart-item-delete"
                   onClick={() => removeFromCart(item.id)}
@@ -61,8 +89,10 @@ export default function CartScreen() {
             <span>${totalPrice.toFixed(2)}</span>
           </div>
         </div>
-        <button className="checkout-btn">CHECKOUT</button>
+        <button className="checkout-btn" onClick={handleCheckout}>
+          CHECKOUT
+        </button>
       </div>
     </div>
   );
-} 
+}
