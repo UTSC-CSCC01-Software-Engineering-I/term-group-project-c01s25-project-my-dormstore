@@ -605,12 +605,12 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
         orderNumber, userId, email, firstName, lastName, phone,
         address, city, province, postalCode, moveInDate,
         subtotal, tax, shipping, total, paymentMethod,
-        billingAddress ? billingAddress.firstName : null,
-        billingAddress ? billingAddress.lastName : null,
-        billingAddress ? billingAddress.address : null,
-        billingAddress ? billingAddress.city : null,
-        billingAddress ? billingAddress.province : null,
-        billingAddress ? billingAddress.postalCode : null
+        billingAddress?.firstName || null,
+        billingAddress?.lastName || null,
+        billingAddress?.address || null,
+        billingAddress?.city || null,
+        billingAddress?.province || null,
+        billingAddress?.postalCode || null,
       ]
     );
 
@@ -619,7 +619,7 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
 
     // Get cart items for this user
     const cartResult = await client.query(
-      "SELECT ci.*, p.name as product_name, p.price as product_price FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.user_id = $1",
+      "SELECT ci.*, p.name as product_name, p.price as price FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.user_id = $1",
       [userId]
     );
 
@@ -627,10 +627,10 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
     for (const item of cartResult.rows) {
       await client.query(
         `INSERT INTO order_items (
-          order_id, product_id, product_name, product_price, quantity, subtotal
+          order_id, product_id, product_name, price, quantity, subtotal
         ) VALUES ($1, $2, $3, $4, $5, $6)`,
         [
-          orderId, item.product_id, item.product_name, item.product_price,
+          orderId, item.product_id, item.product_name, item.price,
           item.quantity, item.product_price * item.quantity
         ]
       );
@@ -673,6 +673,7 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error("Order creation error:", error);
+    console.error("Request body:", req.body);
     res.status(500).json({ error: "Failed to create order" });
   } finally {
     client.release();
@@ -716,7 +717,7 @@ app.get("/api/orders/:orderId", authenticateToken, async (req, res) => {
 });
 
 // Get user's orders
-app.get("/api/orders", authenticateToken, async (req, res) => {
+/*app.get("/api/orders", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
 
@@ -732,6 +733,7 @@ app.get("/api/orders", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch orders" });
   }
 });
+*/
 
 // Register Ambassador
 app.post("/api/ambassador/register", async (req, res) => {

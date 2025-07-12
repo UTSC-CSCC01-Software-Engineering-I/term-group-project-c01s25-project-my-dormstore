@@ -31,7 +31,7 @@ export default function CheckoutPage() {
         }
 
         // Fetch user balance
-        const balanceResponse = await fetch(`http://localhost:5001/api/user/balance`, {
+        const balanceResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/user/balance`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -43,7 +43,7 @@ export default function CheckoutPage() {
         }
 
         // Fetch user profile information
-        const profileResponse = await fetch(`http://localhost:5001/me`, {
+        const profileResponse = await fetch(`${process.env.REACT_APP_API_URL}/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -92,7 +92,7 @@ export default function CheckoutPage() {
       try {
         const token = localStorage.getItem("token");
         if (token) {
-          await fetch(`http://localhost:5001/api/user/update`, {
+          await fetch(`http://localhost:5000/api/user/update`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",

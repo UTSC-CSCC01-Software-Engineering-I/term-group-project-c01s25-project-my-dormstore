@@ -1,8 +1,8 @@
 import react from 'react'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { productService } from '../services/productService.ts'
-import { useCart } from '../contexts/CartContext.tsx'
+import { productService } from '../services/productService'
+import { useCart } from '../contexts/CartContext'
 import { Product } from '../types/Product'
 import './ProductDetail.css'
 

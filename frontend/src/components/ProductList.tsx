@@ -1,5 +1,5 @@
 import { Product } from '../types/Product';
-import { ProductCard } from './ProductCard.tsx';
+import { ProductCard } from './ProductCard';
 import './ProductComponents.css';
 
 interface ProductListProps {

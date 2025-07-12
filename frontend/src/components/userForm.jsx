@@ -45,7 +45,7 @@ export default function UserForm({ userInfo, onClose, onProfileUpdated }) {
     
   
     try {
-      const res = await fetch("http://localhost:5001/api/user/update", {
+      const res = await fetch("http://localhost:5000/api/user/update", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from '../types/Product';
-import { productService } from '../services/productService.ts';
+import { productService } from '../services/productService';
 
 // extend product type to include quantity for cart items
 interface CartItem extends Product {
@@ -51,7 +51,7 @@ const loadCartFromStorage = (): CartItem[] => {
 const cartAPI = {
   // get cart items from backend
   async getCart() {
-    const response = await fetch(`http://localhost:5001/cart`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to get cart');
@@ -61,7 +61,7 @@ const cartAPI = {
   
   // add item to backend cart
   async addItem(product_id: number, quantity: number = 1) {
-    const response = await fetch(`http://localhost:5001/cart`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ product_id, quantity })
@@ -72,7 +72,7 @@ const cartAPI = {
 
   // update quantity of a cart item
   async updateItem(itemId: number, quantity: number) {
-    const response = await fetch(`http://localhost:5001/cart/${itemId}`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart/${itemId}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify({ quantity })
@@ -83,7 +83,7 @@ const cartAPI = {
 
   // remove a specific cart item
   async removeItem(itemId: number) {
-    const response = await fetch(`http://localhost:5001/cart/${itemId}`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart/${itemId}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
@@ -93,7 +93,7 @@ const cartAPI = {
 
   // clear the entire cart
   async clearCart() {
-    const response = await fetch(`http://localhost:5001/cart`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });

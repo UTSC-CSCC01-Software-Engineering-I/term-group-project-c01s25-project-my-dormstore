@@ -10,6 +10,8 @@ export interface Product {
   included?: string[];
   created_at?: string;
   updated_at?: string;
+  suggestedWithPurchase?: boolean;
+  shippingInfo?: string;
 } 
 
 export interface Variant {
