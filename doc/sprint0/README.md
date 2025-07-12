@@ -50,8 +50,10 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
     JWT_SECRET=your_jwt_secret
     ```
 
-    - Make sure everyone is using the same PORT value across .env files and server.js
-
+  - If you're using a custom port (e.g., 5002 instead of 5001), make sure:
+    - In `backend/.env`: set `PORT=5002`
+    - In `frontend/.env`: set `REACT_APP_API_URL=http://localhost:5002`
+  
 4. **Run the Application**
 
   - Open two separate terminals to run the backend and frontend servers
