@@ -110,7 +110,6 @@ export default function NavBar({ isLoggedIn }) {
           <Link to="/contact" className="dropdown-title">Customer Service</Link>
           {activeDropdown === "service" && (
             <div className="dropdown-content">
-              <Link to="/visualizer">Dorm Visualizer</Link>
               {isLoggedIn && (
                 <Link to="/checklist" className="nav-link">
                   Move-in Checklist
