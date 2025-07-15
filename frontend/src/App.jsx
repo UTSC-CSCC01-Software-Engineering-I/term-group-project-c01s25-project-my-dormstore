@@ -30,7 +30,7 @@ import SuccessPage  from "./pages/CheckoutPage/SuccessPage.jsx";
 import { CheckoutProvider } from "./contexts/CheckoutContext.tsx";
 import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin/AdminLogin";
-
+import RequireAdmin from "./components/RequireAdmin";
 
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -246,7 +246,14 @@ function AppContent() {
           <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
           <Route path="/checkout/review"  element={<ReviewPage />} />
           <Route path="/checkout/success"  element={<SuccessPage />} />
-          <Route path="/admin/*" element={<AdminDashboard />} />
+          <Route
+            path="/admin/*"
+            element={
+              <RequireAdmin>
+                <AdminDashboard />
+              </RequireAdmin>
+            }
+          />
           <Route path="/admin-login" element={<AdminLogin />} />
         </Routes>
       )}

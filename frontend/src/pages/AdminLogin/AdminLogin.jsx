@@ -9,7 +9,6 @@ const AdminLogin = () => {
 
   const navigate = useNavigate();
 
-  // ✅ 如果已经登录，直接跳转到 admin dashboard
   const isAdmin = localStorage.getItem("isAdmin") === "true";
   if (isAdmin) {
     return <Navigate to="/admin/home" />;
@@ -27,7 +26,6 @@ const AdminLogin = () => {
       });
 
       if (res.ok) {
-        // ✅ 登录成功：设置本地状态 + 跳转 dashboard
         localStorage.setItem("isAdmin", "true");
         navigate("/admin/home");
       } else {

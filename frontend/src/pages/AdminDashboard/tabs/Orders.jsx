@@ -11,6 +11,10 @@ const Orders = () => {
       shippingDate: "2025-07-15",
       shippingNumber: "TRACK123456",
       status: "Wait for Process",
+      products: [
+        { name: "Shower Caddy", quantity: 1, price: 16.99 },
+        { name: "Towel Set", quantity: 2, price: 49.99 },
+      ],
     },
     {
       id: "ORD002",
@@ -18,8 +22,14 @@ const Orders = () => {
       shippingDate: "2025-07-13",
       shippingNumber: "TRACK789012",
       status: "Shipping",
+      products: [
+        { name: "String Lights", quantity: 1, price: 19.99 },
+        { name: "Power Strip", quantity: 1, price: 10.99 },
+      ],
     },
   ]);
+
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   const filteredOrders =
     filterStatus === "All"
@@ -30,6 +40,10 @@ const Orders = () => {
     const updated = [...orders];
     updated[index].status = newStatus;
     setOrders(updated);
+  };
+
+  const toggleExpand = (orderId) => {
+    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
   };
 
   return (
@@ -59,33 +73,68 @@ const Orders = () => {
               <th>Shipping Date</th>
               <th>Shipping Number</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredOrders.length > 0 ? (
               filteredOrders.map((order, index) => (
-                <tr key={order.id}>
-                  <td>{order.id}</td>
-                  <td>{order.address}</td>
-                  <td>{order.shippingDate}</td>
-                  <td>{order.shippingNumber}</td>
-                  <td>
-                    <select
-                      value={order.status}
-                      onChange={(e) =>
-                        handleStatusChange(index, e.target.value)
-                      }
-                    >
-                      <option value="Wait for Process">Wait for Process</option>
-                      <option value="Shipping">Shipping</option>
-                      <option value="Arrived">Arrived</option>
-                    </select>
-                  </td>
-                </tr>
+                <React.Fragment key={order.id}>
+                  <tr>
+                    <td>{order.id}</td>
+                    <td>{order.address}</td>
+                    <td>{order.shippingDate}</td>
+                    <td>{order.shippingNumber}</td>
+                    <td>
+                      <select
+                        value={order.status}
+                        onChange={(e) =>
+                          handleStatusChange(index, e.target.value)
+                        }
+                      >
+                        <option value="Wait for Process">Wait for Process</option>
+                        <option value="Shipping">Shipping</option>
+                        <option value="Arrived">Arrived</option>
+                      </select>
+                    </td>
+                    <td>
+                      <button onClick={() => toggleExpand(order.id)}>
+                        {expandedOrderId === order.id ? "Hide" : "View All"}
+                      </button>
+                    </td>
+                  </tr>
+
+                  {expandedOrderId === order.id && (
+                    <tr>
+                      <td colSpan="6">
+                        <div className="product-list">
+                          <table className="products-table">
+                            <thead>
+                              <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {order.products.map((product, i) => (
+                                <tr key={i}>
+                                  <td>{product.name}</td>
+                                  <td>{product.quantity}</td>
+                                  <td>${product.price.toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))
             ) : (
               <tr>
-                <td colSpan="5" style={{ textAlign: "center", padding: "1rem" }}>
+                <td colSpan="6" style={{ textAlign: "center", padding: "1rem" }}>
                   No orders found.
                 </td>
               </tr>

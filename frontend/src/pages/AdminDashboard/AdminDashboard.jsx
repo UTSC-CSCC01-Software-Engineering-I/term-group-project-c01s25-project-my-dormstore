@@ -6,6 +6,7 @@ import Orders from "./tabs/Orders";
 import OrderUpdate from "./tabs/OrderUpdate";
 import AmbassadorList from "./tabs/AmbassadorList";
 import UserList from "./tabs/UserList";
+import ProductManagement from "./tabs/ProductManagement";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
@@ -27,6 +28,7 @@ const AdminDashboard = () => {
           <NavLink to="/admin/inventory" className={({ isActive }) => isActive ? "link active" : "link"}>Inventory Check</NavLink>
           <NavLink to="/admin/orders" className={({ isActive }) => isActive ? "link active" : "link"}>Orders</NavLink>
           <NavLink to="/admin/update" className={({ isActive }) => isActive ? "link active" : "link"}>Order Update</NavLink>
+          <NavLink to="/admin/products" className={({ isActive }) => isActive ? "link active" : "link"}>Product Management</NavLink>
           <NavLink to="/admin/ambassadors" className={({ isActive }) => isActive ? "link active" : "link"}>Ambassador List</NavLink>
           <NavLink to="/admin/users" className={({ isActive }) => isActive ? "link active" : "link"}>User List</NavLink>
         </nav>
@@ -45,6 +47,7 @@ const AdminDashboard = () => {
           <Route path="update" element={<OrderUpdate />} />
           <Route path="ambassadors" element={<AmbassadorList />} />
           <Route path="users" element={<UserList />} />
+          <Route path="products" element={<ProductManagement />} />
         </Routes>
       </main>
     </div>
