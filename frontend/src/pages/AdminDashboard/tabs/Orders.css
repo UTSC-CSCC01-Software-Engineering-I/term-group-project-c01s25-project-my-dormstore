@@ -1,0 +1,91 @@
+.orders-page {
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+}
+
+.orders-page h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.filter-bar label {
+  font-weight: 600;
+  color: #444;
+}
+
+.filter-bar select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.dashboard-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.orders-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+  color: #333;
+}
+
+.orders-table td {
+  font-size: 0.95rem;
+}
+
+.orders-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.orders-table td:last-child {
+  font-weight: 600;
+  color: #0077cc;
+}
+
+.orders-page select {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.orders-page select:focus {
+  border-color: #73b8e6;
+  box-shadow: 0 0 3px rgba(115, 184, 230, 0.5);
+}
+
+.orders-page option {
+  padding: 6px;
+}
+
+.orders-page select:hover {
+  border-color: #aaa;
+}

@@ -1,0 +1,94 @@
+:root {
+  --main-blue: #C9EAFF;
+  --text-dark: #333;
+  --text-light: #555;
+  --bg-light: #f9fcff;
+  --white: #fff;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --radius: 12px;
+  --transition: all 0.2s ease;
+}
+
+.admin-dashboard {
+  display: flex;
+  height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-light);
+}
+
+/* SIDEBAR */
+
+.sidebar {
+  width: 240px;
+  background: var(--main-blue);
+  padding: 2rem 1rem;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo {
+  margin-bottom: 2rem;
+}
+
+.logo img {
+  max-width: 140px;
+  height: auto;
+  object-fit: contain;
+}
+
+.nav-links {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.link {
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border-radius: var(--radius);
+  color: var(--text-dark);
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.link:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.link.active {
+  background-color: var(--white);
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* MAIN CONTENT */
+
+.main-content {
+  flex-grow: 1;
+  padding: 2rem 3rem;
+  background-color: var(--bg-light);
+  overflow-y: auto;
+}
+
+.logout-button {
+  margin-top: auto;
+  padding: 10px 20px;
+  background-color: white;
+  color: #35a7ed;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: block;
+  width: 80%;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #35a7ed;
+  color: white;
+}
+

@@ -28,6 +28,8 @@ import CheckoutPaymentPage from "./pages/CheckoutPage/CheckoutPaymentPage.jsx";
 import ReviewPage            from "./pages/CheckoutPage/ReviewPage.jsx";
 import SuccessPage  from "./pages/CheckoutPage/SuccessPage.jsx";
 import { CheckoutProvider } from "./contexts/CheckoutContext.tsx";
+import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
+import AdminLogin from "./pages/AdminLogin/AdminLogin";
 
 
 
@@ -47,8 +49,15 @@ function AppContent() {
   const [showUserForm, setShowUserForm] = useState(false);
 
 
-  const hidelayoutRoutes = ["/login", "/register", "/forgot-password", "/checkout", "/checkout/payment", "/checkout/review"];
-  const hidelayout = hidelayoutRoutes.includes(location.pathname);
+  const hidelayoutRoutes = [
+    "/login", "/register", "/forgot-password",
+    "/checkout", "/checkout/payment", "/checkout/review"
+  ];
+
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
+  const hidelayout = hidelayoutRoutes.includes(location.pathname) || isAdminRoute;
+
 
   useEffect(() => {
     async function checkAuth() {
@@ -237,6 +246,8 @@ function AppContent() {
           <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
           <Route path="/checkout/review"  element={<ReviewPage />} />
           <Route path="/checkout/success"  element={<SuccessPage />} />
+          <Route path="/admin/*" element={<AdminDashboard />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
         </Routes>
       )}
 
