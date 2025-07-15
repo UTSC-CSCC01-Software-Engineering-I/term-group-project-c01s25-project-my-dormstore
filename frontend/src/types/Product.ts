@@ -12,6 +12,7 @@ export interface Product {
   updated_at?: string;
   suggestedWithPurchase?: boolean;
   shippingInfo?: string;
+  image_url?: string; 
 } 
 
 export interface Variant {

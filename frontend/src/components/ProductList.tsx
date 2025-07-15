@@ -23,7 +23,7 @@ export const ProductList = ({ products, onAddToCart, category }: ProductListProp
         <div className="hero-text">
           <h2>{category ? `${category} Essentials` : 'Shop All The Essentials Items At One Step'}</h2>
           <p>
-            ACANCALACNLACNLACNLACNLACNALSNCALKSNCALKSNCALKSNCALJCD HVADLVBCALVBAESRCALSBCALSBCALSBCALSBCALSKCBALSBCALSBCALSF
+            No more back-and-forth shopping trips. We’ve gathered all the dorm must-haves so you can settle in with ease and style.          
           </p>
           <a href="#product-grid" className="down-arrow" aria-label="Scroll to products">
             <img src="/images/group-arrow.png" alt="Scroll down" />

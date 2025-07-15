@@ -1,6 +1,6 @@
 .product-card {
   width: 100%;
-  max-width: 220px;
+  max-width: 350px;
   height: auto;
   background: #ffffff;
   border-radius: 12px;
@@ -55,14 +55,24 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
+}
+
+.cart-icon-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.cart-icon {
+  width: 28px;
+  height: 28px;
 }
 
 .product-price {
-  font-size: 1rem;
-  font-weight: bold;
-  color: #222;
+  font-size: 1.4rem !important;
+  color: #4e4e4e;
 }
 
 .add-to-cart-btn {

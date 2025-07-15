@@ -65,10 +65,15 @@ export default function ProductDetail()  {
     <div className="product-detail">
       {/* Left: Image */}
       <img
-        src={product.image}
+        src={product.image_url || "/images/product-test.jpg"}
         alt={product.name}
         className="product-image"
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = "/images/product-test.jpg";
+        }}
       />
+
 
       {/* Right: Info */}
       <div className="product-info">
