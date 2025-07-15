@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import pg from 'pg';
 import 'dotenv/config';
+import { packageCompositions } from './scripts/package-compositions.js';
 
 const { Pool } = pg;
 const app = express();
@@ -461,9 +462,30 @@ app.get("/api/packages/:id/details", async (req, res) => {
       ORDER BY p.name
     `, [packageId]);
     
+    let includedProducts = productsResult.rows;
+    
+    // If no real products exist, show intended products from our compositions
+    if (includedProducts.length === 0) {
+      const packageName = packageResult.rows[0].name;
+      const composition = packageCompositions.find(comp => comp.packageName === packageName);
+      
+      if (composition && composition.products.length > 0) {
+        includedProducts = composition.products.map((product, index) => ({
+          id: `intended_${packageId}_${index}`,
+          name: product.name,
+          price: null,
+          category: null,
+          description: null,
+          rating: null,
+          quantity: product.quantity,
+          is_intended: true
+        }));
+      }
+    }
+    
     const packageData = {
       ...packageResult.rows[0],
-      included_products: productsResult.rows
+      included_products: includedProducts
     };
     
     res.json({ package: packageData });

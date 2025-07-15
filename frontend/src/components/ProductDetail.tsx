@@ -154,26 +154,42 @@ export default function ProductDetail()  {
         </div>
       </div>
 
-      {/* Package included products section */}
       {isPackage && packageDetails?.included_products && packageDetails.included_products.length > 0 && (
         <div className="package-included-products">
           <h2 className="section-title">What's Included in This Package</h2>
           <div className="included-products-grid">
-            {packageDetails.included_products.map((includedProduct: any) => (
-              <Link 
-                key={includedProduct.id} 
-                to={`/products/${includedProduct.id}`} 
-                className="included-product-card"
-              >
-                <div className="included-product-info">
-                  <h3 className="included-product-name">{includedProduct.name}</h3>
-                  <p className="included-product-price">${parseFloat(includedProduct.price).toFixed(2)} CAD</p>
-                  <p className="included-product-quantity">Quantity: {includedProduct.quantity}</p>
-                  <p className="included-product-description">{includedProduct.description}</p>
-                </div>
-                <div className="included-product-arrow">→</div>
-              </Link>
-            ))}
+            {packageDetails.included_products.map((includedProduct: any) => {
+              // show as non-clickable card w
+              if (includedProduct.is_intended) {
+                return (
+                  <div 
+                    key={includedProduct.id} 
+                    className="included-product-card intended-product"
+                  >
+                    <div className="included-product-info">
+                      <h3 className="included-product-name">{includedProduct.name}</h3>
+                    </div>
+                  </div>
+                );
+              }
+              
+              // Otherwise show as clickable card with full details
+              return (
+                <Link 
+                  key={includedProduct.id} 
+                  to={`/products/${includedProduct.id}`} 
+                  className="included-product-card"
+                >
+                  <div className="included-product-info">
+                    <h3 className="included-product-name">{includedProduct.name}</h3>
+                    <p className="included-product-price">${parseFloat(includedProduct.price).toFixed(2)} CAD</p>
+                    <p className="included-product-quantity">Quantity: {includedProduct.quantity}</p>
+                    <p className="included-product-description">{includedProduct.description}</p>
+                  </div>
+                  <div className="included-product-arrow">→</div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

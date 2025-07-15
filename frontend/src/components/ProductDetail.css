@@ -274,3 +274,50 @@
 .included-product-card:hover .included-product-arrow {
   color: #0070f3;
 }
+
+/* Mock product styles */
+.included-product-card.mock-product {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  cursor: default;
+}
+
+.included-product-card.mock-product:hover {
+  border-color: #dee2e6;
+  box-shadow: none;
+  transform: none;
+}
+
+.mock-product-indicator {
+  font-size: 1.5rem;
+  color: #6c757d;
+  margin-left: 1rem;
+  opacity: 0.7;
+}
+
+.included-product-card.mock-product .included-product-name {
+  color: #495057;
+}
+
+.included-product-card.mock-product .included-product-price {
+  color: #6c757d;
+}
+
+.included-product-card.intended-product {
+  cursor: default;
+  opacity: 0.9;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.included-product-card.intended-product:hover {
+  transform: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: #f8f9fa;
+}
+
+.included-product-card.intended-product .included-product-name {
+  color: #495057;
+  font-size: 1rem;
+  margin: 0;
+}
