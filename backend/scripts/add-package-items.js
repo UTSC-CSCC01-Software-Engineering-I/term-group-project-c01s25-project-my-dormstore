@@ -147,12 +147,21 @@ const packageCompositions = [
     ]
   },
   {
-    packageName: "New Semester",
-    products: []
+    packageName: "New Semester Care Package",
+    products: [
+        { name: "2 Plush pillows", quantity: 1 },
+        { name: "Cozy pillowcases", quantity: 1 }, 
+        { name: "Hot chocolate or tea", quantity: 1 },
+        { name: "Tide detergent", quantity: 1 },
+        { name: "Personalized note", quantity: 1 },
+    ]
   },
   {
-    packageName: "Sleep Well",
-    products: []
+    packageName: "Sleep Well Care Package",
+    products: [
+        { name: "2 Plush pillows", quantity: 1 },
+        { name: "2 Satin pillowcases", quantity: 1 }, 
+    ]
   }
   
 ];
