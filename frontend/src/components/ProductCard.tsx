@@ -6,9 +6,10 @@ import './ProductCard.css';
 interface ProductCardProps {
   product: Product;
   onAddToCart: (productId: number) => void;
+  linkPrefix?: string;
 }
 
-export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
+export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: ProductCardProps) => {
   const handleAddToCart = () => {
     onAddToCart(product.id);
   };
@@ -17,7 +18,7 @@ export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
 
   return (
     <div className="product-card">
-      <Link to={`/products/${product.id}`} className="product-link">
+      <Link to={`${linkPrefix}/${product.id}`} className="product-link">
         <div className="product-image-container">
         <img
           className="product-image"

@@ -5,10 +5,11 @@ import './ProductComponents.css';
 interface ProductListProps {
   products: Product[];
   onAddToCart: (productId: number) => void;
+  linkPrefix?: string;
   category?: string;
 }
 
-export const ProductList = ({ products, onAddToCart, category }: ProductListProps) => {
+export const ProductList = ({ products, onAddToCart, linkPrefix = "/products" }: ProductListProps) => {
   if (products.length === 0) {
     return (
       <div className="empty-state">
@@ -40,6 +41,7 @@ export const ProductList = ({ products, onAddToCart, category }: ProductListProp
             key={product.id}
             product={product}
             onAddToCart={onAddToCart}
+            linkPrefix={linkPrefix}
           />
         ))}
       </div>
