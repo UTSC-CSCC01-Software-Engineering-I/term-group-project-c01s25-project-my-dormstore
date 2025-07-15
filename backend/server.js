@@ -436,6 +436,42 @@ app.get("/api/packages/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch package" });
   }
 });
+
+// Get package details with included products
+app.get("/api/packages/:id/details", async (req, res) => {
+  try {
+    const packageId = parseInt(req.params.id);
+    
+    // Get package info
+    const packageResult = await pool.query(
+      "SELECT id, name, price, category, description, rating, created_at, updated_at FROM packages WHERE id = $1",
+      [packageId]
+    );
+    
+    if (packageResult.rows.length === 0) {
+      return res.status(404).json({ error: "Package not found" });
+    }
+    
+    // Get included products
+    const productsResult = await pool.query(`
+      SELECT p.id, p.name, p.price, p.category, p.description, p.rating, pi.quantity
+      FROM package_items pi
+      JOIN products p ON pi.product_id = p.id
+      WHERE pi.package_id = $1
+      ORDER BY p.name
+    `, [packageId]);
+    
+    const packageData = {
+      ...packageResult.rows[0],
+      included_products: productsResult.rows
+    };
+    
+    res.json({ package: packageData });
+  } catch (error) {
+    console.error("Error fetching package details:", error);
+    res.status(500).json({ error: "Failed to fetch package details" });
+  }
+});
   
   // Contact form endpoint
   app.post("/api/contact", async (req, res) => {

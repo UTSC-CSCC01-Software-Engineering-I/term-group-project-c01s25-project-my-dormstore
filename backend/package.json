@@ -15,6 +15,9 @@
     "add-sample-products": "node --env-file=.env scripts/add-sample-products.js",
     "add-packages-tables": "node --env-file=.env scripts/add-packages-table.js",
     "add-all-packages": "node --env-file=.env scripts/add-all-packages.js",
+    "add-package-items": "node --env-file=.env scripts/add-package-items.js",
+    "clear-packages": "node --env-file=.env scripts/clear-packages.js",
+    "check-database": "node --env-file=.env scripts/check-database-contents.js",
     "add-users": "node --env-file=.env scripts/add-users.js",
     "add-order-updates": "node --env-file=.env scripts/add-order-updates.js"
   },

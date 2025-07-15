@@ -8,6 +8,7 @@ import Footer from "./components/Footer";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProductListPage from "./pages/ProductListPage";
+import PackageListPage from "./pages/PackageListPage";
 import { CartProvider, useCart } from "./contexts/CartContext.tsx";
 import CartScreen from "./components/CartScreen";
 import OurStory from "./pages/OurStoryBlog/OurStory/OurStory";
@@ -212,10 +213,14 @@ function AppContent() {
       ) : (
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductListPage />} />
+          <Route path="/products" element={<PackageListPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />
-          {/* Category routes */}
-          <Route path="/bedding" element={<ProductListPage key="bedding" category="Bedding" />} />
+          <Route path="/packages/:id" element={<ProductDetail />} />
+          {/* Package Category routes */}
+          <Route path="/bedding" element={<PackageListPage key="bedding" category="Bedding" />} />
+          <Route path="/living" element={<PackageListPage key="living" category="Living" />} />
+          <Route path="/caring" element={<PackageListPage key="caring" category="Caring" />} />
+          {/* Product Category routes */}
           <Route path="/bathroom" element={<ProductListPage key="bathroom" category="Bathroom" />} />
           <Route path="/tech" element={<ProductListPage key="tech" category="Tech" />} />
           <Route path="/storage" element={<ProductListPage key="storage" category="Storage" />} />
