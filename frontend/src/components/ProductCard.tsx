@@ -1,5 +1,7 @@
 import { Product } from '../types/Product';
 import { Link } from 'react-router-dom';
+import './ProductCard.css';
+
 
 interface ProductCardProps {
   product: Product;
@@ -19,6 +21,10 @@ export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
             src={product.image}
             alt={product.name}
             className="product-image"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/images/product-test.jpg"; 
+            }}
           />
         </div>
       </Link>
