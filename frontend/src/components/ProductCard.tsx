@@ -1,5 +1,7 @@
 import { Product } from '../types/Product';
 import { Link } from 'react-router-dom';
+import './ProductCard.css';
+
 
 interface ProductCardProps {
   product: Product;
@@ -11,16 +13,22 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
   const handleAddToCart = () => {
     onAddToCart(product.id);
   };
+  console.log("Image URL:", product.image_url);
+
 
   return (
     <div className="product-card">
       <Link to={`${linkPrefix}/${product.id}`} className="product-link">
         <div className="product-image-container">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="product-image"
-          />
+        <img
+          className="product-image"
+          src={product.image_url || "/images/product-test.jpg"}
+          alt={product.name}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "/images/product-test.jpg";
+          }}
+        />
         </div>
       </Link>
       
@@ -29,11 +37,11 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
         <div className="product-footer">
           <span className="product-price">${product.price}</span>
           <button 
-            className="add-to-cart-btn"
+            className="cart-icon-btn"
             onClick={handleAddToCart}
             aria-label={`Add ${product.name} to cart`}
-          >
-            Add to Cart
+            >
+            <img src="/images/Shopping-cart.png" alt="Add to Cart" className="cart-icon" />
           </button>
         </div>
       </div>

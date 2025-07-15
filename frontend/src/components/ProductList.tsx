@@ -6,6 +6,7 @@ interface ProductListProps {
   products: Product[];
   onAddToCart: (productId: number) => void;
   linkPrefix?: string;
+  category?: string;
 }
 
 export const ProductList = ({ products, onAddToCart, linkPrefix = "/products" }: ProductListProps) => {
@@ -19,18 +20,22 @@ export const ProductList = ({ products, onAddToCart, linkPrefix = "/products" }:
 
   return (
     <div className="product-list">
-      <div className="product-grid">
-        <style> 
-          {`
-            .product-grid {
-            grid-template-columns: repeat(2, 1fr);
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-start;
-            gap: 2rem;
-            }
-          `}
-        </style>
+      <div className="hero-section">
+        <div className="hero-text">
+          <h2>{category ? `${category} Essentials` : 'Shop All The Essentials Items At One Step'}</h2>
+          <p>
+            No more back-and-forth shopping trips. We’ve gathered all the dorm must-haves so you can settle in with ease and style.          
+          </p>
+          <a href="#product-grid" className="down-arrow" aria-label="Scroll to products">
+            <img src="/images/group-arrow.png" alt="Scroll down" />
+          </a>        
+        </div>
+        <div className="hero-image">
+          <img src="/images/sleep-product.png" alt="Bed Essentials" />
+        </div>
+      </div>
+
+      <div id="product-grid" className="product-grid">
         {products.map((product) => (
           <ProductCard
             key={product.id}
@@ -42,4 +47,4 @@ export const ProductList = ({ products, onAddToCart, linkPrefix = "/products" }:
       </div>
     </div>
   );
-}; 
+};

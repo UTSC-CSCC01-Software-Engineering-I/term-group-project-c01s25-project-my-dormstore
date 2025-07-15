@@ -88,3 +88,12 @@ CREATE TABLE IF NOT EXISTS order_updates (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Add Admin table
+CREATE TABLE IF NOT EXISTS admin_users (
+  id SERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL
+);
+INSERT INTO admin_users (email, password)
+VALUES ('admin@example.com', 'admin123');
+

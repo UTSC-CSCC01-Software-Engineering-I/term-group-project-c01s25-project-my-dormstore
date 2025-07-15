@@ -370,10 +370,10 @@ app.get("/api/products", async (req, res) => {
     let query, params;
     
     if (category) {
-      query = "SELECT id, name, price, description, rating, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
+      query = "SELECT id, name, price, description, rating, image_url, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
       params = [category];
     } else {
-      query = "SELECT id, name, price, description, rating, created_at, updated_at FROM products ORDER BY name";
+      query = "SELECT id, name, price, description, rating, image_url, created_at, updated_at FROM products ORDER BY name";
       params = [];
     }
     
@@ -390,7 +390,7 @@ app.get("/api/products/:id", async (req, res) => {
   try {
     const productId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, description, rating, created_at, updated_at FROM products WHERE id = $1",
+      "SELECT id, name, price, description, rating, image_url, created_at, updated_at FROM products WHERE id = $1",
       [productId]
     );
     
@@ -827,3 +827,28 @@ app.post("/api/ambassador/register", async (req, res) => {
     res.status(500).json({ error: "Failed to register ambassador" });
   }
 });
+
+// Admin login endpoint
+app.post("/api/admin/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const result = await pool.query("SELECT * FROM admin_users WHERE email = $1", [email]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Admin not found." });
+    }
+
+    const admin = result.rows[0];
+    if (admin.password !== password) {
+      return res.status(401).json({ error: "Incorrect password." });
+    }
+    // Generate JWT token for admin
+    const token = jwt.sign({ adminId: admin.id }, "secret-key", { expiresIn: "2h" });
+
+    res.json({ message: "Admin login successful", token });
+  } catch (err) {
+    console.error("Admin login error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
