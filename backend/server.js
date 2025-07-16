@@ -324,21 +324,41 @@ app.delete("/cart", authenticateToken, async (req, res) => {
   });
   
   app.post("/api/order-updates", async (req, res) => {
-    const { orderName, email, update } = req.body;
+    const { orderNumber, email, update } = req.body;
   
-    if (!orderName || !email || !update) {
+    if (!orderNumber || !email || !update) {
       return res.status(400).json({ error: "Missing required fields" });
     }
   
     try {
       await pool.query(
-        "INSERT INTO order_updates (order_name, email, update_text) VALUES ($1, $2, $3)",
-        [orderName, email, update]
+        "INSERT INTO order_updates (order_number, email, update_text) VALUES ($1, $2, $3)",
+        [orderNumber, email, update]
       );
       res.status(200).json({ message: "Update saved" });
     } catch (err) {
       console.error("Database insert error:", err);
       res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  app.get("/api/order-updates", async (req, res) => {
+    const { orderNumber, email } = req.query;
+  
+    if (!orderNumber || !email) {
+      return res.status(400).json({ error: "Missing order number or email" });
+    }
+  
+    try {
+      const result = await pool.query(
+        "SELECT update_text, created_at FROM order_updates WHERE order_number = $1 AND email = $2 ORDER BY created_at ASC",
+        [orderNumber, email]
+      );
+  
+      res.json({ updates: result.rows });
+    } catch (err) {
+      console.error("Database fetch error:", err);
+      res.status(500).json({ error: "Failed to fetch updates" });
     }
   });
 
@@ -869,3 +889,54 @@ app.put("/api/admin/order-status", async (req, res) => {
     res.status(500).json({ error: "Failed to update status" });
   }
 });
+
+app.get("/api/order-details", async (req, res) => {
+  const { orderNumber } = req.query;
+
+  if (!orderNumber) {
+    return res.status(400).json({ error: "Missing order number" });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT o.*, 
+              json_agg(json_build_object(
+                'product_id', oi.product_id,
+                'product_name', oi.product_name,
+                'product_price', oi.price,
+                'quantity', oi.quantity,
+                'subtotal', oi.subtotal
+              )) AS items
+       FROM orders o
+       LEFT JOIN order_items oi ON o.id = oi.order_id
+       WHERE o.order_number = $1
+       GROUP BY o.id`,
+      [orderNumber]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json({ order: result.rows[0] });
+  } catch (error) {
+    console.error("Error fetching order details:", error);
+    res.status(500).json({ error: "Failed to fetch order details" });
+  }
+});
+
+app.get("/api/order-history", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const result = await pool.query(
+      "SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC",
+      [userId]
+    );
+
+    res.json({ orders: result.rows });
+  } catch (error) {
+    console.error("Error fetching order history:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+

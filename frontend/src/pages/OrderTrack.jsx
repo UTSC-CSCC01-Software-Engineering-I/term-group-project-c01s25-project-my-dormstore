@@ -13,7 +13,6 @@ export default function OrderTrackingPage() {
 
     
     const [form, setForm] = useState({
-        orderName: "",
         email: "",
         orderUpdate: "",
         trackingOrderNumber: "",
@@ -33,7 +32,7 @@ export default function OrderTrackingPage() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              orderName: form.orderName,
+              orderNumber: form.trackingOrderNumber,
               email: form.email,
               update: form.orderUpdate,
             }),
@@ -99,9 +98,9 @@ export default function OrderTrackingPage() {
             <div className="form-row">
                 <input
                 type="text"
-                name="orderName"
-                placeholder="Order Name"
-                value={form.orderName}
+                name="trackingOrderNumber"
+                placeholder="Order Number"
+                value={form.trackingOrderNumber}
                 onChange={handleChange}
                 />
                 <input

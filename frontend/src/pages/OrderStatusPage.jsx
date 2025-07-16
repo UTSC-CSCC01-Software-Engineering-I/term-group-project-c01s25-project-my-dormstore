@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './OrderStatusPage.css';
 
 const steps = [
@@ -23,6 +24,7 @@ export default function OrderStatusPage() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
   const [order, setOrder] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!orderId || !email) return;
@@ -43,6 +45,15 @@ export default function OrderStatusPage() {
       });
   }, [orderId, email]);
 
+  const formatDate = (dateString) => {
+    const d = new Date(dateString);
+    return d.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   if (!order) return <p>Loading order info...</p>;
 
   const currentStepIndex = steps.findIndex(step =>
@@ -50,38 +61,49 @@ export default function OrderStatusPage() {
   );
 
   return (
-    <div className="order-status-page">
-        <div className="order-info-wrapper">
-  <div className="order-info-left">
-    <strong>Order #</strong><br />
-    {order.order_number}
-  </div>
-  <div className="order-info-right">
-    <p><strong>Shipped Via:</strong> UPS Ground</p>
-    <p><strong>Status:</strong> {order.status}</p>
-    <p><strong>Expected Date:</strong> {order.estimated_delivery || "TBD"}</p>
-  </div>
-</div>
-      <div className="order-progress-bar">
-        <div
-          className="progress-fill"
-          style={{
-            width: `${
-              currentStepIndex === steps.length - 1
-                ? 100
-                : ((currentStepIndex + 0.5) / (steps.length - 1)) * 100
-            }%`
-          }}
-        />
-        {steps.map((step, index) => (
-          <div className={`step ${index <= currentStepIndex ? 'active' : ''}`} key={index}>
-            <div className="circle"></div>
-            <div className="label">{step.label}</div>
-          </div>
-        ))}
-      </div>
+    <div className="order-tracking-layout">
+        <div className="right-panel">
+            <div className="right-content">
+                <h1>YOUR<br />ORDER<br />STATUS</h1>
+            <p>
+                Wondering where your order is? This page shows you exactly what’s happening and when your items will arrive.
+            </p>
+            </div>
+        </div>
+        <div className="left-panel">
+            <div className="order-status-page">
+                <div className="order-summary-box">
+                    <div><strong>ORDER PLACED</strong><br />{formatDate(order.created_at)}</div>
+                    <div><strong>ORDER #</strong><br />{order.order_number}</div>
+                    <div><strong>TOTAL</strong><br />${order.total}</div>
+                </div>
 
-      <button className="order-detail-btn">View Order Details</button>
+                <div className="status-title">
+                    <p><strong>Order Status:</strong> <span className="status-highlight">{order.status}</span></p>
+                    <p><strong>Estimated Delivery:</strong> {order.estimated_delivery || "TBD"}</p>
+                </div>
+                <div className="order-progress-bar">
+                    <div
+                        className="progress-fill"
+                        style={{
+                            width: `${((currentStepIndex + 0.5) / (steps.length - 1)) * 100}%`
+                        }}
+                    />
+                    {steps.map((step, index) => (
+                        <div className={`step ${index <= currentStepIndex ? 'active' : ''}`} key={index}>
+                            <div className="circle"></div>
+                            <div className="label">{step.label}</div>
+                        </div>
+                    ))}
+            </div>
+            <button
+                className="order-detail-btn"
+                onClick={() => navigate(`/order-details/${order.order_number}`)}
+            >
+                VIEW ORDER DETAILS
+            </button>
+        </div>
+      </div>      
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import UserForm from "../components/userForm";
 import "./Login.css";
 
@@ -12,12 +13,19 @@ export default function Profile() {
   const [newPassword, setNewPassword] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const navigate = useNavigate();
 
-
-  const orders = [
-    { id: 1, item: "Dorm Bedding Set", date: "2025-06-12", status: "Delivered" },
-    { id: 2, item: "Desk Lamp", date: "2025-06-10", status: "Shipped" }
-  ];
+  function formatDate(dateStr) {
+  if (!dateStr) return "—";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
   const fetchUserInfo = async () => {
     const token = localStorage.getItem("token");
@@ -26,7 +34,7 @@ export default function Profile() {
     }
   
     try {
-      const res = await fetch("http://localhost:5000/me", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -63,7 +71,7 @@ export default function Profile() {
   const handleUpdateEmail = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/user/update", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/user/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -112,6 +120,25 @@ export default function Profile() {
       alert("Failed to update password. Please try again.");
     }
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+  
+    fetch(`${process.env.REACT_APP_API_URL}/api/order-history`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch orders");
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Fetched orders:", data.orders); 
+        setOrders(data.orders || []);
+      })
+      .catch((err) => console.error("Failed to load orders:", err));
+  }, []);
 
   return (
     <div className="profile-layout">
@@ -283,17 +310,32 @@ export default function Profile() {
         {activeTab === "orders" && (
           <div className="profile-orders">
             <h2 className="profile-title">Order History</h2>
-            <ul className="order-list">
-              {orders.map((order) => (
-                <li key={order.id} className="order-item">
-                  <span>{order.item}</span>
-                  <span>{order.date}</span>
-                  <span>{order.status}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+
+            {orders.length === 0 ? (
+              <div className="empty-order">
+                <p>You haven’t placed any orders yet.</p>
+                <button onClick={() => navigate("/shop")} className="start-shopping-btn">
+                Start Shopping
+                </button>
+              </div>
+              ) : (
+                orders.map((order) => (
+                  <div className="order-card" key={order.id}>
+                    <div className="order-info">
+                      <div className="order-item-name">#{order.order_number}</div>
+                      <div className="order-date">{formatDate(order.created_at)}</div>
+                    </div>
+                    <button
+                      className="order-detail-btn"
+                      onClick={() => navigate(`/order-details/${order.order_number}`)}
+                    >
+                    View Details
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
       </div>
     </div>
   );

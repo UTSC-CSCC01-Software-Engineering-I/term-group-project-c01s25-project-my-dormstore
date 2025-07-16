@@ -1,8 +1,7 @@
 .order-status-page {
-  max-width: 700px;
-  margin: 80px auto;
-  padding: 100px;
-  border-radius: 20px;
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 30px;
   text-align: center;
   font-family: 'Segoe UI', sans-serif;
 }
@@ -11,7 +10,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  gap: 80px;
+  gap: 100px;
   margin: 0 auto 40px;
   max-width: 800px;
   flex-wrap: wrap;
@@ -31,9 +30,8 @@
   flex-direction: column;
   gap: 4px;
   font-size: 16px;
+  margin-right: 0;
 }
-
-
 
 .order-progress-bar {
   display: flex;
@@ -83,8 +81,8 @@
 }
 
 .step .circle {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background-color: #fff;
   border: 4px solid #ccc;
@@ -94,6 +92,7 @@
   outline: none;
   box-shadow: none;
   transition: all 0.3s ease;
+  bottom: 8px;
 }
 
 .step.active .circle {
@@ -108,16 +107,96 @@
 }
 
 .order-detail-btn {
-  margin-top: 100px;
-  padding: 15px 20px;
-  background: #1890ff;
+  padding: 18px 20px;
+  background: #1065b6;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  align-self: center;
+  margin-top: 100px;
 }
+
 
 .step::before,
 .step .circle::before {
   display: none !important;
+}
+
+.order-summary-box {
+  display: flex;
+  justify-content: space-between;
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 50px;
+  font-size: 15px;
+  text-align: center;
+}
+
+.order-summary-box > div {
+  flex: 1;
+  padding: 0 10px;
+  text-align: center;
+}
+
+.order-summary-box strong {
+  display: inline-block;
+  padding-bottom: 10px;
+}
+
+
+.status-title {
+  margin-bottom: 80px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.status-title p {
+    padding-bottom: 25px;
+}
+
+.status-highlight {
+  color: #3dc374;
+  font-weight: 800;
+}
+
+.order-tracking-layout {
+  display: flex;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.left-panel {
+  flex: 3;
+  background: white;
+  padding: 40px 20px;
+  flex-direction: column; /* ⬅️ make it vertical */
+  justify-content: space-between; /* ⬅️ space between top & bottom */
+  height: 100vh;
+}
+
+.right-panel {
+  flex: 2;
+  background: linear-gradient(135deg, #bddcf4, #4086c8);
+  color: rgb(255, 255, 255);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: left;
+
+}
+
+.right-content h1 {
+  font-size: 48px;
+  line-height: 1.2;
+  font-weight: 800;
+  margin-bottom: 30px;
+}
+
+.right-content p {
+  font-size: 19px;
+  max-width: 300px;
+  margin-bottom: 100px;
 }
