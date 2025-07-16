@@ -44,6 +44,7 @@ import OrderUpdate from "./pages/AdminDashboard/tabs/OrderUpdate";
 import AmbassadorList from "./pages/AdminDashboard/tabs/AmbassadorList";
 import UserList from "./pages/AdminDashboard/tabs/UserList";
 import ProductManagement from "./pages/AdminDashboard/tabs/ProductManagement";
+import OrderStatusPage from "./pages/OrderStatusPage.jsx";
 import { CartProvider, useCart } from "./contexts/CartContext.tsx";
 import { CheckoutProvider } from "./contexts/CheckoutContext.tsx";
 import { countryCurrency } from "./data/countryCurrency";
@@ -71,7 +72,7 @@ function AppContent() {
     "/checkout/payment",
     "/checkout/review",
     "/admin-login",
-  ].some((prefix) => location.pathname === prefix || location.pathname.startsWith("/admin"));
+  ].some((prefix) => location.pathname === prefix || location.pathname.startsWith("/admin") || location.pathname.startsWith("/order-status/"));
 
   useEffect(() => {
     async function checkAuth() {
@@ -246,6 +247,7 @@ function AppContent() {
           <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
           <Route path="/checkout/review" element={<ReviewPage />} />
           <Route path="/checkout/success" element={<SuccessPage />} />
+          <Route path="/order-status/:orderId" element={<OrderStatusPage />} />
 
           {/* Admin Routes */}
           <Route

@@ -852,3 +852,20 @@ app.post("/api/admin/login", async (req, res) => {
   }
 });
 
+app.put("/api/admin/order-status", async (req, res) => {
+  const { orderNumber, status } = req.body;
+  if (!orderNumber || !status) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
+  try {
+    await pool.query(
+      `UPDATE orders SET order_status = $1, updated_at = CURRENT_TIMESTAMP WHERE order_number = $2`,
+      [status, orderNumber]
+    );
+    res.status(200).json({ message: "Order status updated" });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ error: "Failed to update status" });
+  }
+});

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useRef, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import "./OrderTrackingPage.css";
 
 export default function OrderTrackingPage() {
@@ -8,7 +9,7 @@ export default function OrderTrackingPage() {
     const orderStatusRef = useRef(null);
     const orderTrackingRef = useRef(null);
     const [trackingResult, setTrackingResult] = useState(null);
-
+    const navigate = useNavigate();
 
     
     const [form, setForm] = useState({
@@ -52,43 +53,15 @@ export default function OrderTrackingPage() {
     };
       
 
-    const handleTrackOrder = async () => {
-        const { trackingOrderNumber, trackingEmail } = form;
-      
-        if (!trackingOrderNumber || !trackingEmail) {
-          alert("Please enter both order number and email/phone.");
-          return;
-        }
-      
-        try {
-          const queryParams = new URLSearchParams({
-            orderNumber: trackingOrderNumber,
-            emailOrPhone: trackingEmail, 
-          });
-      
-          const res = await fetch(
-            `${process.env.REACT_APP_API_URL}/api/order-tracking?${queryParams}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-      
-          if (res.ok) {
-            const data = await res.json();
-            setTrackingResult({ success: true, data });
-          } else if (res.status === 404) {
-            setTrackingResult({ success: false, message: "Order not found." });
-          } else {
-            setTrackingResult({ success: false, message: "An error occurred." });
-          }
-        } catch (error) {
-          console.error("Tracking error:", error);
-          setTrackingResult({ success: false, message: "Network error." });
-        }
-      
+    const handleTrackOrder = () => {
+      const { trackingOrderNumber, trackingEmail } = form;
+    
+      if (!trackingOrderNumber || !trackingEmail) {
+        alert("Please enter both order number and email/phone.");
+        return;
+      }
+    
+      navigate(`/order-status/${trackingOrderNumber}?email=${trackingEmail}`);
     };
       
       
@@ -169,18 +142,24 @@ export default function OrderTrackingPage() {
                     />    
                     <button onClick={handleTrackOrder}>Track Your Order</button>
                     {trackingResult && (
-                        <div className="tracking-result-box">
-                            {trackingResult.success ? (
-                                <p>
-                                    📦 Order <strong>{trackingResult.data.order_number}</strong> for{" "}
-                                    <strong>{trackingResult.data.email}</strong> is currently{" "}
-                                    <strong style={{ color: "blue" }}>{trackingResult.data.status}</strong>.
-                                </p>
-                            ) : (
-                                <p style={{ color: "red" }}>❌ {trackingResult.message}</p>
-                            )}
-                        </div>
-                    )}
+  <div className="tracking-result-box">
+    {trackingResult.success ? (
+      <>
+        <h3>Order <strong>{trackingResult.data.order_number}</strong></h3>
+        <p>For <strong>{trackingResult.data.email}</strong></p>
+        <div className="order-progress">
+          <div className={`step ${["Placed", "Processing", "Shipped", "Delivered"].indexOf(trackingResult.data.status) >= 0 ? "active" : ""}`}>Placed</div>
+          <div className={`step ${["Processing", "Shipped", "Delivered"].indexOf(trackingResult.data.status) >= 0 ? "active" : ""}`}>Processing</div>
+          <div className={`step ${["Shipped", "Delivered"].indexOf(trackingResult.data.status) >= 0 ? "active" : ""}`}>Shipped</div>
+          <div className={`step ${trackingResult.data.status === "Delivered" ? "active" : ""}`}>Delivered</div>
+        </div>
+        <p>Status: <span className={`status-badge ${trackingResult.data.status.toLowerCase()}`}>{trackingResult.data.status}</span></p>
+      </>
+    ) : (
+      <p style={{ color: "red" }}> {trackingResult.message}</p>
+    )}
+  </div>
+)}
                 </label>
             </div>
             <div className="tracking-image-container">
