@@ -19,7 +19,7 @@ const AdminLogin = () => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5001/api/admin/login", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

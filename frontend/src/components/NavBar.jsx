@@ -4,25 +4,37 @@ import { Link, useLocation } from "react-router-dom";
 let timeoutId = null;
 
 export default function NavBar({ isLoggedIn }) {
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
   const location = useLocation();
- 
-  const isFixedDropdownPage = location.pathname === "/products" || location.pathname === "/packages";
+
+  const itemPaths = ["/products", "/bathroom", "/tech", "/storage", "/laundry", "/desk", "/decor"];
+  const packagePaths = ["/packages", "/bedding", "/living", "/caring"];
+
+  const [baseSection, setBaseSection] = useState(null);        
+  const [activeDropdown, setActiveDropdown] = useState(null); 
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (itemPaths.includes(path)) {
+      setBaseSection("items");
+      setActiveDropdown("items");
+    } else if (packagePaths.includes(path)) {
+      setBaseSection("packages");
+      setActiveDropdown("packages");
+    } else {
+      setBaseSection(null);
+      setActiveDropdown(null);
+    }
+  }, [location.pathname]);
 
   const handleMouseEnter = (menu) => {
     clearTimeout(timeoutId);
-    setActiveDropdown(menu);
-    setSelectedSection(menu);
+    setActiveDropdown(menu); // visual only
   };
 
   const handleMouseLeave = () => {
-    if (!isFixedDropdownPage) {
-      timeoutId = setTimeout(() => {
-        setActiveDropdown(null);
-        setSelectedSection(null);
-      }, 200);
-    }
+    timeoutId = setTimeout(() => {
+      setActiveDropdown(baseSection); // revert to what the route says
+    }, 200);
   };
 
   const packageCategories = [
@@ -42,59 +54,26 @@ export default function NavBar({ isLoggedIn }) {
     { name: "Decor", image: "/images/decor.png", link: "/decor" },
   ];
 
-  useEffect(() => {
-    if (location.pathname === "/products") {
-      setSelectedSection("items");
-      setActiveDropdown("items");
-      sessionStorage.setItem("dropdownSection", "items");
-    } else if (location.pathname === "/packages") {
-      setSelectedSection("packages");
-      setActiveDropdown("packages");
-      sessionStorage.setItem("dropdownSection", "packages");
-    } else {
-      setSelectedSection(null);
-      setActiveDropdown(null);
-      sessionStorage.removeItem("dropdownSection");
-    }
-  }, [location.pathname]);
-
   return (
     <>
       <nav className="nav-bar">
-        {/* Shop Packages */}
         <span
-          className={`nav-title ${selectedSection === "packages" ? "active-tab" : ""}`}
+          className={`nav-title ${baseSection === "packages" ? "active-tab" : ""}`}
           onMouseEnter={() => handleMouseEnter("packages")}
           onMouseLeave={handleMouseLeave}
-          onClick={() => {
-            sessionStorage.setItem("dropdownSection", "packages");
-            setSelectedSection("packages");
-            setActiveDropdown("packages");
-          }}
         >
           Shop Packages
         </span>
 
-        {/* Shop by Items */}
         <span
-          className={`nav-title ${selectedSection === "items" ? "active-tab" : ""}`}
+          className={`nav-title ${baseSection === "items" ? "active-tab" : ""}`}
           onMouseEnter={() => handleMouseEnter("items")}
           onMouseLeave={handleMouseLeave}
-          onClick={() => {
-            sessionStorage.setItem("dropdownSection", "items");
-            setSelectedSection("items");
-            setActiveDropdown("items");
-          }}
         >
           Shop by Items
         </span>
 
-        {/* Our Story & Blog */}
-        <div
-          className="dropdown"
-          onMouseEnter={() => handleMouseEnter("story")}
-          onMouseLeave={handleMouseLeave}
-        >
+        <div className="dropdown" onMouseEnter={() => handleMouseEnter("story")} onMouseLeave={handleMouseLeave}>
           <Link to="/our-story" className="dropdown-title">Our Story & Blog</Link>
           {activeDropdown === "story" && (
             <div className="dropdown-content">
@@ -105,20 +84,11 @@ export default function NavBar({ isLoggedIn }) {
           )}
         </div>
 
-        {/* Customer Service */}
-        <div
-          className="dropdown"
-          onMouseEnter={() => handleMouseEnter("service")}
-          onMouseLeave={handleMouseLeave}
-        >
+        <div className="dropdown" onMouseEnter={() => handleMouseEnter("service")} onMouseLeave={handleMouseLeave}>
           <Link to="/contact" className="dropdown-title">Customer Service</Link>
           {activeDropdown === "service" && (
             <div className="dropdown-content">
-              {isLoggedIn && (
-                <Link to="/checklist" className="nav-link">
-                  Move-in Checklist
-                </Link>
-              )}          
+              {isLoggedIn && <Link to="/checklist" className="nav-link">Move-in Checklist</Link>}
               <Link to="/order-status#order-status">Order Status</Link>
               <Link to="/order-status#order-tracking">Track My Orders</Link>
               <Link to="/live-chat">Live Chat</Link>
@@ -128,12 +98,8 @@ export default function NavBar({ isLoggedIn }) {
         </div>
       </nav>
 
-      {selectedSection === "packages" && (
-        <div
-          className="mega-menu-scroll"
-          onMouseEnter={() => clearTimeout(timeoutId)}
-          onMouseLeave={!isFixedDropdownPage ? handleMouseLeave : undefined}
-        >
+      {activeDropdown === "packages" && (
+        <div className="mega-menu-scroll" onMouseEnter={() => clearTimeout(timeoutId)} onMouseLeave={handleMouseLeave}>
           {packageCategories.map((cat) => (
             <Link to={cat.link} className="menu-tile" key={cat.name}>
               <img src={cat.image} alt={cat.name} />
@@ -143,12 +109,8 @@ export default function NavBar({ isLoggedIn }) {
         </div>
       )}
 
-      {selectedSection === "items" && (
-        <div
-          className="mega-menu-scroll"
-          onMouseEnter={() => clearTimeout(timeoutId)}
-          onMouseLeave={!isFixedDropdownPage ? handleMouseLeave : undefined}
-        >
+      {activeDropdown === "items" && (
+        <div className="mega-menu-scroll" onMouseEnter={() => clearTimeout(timeoutId)} onMouseLeave={handleMouseLeave}>
           {categories.map((cat) => (
             <Link to={cat.link} className="menu-tile" key={cat.name}>
               <img src={cat.image} alt={cat.name} />

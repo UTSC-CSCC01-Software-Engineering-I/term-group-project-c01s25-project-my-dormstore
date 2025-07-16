@@ -1,77 +1,89 @@
-import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate, Link } from "react-router-dom";
-import { useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+  Link,
+  Navigate,
+} from "react-router-dom";
+
 import TopBar from "./components/TopBar";
 import NavBar from "./components/NavBar";
-import HomePage from "./pages/Homepage/Homepage";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
+import CartScreen from "./components/CartScreen";
+import UserForm from "./components/userForm";
+import RequireAdmin from "./components/RequireAdmin";
+import HomePage from "./pages/Homepage/Homepage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import ProductListPage from "./pages/ProductListPage";
 import PackageListPage from "./pages/PackageListPage";
-import { CartProvider, useCart } from "./contexts/CartContext.tsx";
-import CartScreen from "./components/CartScreen";
-import OurStory from "./pages/OurStoryBlog/OurStory/OurStory";
-import Blog from "./pages/OurStoryBlog/Blog/Blog";
-import Ambassador from "./pages/OurStoryBlog/Ambassador/Ambassador";
-import ProductDetail from "./components/ProductDetail.tsx";
-import BlogDetail from "./pages/OurStoryBlog/Blog/BlogDetail";
+import ProductDetail from "./components/ProductDetail";
 import Profile from "./pages/Profile";
 import ChecklistPage from "./pages/ChecklistPage";
-import { countryCurrency } from "./data/countryCurrency";
-import OrderTrack from "./pages/OrderTrack.jsx";
-import UserForm from "./components/userForm.jsx";
-import ScrollToTop from "./components/ScrollToTop";
-import ForgotPassword from "./pages/ForgotPassword.jsx";
-import ContactUs from "./pages/ContactUs/ContactUs.jsx";
-import CheckoutPage    from "./pages/CheckoutPage/CheckoutPage.jsx";
-import CheckoutPaymentPage from "./pages/CheckoutPage/CheckoutPaymentPage.jsx";
-import ReviewPage            from "./pages/CheckoutPage/ReviewPage.jsx";
-import SuccessPage  from "./pages/CheckoutPage/SuccessPage.jsx";
-import { CheckoutProvider } from "./contexts/CheckoutContext.tsx";
-import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
+import ContactUs from "./pages/ContactUs/ContactUs";
+import Blog from "./pages/OurStoryBlog/Blog/Blog";
+import BlogDetail from "./pages/OurStoryBlog/Blog/BlogDetail";
+import Ambassador from "./pages/OurStoryBlog/Ambassador/Ambassador";
+import OurStory from "./pages/OurStoryBlog/OurStory/OurStory";
+import OrderTrack from "./pages/OrderTrack";
+import CheckoutPage from "./pages/CheckoutPage/CheckoutPage";
+import CheckoutPaymentPage from "./pages/CheckoutPage/CheckoutPaymentPage";
+import ReviewPage from "./pages/CheckoutPage/ReviewPage";
+import SuccessPage from "./pages/CheckoutPage/SuccessPage";
 import AdminLogin from "./pages/AdminLogin/AdminLogin";
-import RequireAdmin from "./components/RequireAdmin";
-
-
+import AdminLayout from "./pages/adminlayout";
+import Home from "./pages/AdminDashboard/tabs/Home";
+import InventoryCheck from "./pages/AdminDashboard/tabs/InventoryCheck";
+import Orders from "./pages/AdminDashboard/tabs/Orders";
+import OrderUpdate from "./pages/AdminDashboard/tabs/OrderUpdate";
+import AmbassadorList from "./pages/AdminDashboard/tabs/AmbassadorList";
+import UserList from "./pages/AdminDashboard/tabs/UserList";
+import ProductManagement from "./pages/AdminDashboard/tabs/ProductManagement";
+import { CartProvider, useCart } from "./contexts/CartContext.tsx";
+import { CheckoutProvider } from "./contexts/CheckoutContext.tsx";
+import { countryCurrency } from "./data/countryCurrency";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
 
 function AppContent() {
   const [showCart, setShowCart] = useState(false);
   const location = useLocation();
-  const { totalItems } = useCart();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const { totalItems } = useCart();
   const langDropdownRef = useRef(null);
+
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("CA | English");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showUserForm, setShowUserForm] = useState(false);
 
-
-  const hidelayoutRoutes = [
-    "/login", "/register", "/forgot-password",
-    "/checkout", "/checkout/payment", "/checkout/review"
-  ];
-
-  const isAdminRoute = location.pathname.startsWith("/admin");
-
-  const hidelayout = hidelayoutRoutes.includes(location.pathname) || isAdminRoute;
-
+  const hidelayout = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/checkout",
+    "/checkout/payment",
+    "/checkout/review",
+    "/admin-login",
+  ].some((prefix) => location.pathname === prefix || location.pathname.startsWith("/admin"));
 
   useEffect(() => {
     async function checkAuth() {
       try {
         const token = localStorage.getItem("token");
-  
         const res = await fetch(`http://localhost:5000/me`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-  
+
         if (res.ok) {
           setIsLoggedIn(true);
           const data = await res.json();
@@ -83,10 +95,10 @@ function AppContent() {
             school: data.school,
             email,
           };
-  
+
           localStorage.setItem("userEmail", email);
           localStorage.setItem(`userInfo_${email}`, JSON.stringify(userData));
-  
+
           const isIncomplete =
             !userData.firstname || !userData.lastname || !userData.school || !userData.dorm;
           const completed = localStorage.getItem(`completed_${email}`);
@@ -101,11 +113,10 @@ function AppContent() {
         setIsLoggedIn(false);
       }
     }
-  
+
     checkAuth();
   }, []);
 
-  // close cart when navigating to different pages
   useEffect(() => {
     setShowCart(false);
   }, [location.pathname]);
@@ -116,13 +127,10 @@ function AppContent() {
         setShowLanguageMenu(false);
       }
     }
-  
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  
+
   return (
     <div className="App">
       {showUserForm && (
@@ -132,12 +140,13 @@ function AppContent() {
             const email = localStorage.getItem("userEmail");
             if (email) {
               localStorage.setItem(`userInfo_${email}`, JSON.stringify(data));
-              localStorage.setItem(`completed_${email}`, "true"); 
+              localStorage.setItem(`completed_${email}`, "true");
             }
             setShowUserForm(false);
           }}
         />
       )}
+
       {!hidelayout && <TopBar />}
 
       {!hidelayout && (
@@ -145,7 +154,7 @@ function AppContent() {
           <div className="left-section">
             <div className="logo">
               <Link to="/">
-                <img src="/mydormstroe_log.webp" alt="My Dorm Store Logo" className="logo" />
+                <img src="/mydormstroe_log.webp" alt="My Dorm Store Logo" />
               </Link>
             </div>
             <div className="search-bar">
@@ -156,12 +165,12 @@ function AppContent() {
 
           <div className="header-icons">
             <div className="language-dropdown" ref={langDropdownRef}>
-              <span onClick={() => setShowLanguageMenu(prev => !prev)} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span onClick={() => setShowLanguageMenu((prev) => !prev)}>
                 <img src="/language.png" alt="Language icon" />
                 <span>{selectedLanguage}</span>
               </span>
               {showLanguageMenu && (
-                <div className="dropdown-container" ref={langDropdownRef}>
+                <div className="dropdown-container">
                   <input
                     type="text"
                     className="dropdown-search"
@@ -171,45 +180,31 @@ function AppContent() {
                   />
                   <ul className="dropdown-menu">
                     {countryCurrency
-                      .filter(({ country }) =>
-                      country.toLowerCase().includes(searchTerm.toLowerCase())
-                      )
+                      .filter(({ country }) => country.toLowerCase().includes(searchTerm.toLowerCase()))
                       .map(({ country, currency_code }, idx) => (
-                        currency_code && (
-                          <li
-                            key={idx}
-                            onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedLanguage(`${country} - ${currency_code}`);
-                            setShowLanguageMenu(false);
-                            setSearchTerm("");
-                          }}
-                          >
-                            <span className="country">{country}</span>
-                            <span className="currency">{currency_code}</span>
-                          </li>
-                        )
+                        <li key={idx} onClick={() => {
+                          setSelectedLanguage(`${country} - ${currency_code}`);
+                          setShowLanguageMenu(false);
+                          setSearchTerm("");
+                        }}>
+                          <span className="country">{country}</span>
+                          <span className="currency">{currency_code}</span>
+                        </li>
                       ))}
                   </ul>
                 </div>
               )}
             </div>
-            <span
-              onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}
-              style={{ cursor: "pointer" }}
-            >
-              <img src="/user.png" alt="User icon" />
+
+            <span onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}>
+              <img src="/user.png" alt="User" />
             </span>
-            <span onClick={() => navigate(isLoggedIn ? "/checklist" : "/login")} style={{ cursor: "pointer" }}>
-              <img src="/check_box.png" alt="Checklist icon" />
+            <span onClick={() => navigate(isLoggedIn ? "/checklist" : "/login")}>
+              <img src="/check_box.png" alt="Checklist" />
             </span>
-            <span onClick={() => setShowCart(true)} style={{ cursor: "pointer", position: "relative" }}>
-              <img src="/shopping.png" alt="Cart icon" />
-              {totalItems > 0 && (
-                <span style={{ marginLeft: "5px", fontSize: "14px" }}>
-                  ({totalItems})
-                </span>
-              )}
+            <span onClick={() => setShowCart(true)} style={{ position: "relative" }}>
+              <img src="/shopping.png" alt="Cart" />
+              {totalItems > 0 && <span style={{ marginLeft: "5px", fontSize: "14px" }}>({totalItems})</span>}
             </span>
           </div>
         </header>
@@ -221,16 +216,15 @@ function AppContent() {
         <CartScreen />
       ) : (
         <Routes>
+          {/* Customer Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductListPage />} />
-          <Route path="/packages" element={<PackageListPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/packages" element={<PackageListPage />} />
           <Route path="/packages/:id" element={<ProductDetail />} />
-          {/* Package Category routes */}
           <Route path="/bedding" element={<PackageListPage key="bedding" category="Bedding" />} />
           <Route path="/living" element={<PackageListPage key="living" category="Living" />} />
           <Route path="/caring" element={<PackageListPage key="caring" category="Caring" />} />
-          {/* Product Category routes */}
           <Route path="/bathroom" element={<ProductListPage key="bathroom" category="Bathroom" />} />
           <Route path="/tech" element={<ProductListPage key="tech" category="Tech" />} />
           <Route path="/storage" element={<ProductListPage key="storage" category="Storage" />} />
@@ -243,23 +237,35 @@ function AppContent() {
           <Route path="/ambassador" element={<Ambassador />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/checklist" element={<ChecklistPage />} />
           <Route path="/order-status" element={<OrderTrack />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/contact" element={<ContactUs />} />
-          <Route path="/checkout"     element={<CheckoutPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
-          <Route path="/checkout/review"  element={<ReviewPage />} />
-          <Route path="/checkout/success"  element={<SuccessPage />} />
+          <Route path="/checkout/review" element={<ReviewPage />} />
+          <Route path="/checkout/success" element={<SuccessPage />} />
+
+          {/* Admin Routes */}
           <Route
-            path="/admin/*"
+            path="/admin"
             element={
               <RequireAdmin>
-                <AdminDashboard />
+                <AdminLayout />
               </RequireAdmin>
             }
-          />
+          >
+            <Route index element={<Navigate to="home" />} />
+            <Route path="home" element={<Home />} />
+            <Route path="inventory" element={<InventoryCheck />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="update" element={<OrderUpdate />} />
+            <Route path="ambassadors" element={<AmbassadorList />} />
+            <Route path="users" element={<UserList />} />
+            <Route path="products" element={<ProductManagement />} />
+          </Route>
+
           <Route path="/admin-login" element={<AdminLogin />} />
         </Routes>
       )}

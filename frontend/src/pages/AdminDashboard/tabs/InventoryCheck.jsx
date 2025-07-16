@@ -10,7 +10,7 @@ const InventoryCheck = () => {
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/admin/inventory");
+        const res = await fetch("http://localhost:5000/api/admin/inventory");
         const data = await res.json();
         setInventory(data);
       } catch (err) {
