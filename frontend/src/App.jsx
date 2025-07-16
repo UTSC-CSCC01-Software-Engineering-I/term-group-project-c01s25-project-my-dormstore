@@ -222,7 +222,8 @@ function AppContent() {
       ) : (
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<PackageListPage />} />
+          <Route path="/products" element={<ProductListPage />} />
+          <Route path="/packages" element={<PackageListPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/packages/:id" element={<ProductDetail />} />
           {/* Package Category routes */}

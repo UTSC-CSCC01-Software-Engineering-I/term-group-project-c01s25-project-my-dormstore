@@ -8,7 +8,7 @@ export default function NavBar({ isLoggedIn }) {
   const [selectedSection, setSelectedSection] = useState(null);
   const location = useLocation();
  
-  const isFixedDropdownPage = location.pathname === "/products";
+  const isFixedDropdownPage = location.pathname === "/products" || location.pathname === "/packages";
 
   const handleMouseEnter = (menu) => {
     clearTimeout(timeoutId);
@@ -26,7 +26,7 @@ export default function NavBar({ isLoggedIn }) {
   };
 
   const packageCategories = [
-    { name: "View All", image: "/images/viewall.png", link: "/products" },
+    { name: "View All", image: "/images/viewall.png", link: "/packages" },
     { name: "Bedding", image: "/images/bedding.png", link: "/bedding" },
     { name: "Living", image: "/images/living.png", link: "/living" },
     { name: "Caring", image: "/images/caring.png", link: "/caring" },
@@ -44,9 +44,13 @@ export default function NavBar({ isLoggedIn }) {
 
   useEffect(() => {
     if (location.pathname === "/products") {
-      const section = sessionStorage.getItem("dropdownSection") || "packages";
-      setSelectedSection(section);
-      setActiveDropdown(section);
+      setSelectedSection("items");
+      setActiveDropdown("items");
+      sessionStorage.setItem("dropdownSection", "items");
+    } else if (location.pathname === "/packages") {
+      setSelectedSection("packages");
+      setActiveDropdown("packages");
+      sessionStorage.setItem("dropdownSection", "packages");
     } else {
       setSelectedSection(null);
       setActiveDropdown(null);

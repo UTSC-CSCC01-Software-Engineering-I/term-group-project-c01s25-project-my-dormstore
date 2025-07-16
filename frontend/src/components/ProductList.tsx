@@ -9,7 +9,7 @@ interface ProductListProps {
   category?: string;
 }
 
-export const ProductList = ({ products, onAddToCart, linkPrefix = "/products" }: ProductListProps) => {
+export const ProductList = ({ products, onAddToCart, linkPrefix = "/products", category }: ProductListProps) => {
   if (products.length === 0) {
     return (
       <div className="empty-state">
