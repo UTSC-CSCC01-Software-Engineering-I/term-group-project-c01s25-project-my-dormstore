@@ -32,7 +32,7 @@ export default function ChecklistPage() {
     const token = localStorage.getItem("token");
   
     try {
-              await fetch("http://localhost:5001/api/user/update", {
+              await fetch(`${process.env.REACT_APP_API_URL}/api/user/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -41,7 +41,7 @@ export default function ChecklistPage() {
         body: JSON.stringify({ dorm }),
       });
   
-      const response = await fetch("http://localhost:5001/me", { // CHANGED FROM 5000
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/me`, { 
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -64,7 +64,7 @@ export default function ChecklistPage() {
     if (!token) return;
   
     try {
-      const response = await fetch("http://localhost:5001/me", { // CHANGED FROM 5000
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/me`, { 
         headers: {
           Authorization: `Bearer ${token}`,
         },
