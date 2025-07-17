@@ -1,5 +1,6 @@
 import { Product } from '../types/Product';
 import { Link } from 'react-router-dom';
+import { getCurrentUserBedSize } from '../utils/bedSizeHelper';
 import './ProductCard.css';
 
 
@@ -13,6 +14,21 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
   const handleAddToCart = () => {
     onAddToCart(product.id);
   };
+  
+  // Get bed size recommendation for user's dorm
+  const getRecommendationText = () => {
+    if (product.category?.toLowerCase() === 'bedding') {
+      const userBedSize = getCurrentUserBedSize();
+      
+      if (userBedSize) {
+        return `Required: ${userBedSize} Size Suggested For Your Dorm`;
+      } else {
+        return "Required: Uknown Size Suggested For Your Dorm";
+      }
+    }
+    return "Highly Recommended";
+  };
+  
   console.log("Image URL:", product.image_url);
 
   return (
@@ -39,7 +55,7 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
           {product.category?.toLowerCase() === 'bedding' ? (
             <>
               <span className="red-dot">●</span>
-              <span className="size-text">Required: Size Suggested For Your Dorm : UNKNOWN</span>
+              <span className="size-text">{getRecommendationText()}</span>
             </>
           ) : (
             <>

@@ -34,7 +34,7 @@ export default function Profile() {
     }
   
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/me`, {
+      const res = await fetch(`http://localhost:5001/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -71,7 +71,7 @@ export default function Profile() {
   const handleUpdateEmail = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/user/update`, {
+      const res = await fetch(`http://localhost:5001/api/user/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -94,7 +94,7 @@ export default function Profile() {
   const handleUpdatePassword = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/user/update`, {
+      const res = await fetch(`http://localhost:5001/api/user/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
