@@ -34,6 +34,13 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
       
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
+        
+        {/*size recommendation placeholder */}
+        <div className="size-recommendation">
+          <span className="red-dot">●</span>
+          <span className="size-text">Size Suggested For Your Dorm : UNKNOWN</span>
+        </div>
+        
         <div className="product-footer">
           <span className="product-price">${product.price}</span>
           <button 
