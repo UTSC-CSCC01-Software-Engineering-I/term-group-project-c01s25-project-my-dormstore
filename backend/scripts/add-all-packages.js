@@ -11,28 +11,33 @@ const packages = [
     price: 89.99,
     category: "Bedding",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=15TvY0Z_8DEvwS0CDT36LtWXtFGecEjgk"
   },
   {
     name: "Standard Bedding Package", 
     price: 129.99,
     category: "Bedding",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1u7kcVrm_Sl6G5yJsO3kJxkXzIuIWgp06"
+
   },
   {
     name: "Sleep Country Complete Bedding Package",
     price: 179.99,
     category: "Bedding", 
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1UUanG5c1Pmi_v1-0UDo_Dq4ClEZyHKmo"
   },
   {
     name: "Deluxe Bedding Package",
     price: 219.99,
     category: "Bedding",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1GUqV6OidDM0oOT1dZ6dKJ73UshpGhqAU"
   },
 
   // Living Category
@@ -41,56 +46,72 @@ const packages = [
     price: 79.99,
     category: "Living",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=14b_lD9YrYKiopMXqrawIj5-uGj1LJf4P"
   },
   {
     name: "Laundry Essentials",
     price: 64.99,
     category: "Living",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1FfToOKP5E4oZmMeY9L0Xv7-9ilJ7TvmL"
   },
   {
     name: "Tech Essentials",
     price: 45.99,
     category: "Living",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=19Wq3IHcIdtCvgbAomEip2sX2jeW9iG6B"
   },
   {
     name: "Organization Essentials",
     price: 89.99,
     category: "Living",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=11V1unP7qEnubnh2rvaKEHYgX-lCmKm6F"
   },
   {
     name: "Cleaning Essentials",
     price: 39.99,
     category: "Living",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1z9dNpb72TN18Bt-yW2zQfXr1F1q6-GOJ"
   },
   {
     name: "Decoration",
     price: 59.99,
     category: "Living",
     description: "template",
-    rating: 0.0
-  },
-  {
-    name: "Desk Essentials",
-    price: 74.99,
-    category: "Living",
-    description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=18KqYy2UDQdThL8qX_xcAU7g2b2kXGWDM"
   },
   {
     name: "Door Decor",
     price: 29.99,
     category: "Living",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1AfxnWyzWvv-XQyBGU3UNYiN6DzhB-vHI"
+  },
+  {
+    name: "Household Essentials",
+    price: 57.99,
+    category: "Living",
+    description: "template",
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1QvsGck94U6Ub4GSjXAkkTk72_mmNrtzy"
+  },
+  {
+    name: "Kitchen Essentials",
+    price: 149.99,
+    category: "Living",
+    description: "template",
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=16EXzNd4rCxuV6gDZNtxbr5JLl_QbNjNs"
   },
 
   // Caring Category
@@ -99,49 +120,56 @@ const packages = [
     price: 34.99,
     category: "Caring",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1i6OuiF3g8q8vPNqcavFhimWHBa1qf8rJ"
   },
   {
     name: "Exam and Midterm",
     price: 39.99,
     category: "Caring",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=17PG28MYTy5CXO1YcWzF-brSYScXuDwfe"
   },
   {
     name: "Thinking of You",
     price: 29.99,
     category: "Caring",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1S-fmiIKlFCkaA1lG_iqsCU2Y7vBoHCAa"
   },
   {
     name: "Build Your Own",
     price: 0.00,
     category: "Caring",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1JZQBtZuG3tfHSjYjIBK_8LducqHGXJjs"
   },
   {
     name: "Feel Better Soon",
     price: 32.99,
     category: "Caring",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1Y-gaJ06-7OIPj9ROXsCFhcCScz8Pgs2F"
   },
   {
     name: "New Semester",
     price: 49.99,
     category: "Caring",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1tgMS2pczByZIIjMuSnoZILaaKQTUCIzQ"
   },
   {
     name: "Sleep Well",
     price: 44.99,
     category: "Caring",
     description: "template",
-    rating: 0.0
+    rating: 0.0,
+    image_url: "https://drive.google.com/thumbnail?id=1QcbF1b3K4c5vk4cavuXf9HpEaMt_1Q4C"
   }
 ];
 
@@ -161,8 +189,8 @@ async function addAllPackages() {
     
     for (const pkg of packages) {
       const result = await pool.query(
-        'INSERT INTO packages (name, price, category, description, rating) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [pkg.name, pkg.price, pkg.category, pkg.description, pkg.rating]
+        'INSERT INTO packages (name, price, category, description, rating, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+        [pkg.name, pkg.price, pkg.category, pkg.description, pkg.rating, pkg.image_url]
       );
       
       addedCount++;

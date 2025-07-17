@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ProductList } from '../components/ProductList.tsx';
+import { PackageList } from '../components/PackageList.tsx';
 import { packageService } from '../services/packageService.ts';
 import { useCart } from '../contexts/CartContext.tsx';
 
@@ -67,13 +67,10 @@ const PackageListPage = ({ category }) => {
 
   return (
     <div className="product-list-page">
-      <div className="page-header">
-        <h1>{category ? `${category} Packages` : 'Shop Packages'}</h1>
-        <p>Curated packages designed for student life</p>
-      </div>
-      <ProductList 
-        products={packages} 
+      <PackageList 
+        packages={packages} 
         onAddToCart={handleAddToCart}
+        category={category}
         linkPrefix="/packages"
       />
     </div>

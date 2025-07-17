@@ -15,7 +15,6 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
   };
   console.log("Image URL:", product.image_url);
 
-
   return (
     <div className="product-card">
       <Link to={`${linkPrefix}/${product.id}`} className="product-link">
