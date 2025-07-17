@@ -67,6 +67,12 @@
   line-height: 1;
 }
 
+.green-dot {
+  color: #38a169;
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
 .size-text {
   color: #333;
   font-weight: 500;

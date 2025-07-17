@@ -35,10 +35,19 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
         
-        {/*size recommendation placeholder */}
+        {/*requirement level indicator */}
         <div className="size-recommendation">
-          <span className="red-dot">●</span>
-          <span className="size-text">Size Suggested For Your Dorm : UNKNOWN</span>
+          {product.category?.toLowerCase() === 'bedding' ? (
+            <>
+              <span className="red-dot">●</span>
+              <span className="size-text">Required: Size Suggested For Your Dorm : UNKNOWN</span>
+            </>
+          ) : (
+            <>
+              <span className="green-dot">●</span>
+              <span className="size-text">Highly Recommended</span>
+            </>
+          )}
         </div>
         
         <div className="product-footer">
