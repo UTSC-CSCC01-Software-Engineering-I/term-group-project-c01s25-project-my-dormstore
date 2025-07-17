@@ -17,14 +17,13 @@ export default function SuccessPage() {
   }, [resetCheckout]); // Add resetCheckout back since it's now memoized
 
   return (
-    <div className="success-container">
-      <CheckoutProgress currentStep={4} />
-      <div className="success-icon">✔︎</div>
-
+    <div>
+      <div className="success-container">
+        <CheckoutProgress currentStep={4} />
+        <div className="success-icon">✔︎</div>
         <h2>Thank you for your order!</h2>
         <p>Your order # is: <strong>{orderNumber}</strong></p>
         <p>We will email you an order confirmation</p>
-
         {/* Balance Information */}
         {balance && (
           <div className="balance-update">
@@ -33,7 +32,6 @@ export default function SuccessPage() {
             <p><strong>Total Spent:</strong> ${balance.totalSpent.toFixed(2)}</p>
           </div>
         )}
-
         <button
           className="btn-continue"
           onClick={() => navigate("/")}

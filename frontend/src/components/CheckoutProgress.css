@@ -1,15 +1,6 @@
 .checkout-progress {
-<<<<<<< Updated upstream
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 2rem 0 1.5rem 0;
-=======
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 30px;
-  border: 1px solid #e9ecef;
 }
 
 .progress-header {
@@ -39,62 +30,11 @@
   display: flex;
   align-items: center;
   gap: 20px;
->>>>>>> Stashed changes
 }
 
 .progress-step {
   display: flex;
   align-items: center;
-<<<<<<< Updated upstream
-  position: relative;
-  color: #bbb;
-  font-weight: 500;
-}
-
-.progress-step .step-number {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #eee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  margin-right: 0.5rem;
-  border: 2px solid #bbb;
-  transition: background 0.2s, border 0.2s;
-}
-
-.progress-step.active .step-number {
-  background: #1976d2;
-  color: #fff;
-  border: 2px solid #1976d2;
-}
-
-.progress-step.completed .step-number {
-  background: #4caf50;
-  color: #fff;
-  border: 2px solid #4caf50;
-}
-
-.progress-step .step-label {
-  min-width: 60px;
-  text-align: center;
-  font-size: 1rem;
-  margin-right: 0.5rem;
-}
-
-.progress-bar {
-  width: 40px;
-  height: 4px;
-  background: #bbb;
-  border-radius: 2px;
-  margin: 0 0.5rem;
-}
-
-.progress-step.completed .progress-bar {
-  background: #4caf50;
-=======
   flex: 1;
   position: relative;
 }
@@ -193,5 +133,4 @@
   .step-indicator {
     align-self: flex-end;
   }
->>>>>>> Stashed changes
 } 
