@@ -12,6 +12,7 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: ProductCardProps) => {
   const handleAddToCart = () => {
+    console.log(" CLICKED:", product);  
     onAddToCart(product.id);
   };
   
@@ -37,7 +38,7 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
         <div className="product-image-container">
         <img
           className="product-image"
-          src={product.image_url || "/images/product-test.jpg"}
+          src={product.image_url || product.image || "/images/product-test.jpg"}
           alt={product.name}
           onError={(e) => {
             e.currentTarget.onerror = null;

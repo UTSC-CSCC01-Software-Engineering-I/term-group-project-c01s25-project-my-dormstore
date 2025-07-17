@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import UserForm from "../components/userForm"; 
 import "./ChecklistPage.css";
+import { useCart } from "../contexts/CartContext"; 
 import { DormChecklistItems } from "../data/dormChecklistItems";
 
 
@@ -16,6 +17,7 @@ export default function ChecklistPage() {
   const [selectedDorm, setSelectedDorm] = useState(""); 
   const [userName, setUserName] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const { items: cartItems } = useCart();
 
 
 
@@ -104,6 +106,19 @@ export default function ChecklistPage() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (!cartItems || cartItems.length === 0) return;
+  
+    setItems((prevItems) =>
+      prevItems.map((item) => {
+        const isInCart = cartItems.some((cartItem) =>
+          cartItem.name.toLowerCase().includes(item.label.toLowerCase())
+        );
+        return isInCart ? { ...item, checked: true } : item;
+      })
+    );
+  }, [cartItems]);
   
 
   return (
