@@ -629,6 +629,8 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       subtotal,
       tax,
       shipping,
+      shippingMethod,
+      shippingCost,
       total,
       billingAddress
     } = req.body;
@@ -675,14 +677,15 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       `INSERT INTO orders (
         order_number, user_id, email, first_name, last_name, phone,
         address, city, province, postal_code, move_in_date,
-        subtotal, tax, shipping, total, payment_method,
+        subtotal, tax, shipping, shipping_method, total, payment_method,
         billing_first_name, billing_last_name, billing_address, billing_city, billing_province, billing_postal_code
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
       RETURNING id, order_number`,
       [
         orderNumber, userId, email, firstName, lastName, phone,
         address, city, province, postalCode, moveInDate,
-        subtotal, tax, shipping, total, paymentMethod,
+        subtotal, tax, shippingCost || shipping, shippingMethod,
+        total, paymentMethod,
         billingAddress?.firstName || null,
         billingAddress?.lastName || null,
         billingAddress?.address || null,
@@ -740,7 +743,9 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       order: {
         id: orderId,
         orderNumber: orderNumberGenerated,
-        total: total
+        total: total,
+        shippingMethod: shippingMethod,
+        shippingCost: shippingCost || shipping
       },
       balance: {
         remaining: parseFloat(updatedBalanceResult.rows[0].balance),

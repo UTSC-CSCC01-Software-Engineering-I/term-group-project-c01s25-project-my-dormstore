@@ -5,14 +5,34 @@ import "./CheckoutPage.css";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../contexts/CartContext.tsx";
 import { useCheckout } from "../../contexts/CheckoutContext.tsx";
+import CheckoutProgress from '../../components/CheckoutProgress';
+
+const SHIPPING_OPTIONS = [
+  { label: 'Expedited Parcel', cost: 22.64, delivery: 'Ships within the 3 days' },
+  { label: 'Xpresspost', cost: 24.20, delivery: 'Ships within the 5 days' },
+  { label: 'Purolator Ground®', cost: 28.92, delivery: 'Ships within the 5 days' },
+  { label: 'Purolator Express®', cost: 31.42, delivery: 'Ships within the 3 days' },
+  { label: 'Priority', cost: 38.62, delivery: 'Ships within the 3 days' },
+];
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { items, totalPrice } = useCart();
-  const { checkoutData, updateShipping, updateMoveInDate, updateEmail } = useCheckout();
+  const { checkoutData, updateShipping, updateMoveInDate, updateEmail, updateShippingMethod } = useCheckout();
   const [userBalance, setUserBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasPopulatedForm, setHasPopulatedForm] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState(
+    checkoutData.shippingMethod || SHIPPING_OPTIONS[0].label
+  );
+
+  useEffect(() => {
+    // Save to context when selectedShipping changes
+    const option = SHIPPING_OPTIONS.find(opt => opt.label === selectedShipping);
+    if (option) {
+      updateShippingMethod(option.label, option.cost);
+    }
+  }, [selectedShipping]);
 
   // Calculate totals
   const subtotal = totalPrice;
@@ -124,150 +144,177 @@ export default function CheckoutPage() {
   }
 
   return (
-    <form className="checkout-container" onSubmit={handleSubmit}>
-      <div className="checkout-left">
-        <h2>Checkout</h2>
+    <div>
+      <CheckoutProgress currentStep={1} />
+      <form className="checkout-container" onSubmit={handleSubmit}>
+        <div className="checkout-left">
+          <h2>Checkout</h2>
 
-        {/* Balance Display */}
-        {!loading && userBalance && (
-          <div className="balance-display">
-            <h3>Your Balance</h3>
-            <div className="balance-info">
-              <p><strong>Available:</strong> ${userBalance.balance.toFixed(2)}</p>
-              <p><strong>Total Spent:</strong> ${userBalance.totalSpent.toFixed(2)}</p>
-              {userBalance.balance < total && (
-                <p className="insufficient-funds">
-                  ⚠️ Insufficient funds. You need ${(total - userBalance.balance).toFixed(2)} more.
-                </p>
-              )}
+          {/* Balance Display */}
+          {!loading && userBalance && (
+            <div className="balance-display">
+              <h3>Your Balance</h3>
+              <div className="balance-info">
+                <p><strong>Available:</strong> ${userBalance.balance.toFixed(2)}</p>
+                <p><strong>Total Spent:</strong> ${userBalance.totalSpent.toFixed(2)}</p>
+                {userBalance.balance < total && (
+                  <p className="insufficient-funds">
+                    ⚠️ Insufficient funds. You need ${(total - userBalance.balance).toFixed(2)} more.
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <section className="checkout-section">
-          <div className="section-title">Move-in date</div>
-          <DatePicker
-            selected={checkoutData.moveInDate}
-            onChange={date => updateMoveInDate(date)}
-            inline
-          />
-        </section>
+          <section className="checkout-section">
+            <div className="section-title">Move-in date</div>
+            <DatePicker
+              selected={checkoutData.moveInDate}
+              onChange={date => updateMoveInDate(date)}
+              inline
+            />
+          </section>
 
-        <section className="checkout-section">
-          <div className="section-title">Contact Information</div>
-          <input
-            type="email"
-            placeholder="Email address"
-            value={checkoutData.email}
-            onChange={e => updateEmail(e.target.value)}
-            required
-          />
-        </section>
-
-        <section className="checkout-section">
-          <div className="section-title">Shipping address</div>
-
-          <div className="two-col">
-            <input
-              name="firstName"
-              placeholder="First name"
-              value={checkoutData.shipping.firstName}
-              onChange={handleChange}
-              required
-            />
-            <input
-              name="lastName"
-              placeholder="Last name"
-              value={checkoutData.shipping.lastName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="two-col">
-            <input
-              name="phone"
-              type="tel"
-              placeholder="Phone number"
-              value={checkoutData.shipping.phone}
-              onChange={handleChange}
-              required
-            />
-            <input
-              name="address"
-              placeholder="Address (apt, suite, etc.)"
-              value={checkoutData.shipping.address}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="three-col">
-            <input
-              name="city"
-              placeholder="City"
-              value={checkoutData.shipping.city}
-              onChange={handleChange}
-              required
-            />
-            <input
-              name="province"
-              placeholder="Province"
-              value={checkoutData.shipping.province}
-              onChange={handleChange}
-              required
-            />
-            <input
-              name="postalCode"
-              placeholder="Postal code"
-              value={checkoutData.shipping.postalCode}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              name="saveToAccount"
-              checked={checkoutData.shipping.saveToAccount}
-              onChange={handleChange}
-            />
-            Save address to my account
-          </label>
-        </section>
-
-        <button 
-          type="submit" 
-          className="btn-next"
-          disabled={userBalance && userBalance.balance < total}
-        >
-          {userBalance && userBalance.balance < total ? "INSUFFICIENT FUNDS" : "NEXT STEP"}
-        </button>
-      </div>
-
-      <div className="checkout-right">
-        <h3>Order Summary</h3>
-        {items.map((item) => (
-          <div key={item.id} className="summary-item">
-            <img
-              src={item.image || "/images/basic-bedding.jpg"}
-              alt={item.name}
-            />
-            <div>
-              <p className="item-title">{item.name}</p>
-              <p>${item.price.toFixed(2)}</p>
-              <p>Qt: {item.quantity}</p>
+          {/* Shipping Service Selection */}
+          <section className="checkout-section">
+            <div className="section-title">Shipping Service</div>
+            <p>Choose the rate that you want to use for shipping</p>
+            <div className="shipping-options-list">
+              {SHIPPING_OPTIONS.map(opt => (
+                <label key={opt.label} className={`shipping-option-label${selectedShipping === opt.label ? ' selected' : ''}`}
+                  style={{ display: 'flex', alignItems: 'center', marginBottom: 8, cursor: 'pointer', fontWeight: 500 }}>
+                  <input
+                    type="radio"
+                    name="shippingService"
+                    value={opt.label}
+                    checked={selectedShipping === opt.label}
+                    onChange={() => setSelectedShipping(opt.label)}
+                    style={{ marginRight: 12 }}
+                  />
+                  <span style={{ flex: 1 }}>{opt.label}</span>
+                  <span style={{ marginRight: 16 }}>${opt.cost.toFixed(2)}</span>
+                  <span style={{ color: '#666', fontSize: '0.95em' }}>{opt.delivery}</span>
+                </label>
+              ))}
             </div>
-          </div>
-        ))}
-        <div className="summary-totals">
-          <div><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-          <div><span>Shipping</span><span>Free</span></div>
-          <div><span>Tax</span><span>${tax.toFixed(2)}</span></div>
-          <div className="total"><span>Order total</span><span>${total.toFixed(2)}</span></div>
+          </section>
+
+          <section className="checkout-section">
+            <div className="section-title">Contact Information</div>
+            <input
+              type="email"
+              placeholder="Email address"
+              value={checkoutData.email}
+              onChange={e => updateEmail(e.target.value)}
+              required
+            />
+          </section>
+
+          <section className="checkout-section">
+            <div className="section-title">Shipping address</div>
+
+            <div className="two-col">
+              <input
+                name="firstName"
+                placeholder="First name"
+                value={checkoutData.shipping.firstName}
+                onChange={handleChange}
+                required
+              />
+              <input
+                name="lastName"
+                placeholder="Last name"
+                value={checkoutData.shipping.lastName}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="two-col">
+              <input
+                name="phone"
+                type="tel"
+                placeholder="Phone number"
+                value={checkoutData.shipping.phone}
+                onChange={handleChange}
+                required
+              />
+              <input
+                name="address"
+                placeholder="Address (apt, suite, etc.)"
+                value={checkoutData.shipping.address}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="three-col">
+              <input
+                name="city"
+                placeholder="City"
+                value={checkoutData.shipping.city}
+                onChange={handleChange}
+                required
+              />
+              <input
+                name="province"
+                placeholder="Province"
+                value={checkoutData.shipping.province}
+                onChange={handleChange}
+                required
+              />
+              <input
+                name="postalCode"
+                placeholder="Postal code"
+                value={checkoutData.shipping.postalCode}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                name="saveToAccount"
+                checked={checkoutData.shipping.saveToAccount}
+                onChange={handleChange}
+              />
+              Save address to my account
+            </label>
+          </section>
+
+          <button 
+            type="submit" 
+            className="btn-next"
+            disabled={userBalance && userBalance.balance < total}
+          >
+            {userBalance && userBalance.balance < total ? "INSUFFICIENT FUNDS" : "NEXT STEP"}
+          </button>
         </div>
-      </div>
-    </form>
+
+        <div className="checkout-right">
+          <h3>Order Summary</h3>
+          {items.map((item) => (
+            <div key={item.id} className="summary-item">
+              <img
+                src={item.image || "/images/basic-bedding.jpg"}
+                alt={item.name}
+              />
+              <div>
+                <p className="item-title">{item.name}</p>
+                <p>${item.price.toFixed(2)}</p>
+                <p>Qt: {item.quantity}</p>
+              </div>
+            </div>
+          ))}
+          <div className="summary-totals">
+            <div><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+            <div><span>Shipping</span><span>${checkoutData.shippingCost ? checkoutData.shippingCost.toFixed(2) : '0.00'}</span></div>
+            <div><span>Tax</span><span>${tax.toFixed(2)}</span></div>
+            <div className="total"><span>Order total</span><span>${(subtotal + (checkoutData.shippingCost || 0) + tax).toFixed(2)}</span></div>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 }

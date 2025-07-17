@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS orders (
   subtotal DECIMAL(10,2) NOT NULL,
   tax DECIMAL(10,2) NOT NULL,
   shipping DECIMAL(10,2) NOT NULL,
+  shipping_method VARCHAR(100),
   total DECIMAL(10,2) NOT NULL,
   payment_method VARCHAR(100),
   payment_status VARCHAR(50) DEFAULT 'pending',
