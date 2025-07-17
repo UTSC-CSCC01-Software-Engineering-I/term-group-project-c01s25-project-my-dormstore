@@ -79,7 +79,7 @@ function AppContent() {
     async function checkAuth() {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:5000/me`, {
+        const res = await fetch(`http://localhost:5001/me`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
