@@ -5,7 +5,6 @@ import "./CheckoutPage.css";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../contexts/CartContext.tsx";
 import { useCheckout } from "../../contexts/CheckoutContext.tsx";
-<<<<<<< Updated upstream
 import CheckoutProgress from '../../components/CheckoutProgress';
 
 const SHIPPING_OPTIONS = [
@@ -15,9 +14,6 @@ const SHIPPING_OPTIONS = [
   { label: 'Purolator Express®', cost: 31.42, delivery: 'Ships within the 3 days' },
   { label: 'Priority', cost: 38.62, delivery: 'Ships within the 3 days' },
 ];
-=======
-import CheckoutProgress from "../../components/CheckoutProgress.jsx";
->>>>>>> Stashed changes
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -148,15 +144,9 @@ export default function CheckoutPage() {
   }
 
   return (
-<<<<<<< Updated upstream
-    <div>
-      <CheckoutProgress currentStep={1} />
-      <form className="checkout-container" onSubmit={handleSubmit}>
-=======
     <form className="checkout-container" onSubmit={handleSubmit}>
       <CheckoutProgress currentStep={1} />
       <div className="checkout-content">
->>>>>>> Stashed changes
         <div className="checkout-left">
           <h2>Checkout</h2>
 
@@ -301,8 +291,6 @@ export default function CheckoutPage() {
             {userBalance && userBalance.balance < total ? "INSUFFICIENT FUNDS" : "NEXT STEP"}
           </button>
         </div>
-<<<<<<< Updated upstream
-
         <div className="checkout-right">
           <h3>Order Summary</h3>
           {items.map((item) => (
@@ -325,12 +313,7 @@ export default function CheckoutPage() {
             <div className="total"><span>Order total</span><span>${(subtotal + (checkoutData.shippingCost || 0) + tax).toFixed(2)}</span></div>
           </div>
         </div>
-      </form>
-    </div>
-=======
-      </div>
       </div>
     </form>
->>>>>>> Stashed changes
   );
 }

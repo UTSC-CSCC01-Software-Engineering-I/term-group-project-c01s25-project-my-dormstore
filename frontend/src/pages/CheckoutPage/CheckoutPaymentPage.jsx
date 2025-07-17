@@ -3,11 +3,7 @@ import "./CheckoutPaymentPage.css";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../contexts/CartContext.tsx";
 import { useCheckout } from "../../contexts/CheckoutContext.tsx";
-<<<<<<< Updated upstream
 import CheckoutProgress from '../../components/CheckoutProgress';
-=======
-import CheckoutProgress from "../../components/CheckoutProgress.jsx";
->>>>>>> Stashed changes
 
 export default function CheckoutPaymentPage() {
   const navigate = useNavigate();
@@ -45,15 +41,9 @@ export default function CheckoutPaymentPage() {
   };
 
   return (
-<<<<<<< Updated upstream
-    <div>
-      <CheckoutProgress currentStep={2} />
-      <form className="checkout-container payment" onSubmit={handleSubmit}>
-=======
     <form className="checkout-container payment" onSubmit={handleSubmit}>
       <CheckoutProgress currentStep={2} />
       <div className="checkout-content">
->>>>>>> Stashed changes
         <div className="checkout-left">
           <h2>Checkout</h2>
 
@@ -250,7 +240,6 @@ export default function CheckoutPaymentPage() {
             REVIEW YOUR ORDER
           </button>
         </div>
-<<<<<<< Updated upstream
 
         <div className="checkout-right">
           <h3>Order Summary</h3>
@@ -274,12 +263,7 @@ export default function CheckoutPaymentPage() {
             <div className="total"><span>Order total</span><span>${total.toFixed(2)}</span></div>
           </div>
         </div>
-      </form>
-    </div>
-=======
-      </div>
       </div>
     </form>
->>>>>>> Stashed changes
   );
 }

@@ -3,11 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./SuccessPage.css";
 import { useCheckout } from "../../contexts/CheckoutContext.tsx";
 import { useEffect } from "react";
-<<<<<<< Updated upstream
 import CheckoutProgress from '../../components/CheckoutProgress';
-=======
-import CheckoutProgress from "../../components/CheckoutProgress.jsx";
->>>>>>> Stashed changes
 
 export default function SuccessPage() {
   const navigate = useNavigate();
@@ -21,16 +17,9 @@ export default function SuccessPage() {
   }, [resetCheckout]); // Add resetCheckout back since it's now memoized
 
   return (
-<<<<<<< Updated upstream
-    <div>
-      <CheckoutProgress currentStep={4} />
-      <div className="success-container">
-        <div className="success-icon">✔︎</div>
-=======
     <div className="success-container">
       <CheckoutProgress currentStep={4} />
       <div className="success-icon">✔︎</div>
->>>>>>> Stashed changes
 
         <h2>Thank you for your order!</h2>
         <p>Your order # is: <strong>{orderNumber}</strong></p>

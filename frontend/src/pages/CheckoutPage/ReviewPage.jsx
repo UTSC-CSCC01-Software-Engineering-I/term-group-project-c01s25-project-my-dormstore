@@ -3,11 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "./ReviewPage.css";
 import { useCart } from "../../contexts/CartContext.tsx";
 import { useCheckout } from "../../contexts/CheckoutContext.tsx";
-<<<<<<< Updated upstream
 import CheckoutProgress from '../../components/CheckoutProgress';
-=======
-import CheckoutProgress from "../../components/CheckoutProgress.jsx";
->>>>>>> Stashed changes
 
 export default function ReviewPage() {
   const navigate = useNavigate();
@@ -120,15 +116,9 @@ export default function ReviewPage() {
   }
 
   return (
-<<<<<<< Updated upstream
-    <div>
-      <CheckoutProgress currentStep={3} />
-      <form className="checkout-container review" onSubmit={handlePlaceOrder}>
-=======
     <form className="checkout-container review" onSubmit={handlePlaceOrder}>
       <CheckoutProgress currentStep={3} />
       <div className="checkout-content">
->>>>>>> Stashed changes
         <div className="checkout-left">
           <h2>Checkout</h2>
 
@@ -207,8 +197,6 @@ export default function ReviewPage() {
             <Link to="/privacy">Privacy Policy</Link>.
           </p>
         </div>
-<<<<<<< Updated upstream
-
         <div className="checkout-right">
           <h3>Order Summary</h3>
           {items.map((item) => (
@@ -231,12 +219,7 @@ export default function ReviewPage() {
             <div className="total"><span>Order total</span><span>${total.toFixed(2)}</span></div>
           </div>
         </div>
-      </form>
-    </div>
-=======
-      </div>
       </div>
     </form>
->>>>>>> Stashed changes
   );
 }
