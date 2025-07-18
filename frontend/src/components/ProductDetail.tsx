@@ -1,4 +1,4 @@
-import react from 'react'
+
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import { productService } from '../services/productService'

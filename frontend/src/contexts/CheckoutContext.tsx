@@ -14,7 +14,9 @@ interface CheckoutData {
     postalCode: string;
     saveToAccount: boolean;
   };
-  
+  // New: Shipping method and cost
+  shippingMethod?: string;
+  shippingCost?: number;
   // Step 2: Payment Information
   payment: {
     method: string;
@@ -40,6 +42,7 @@ interface CheckoutContextType {
   updatePayment: (data: Partial<CheckoutData['payment']>) => void;
   updateMoveInDate: (date: Date) => void;
   updateEmail: (email: string) => void;
+  updateShippingMethod: (method: string, cost: number) => void;
   resetCheckout: () => void;
 }
 
@@ -58,6 +61,8 @@ const initialCheckoutData: CheckoutData = {
     postalCode: "",
     saveToAccount: false
   },
+  shippingMethod: undefined,
+  shippingCost: undefined,
   payment: {
     method: "paypal",
     cardNumber: "",
@@ -99,6 +104,15 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  // New: update shipping method and cost
+  const updateShippingMethod = (method: string, cost: number) => {
+    setCheckoutData(prev => ({
+      ...prev,
+      shippingMethod: method,
+      shippingCost: cost
+    }));
+  };
+
   const resetCheckout = useCallback(() => {
     setCheckoutData(initialCheckoutData);
   }, []);
@@ -111,6 +125,7 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
         updatePayment,
         updateMoveInDate,
         updateEmail,
+        updateShippingMethod,
         resetCheckout
       }}
     >
