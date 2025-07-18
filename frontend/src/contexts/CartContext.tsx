@@ -17,6 +17,7 @@ interface CartContextType {
   totalItems: number;
   totalPrice: number;
   clearCart: () => void;
+  cartReady: boolean;
 }
 
 //? create the context with undefined as initial value
@@ -106,6 +107,7 @@ const cartAPI = {
 export function CartProvider({ children }: { children: ReactNode }) {
   // Initialize with empty cart no matter what
   const [items, setItems] = useState<CartItem[]>([]);
+  const [cartReady, setCartReady] = useState(false);
 
   // Helper function to get product by ID
   const getProductById = async (productId: number): Promise<Product | null> => {
@@ -120,7 +122,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadCart() {
       if (isUserLoggedIn()) {
-        // Logged in
         try {
           const data = await cartAPI.getCart();
           const cartItems = await Promise.all(
@@ -139,11 +140,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
           setItems(cartItems.filter(Boolean));
         } catch (err) {
           setItems([]);
+        } finally {
+          setCartReady(true); // ✅ set after async load finishes
         }
       } else {
-        // Not logged in
         const savedCart = loadCartFromStorage();
         setItems(savedCart);
+        setCartReady(true); // ✅ local cart is ready
       }
     }
     loadCart();
@@ -333,6 +336,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalItems,
         totalPrice,
         clearCart,
+        cartReady
       }}
     >
       {children}
