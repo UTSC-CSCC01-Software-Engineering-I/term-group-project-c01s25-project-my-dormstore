@@ -100,7 +100,7 @@ app.post("/loginUser", async (req, res) => {
       const user = result.rows[0];
   
       if (user && (await bcrypt.compare(password, user.password))) {
-        const token = jwt.sign({ userId: user.id }, "secret-key", { expiresIn: "1h" });
+        const token = jwt.sign({ userId: user.id }, "secret-key", { expiresIn: "24h" });
   
         res.json({ response: "User logged in succesfully.", token: token }); 
       } else {
@@ -135,7 +135,7 @@ app.get("/cart", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const result = await pool.query(
-      "SELECT id, product_id, quantity, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
+      "SELECT id, product_id, quantity, selected_size, selected_color, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
       [userId]
     );
     res.json({ cartItems: result.rows });
@@ -149,7 +149,7 @@ app.get("/cart", authenticateToken, async (req, res) => {
 app.post("/cart", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { product_id, quantity = 1 } = req.body;
+    const { product_id, quantity = 1, selected_size, selected_color } = req.body;
 
     if (!product_id) {
       return res.status(400).json({ error: "Product ID is required" });
@@ -157,16 +157,36 @@ app.post("/cart", authenticateToken, async (req, res) => {
     if (quantity < 1) {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
-    const existingItem = await pool.query(
-      "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2",
-      [userId, product_id]
-    );
+
+    // Check for existing item with same product_id, size, and color
+    let existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2";
+    let queryParams = [userId, product_id];
+    
+    if (selected_size) {
+      existingItemQuery += " AND selected_size = $3";
+      queryParams.push(selected_size);
+      
+      if (selected_color) {
+        existingItemQuery += " AND selected_color = $4";
+        queryParams.push(selected_color);
+      } else {
+        existingItemQuery += " AND selected_color IS NULL";
+      }
+    } else if (selected_color) {
+      existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
+      queryParams.push(selected_color);
+    } else {
+      existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
+    }
+
+    const existingItem = await pool.query(existingItemQuery, queryParams);
+    
     if (existingItem.rows.length > 0) {
       // update existing item quantity
       const newQuantity = existingItem.rows[0].quantity + quantity;
       const result = await pool.query(
-        "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND product_id = $3 RETURNING *",
-        [newQuantity, userId, product_id]
+        "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
+        [newQuantity, existingItem.rows[0].id]
       );
       
       res.json({ 
@@ -175,9 +195,10 @@ app.post("/cart", authenticateToken, async (req, res) => {
       });
     } else {
       const result = await pool.query(
-        "INSERT INTO cart_items (user_id, product_id, quantity) VALUES ($1, $2, $3) RETURNING *",
-        [userId, product_id, quantity]
+        "INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [userId, product_id, quantity, selected_size || null, selected_color || null]
       );
+      
       res.status(201).json({ 
         message: "Item added to cart", 
         cartItem: result.rows[0] 
@@ -390,10 +411,10 @@ app.get("/api/products", async (req, res) => {
     let query, params;
     
     if (category) {
-      query = "SELECT id, name, price, description, rating, image_url, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
+      query = "SELECT id, name, price, description, rating, image_url, category, size, color, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
       params = [category];
     } else {
-      query = "SELECT id, name, price, description, rating, image_url, created_at, updated_at FROM products ORDER BY name";
+      query = "SELECT id, name, price, description, rating, image_url, category, size, color, created_at, updated_at FROM products ORDER BY name";
       params = [];
     }
     
@@ -410,7 +431,7 @@ app.get("/api/products/:id", async (req, res) => {
   try {
     const productId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, description, rating, image_url, created_at, updated_at FROM products WHERE id = $1",
+      "SELECT id, name, price, description, rating, image_url, category, size, color, created_at, updated_at FROM products WHERE id = $1",
       [productId]
     );
     

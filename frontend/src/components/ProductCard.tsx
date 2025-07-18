@@ -12,8 +12,17 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: ProductCardProps) => {
+  // Check if product has  size or color
+  const hasMultipleSizes = product.size && product.size.split(',').length > 1;
+  const hasMultipleColors = product.color && product.color.split(',').length > 1;
+  const needsOptionsSelection = hasMultipleSizes || hasMultipleColors;
+
   const handleAddToCart = () => {
-    console.log(" CLICKED:", product);  
+    if (needsOptionsSelection) {
+      window.location.href = `${linkPrefix}/${product.id}`;
+      return;
+    }
+    // Quick add for products without options
     onAddToCart(product.id);
   };
   
@@ -101,8 +110,8 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
           <button 
             className="cart-icon-btn"
             onClick={handleAddToCart}
-            aria-label={`Add ${product.name} to cart`}
-            >
+            aria-label={needsOptionsSelection ? `Select options for ${product.name}` : `Add ${product.name} to cart`}
+          >
             <img src="/images/Shopping-cart.png" alt="Add to Cart" className="cart-icon" />
           </button>
         </div>
