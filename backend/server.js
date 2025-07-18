@@ -323,7 +323,8 @@ app.delete("/cart", authenticateToken, async (req, res) => {
     }
   });
   
-  app.post("/api/order-updates", async (req, res) => {
+  //change it to admin orderupdates
+  app.post("/api/admin/order-updates", async (req, res) => {
     const { orderNumber, email, update } = req.body;
   
     if (!orderNumber || !email || !update) {
@@ -872,7 +873,7 @@ app.post("/api/admin/login", async (req, res) => {
   }
 });
 
-app.put("/api/admin/order-status", async (req, res) => {
+app.put("/api/order-status", async (req, res) => {
   const { orderNumber, status } = req.body;
   if (!orderNumber || !status) {
     return res.status(400).json({ error: "Missing fields" });
@@ -940,3 +941,173 @@ app.get("/api/order-history", authenticateToken, async (req, res) => {
   }
 });
 
+// GET all users for admin dashboard
+app.get('/api/admin/users', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        first_name  AS "firstName",
+        last_name   AS "lastName",
+        email,
+        phone,
+        address
+      FROM users
+      ORDER BY id
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('GET /api/users error:', err);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// DELETE a user by ID -admindashboard
+app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  try {
+    const result = await pool.query(
+      'DELETE FROM users WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error(`DELETE /api/users/${id} error:`, err);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+//GET all ambassadors for admin dashboard
+app.get('/api/admin/ambassadors', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        first_name  AS "firstName",
+        last_name   AS "lastName",
+        email
+      FROM ambassadors
+      ORDER BY id
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('GET /api/ambassadors error:', err);
+    res.status(500).json({ error: 'Failed to fetch ambassadors' });
+  }
+});
+
+// DELETE an ambassador by ID - admin dashboard
+app.delete('/api/admin/ambassadors/:id', authenticateToken, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  try {
+    const result = await pool.query(
+      'DELETE FROM ambassadors WHERE id = $1 RETURNING id',
+      [id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Ambassador not found' });
+    }
+    res.json({ message: 'Ambassador deleted successfully' });
+  } catch (err) {
+    console.error(`DELETE /api/ambassadors/${id} error:`, err);
+    res.status(500).json({ error: 'Failed to delete ambassador' });
+  }
+});
+
+// Get all products
+app.get("/api/admin/products", authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        name,
+        price,
+        description,
+        rating,
+        image_url AS "imageUrl"
+      FROM products
+      ORDER BY name
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("GET /api/products error:", err);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
+// Add a new product
+app.post("/api/admin/products", authenticateToken, async (req, res) => {
+  const { name, price, description, image_url } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO products (name, price, description, image_url)
+       VALUES ($1, $2, $3, $4)
+       RETURNING
+         id,
+         name,
+         price,
+         description,
+         rating,
+         image_url AS "imageUrl"`,
+      [name, price, description, image_url]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("POST /api/products error:", err);
+    res.status(500).json({ error: "Failed to add product" });
+  }
+});
+
+// Update a product by ID
+app.put("/api/admin/products/:id", authenticateToken, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { name, price, description, image_url } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE products
+         SET name        = $1,
+             price       = $2,
+             description = $3,
+             image_url   = $4
+       WHERE id = $5
+       RETURNING
+         id,
+         name,
+         price,
+         description,
+         rating,
+         image_url AS "imageUrl"`,
+      [name, price, description, image_url, id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("PUT /api/products/:id error:", err);
+    res.status(500).json({ error: "Failed to update product" });
+  }
+});
+
+// Delete a product by ID
+app.delete("/api/admin/products/:id", authenticateToken, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  try {
+    const result = await pool.query(
+      "DELETE FROM products WHERE id = $1 RETURNING id",
+      [id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    res.json({ message: "Product deleted", id: result.rows[0].id });
+  } catch (err) {
+    console.error("DELETE /api/products/:id error:", err);
+    res.status(500).json({ error: "Failed to delete product" });
+  }
+});
