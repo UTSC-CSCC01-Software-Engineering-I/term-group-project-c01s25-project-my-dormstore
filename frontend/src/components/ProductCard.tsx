@@ -1,6 +1,7 @@
 import { Product } from '../types/Product';
 import { Link } from 'react-router-dom';
 import { getCurrentUserBedSize } from '../utils/bedSizeHelper';
+import { DormChecklistItems } from '../data/dormChecklistItems';
 import './ProductCard.css';
 
 
@@ -27,6 +28,33 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
       }
     }
     return "Highly Recommended";
+  };
+
+  // Check if this product is in the user's dorm checklist
+  const isProductInDormChecklist = () => {
+    try {
+      const email = localStorage.getItem("userEmail");
+      if (!email) return false;
+      const userInfo = localStorage.getItem(`userInfo_${email}`);
+      if (!userInfo) return false;
+      
+       const parsed = JSON.parse(userInfo);
+      const userDorm: string = parsed.dorm;
+      
+      if (!userDorm || !DormChecklistItems[userDorm as keyof typeof DormChecklistItems]) return false;
+      
+      // see if product name contains any word from checklist items
+      const dormItems = DormChecklistItems[userDorm as keyof typeof DormChecklistItems];
+      const productName = product.name.toLowerCase();
+      return dormItems.some((item: any) => {
+        const itemLabel = item.label.toLowerCase();
+        return productName.includes(itemLabel) || itemLabel.includes(productName);
+      });
+      
+    } 
+    catch (error) {
+      return false;
+    }
   };
   
   console.log("Image URL:", product.image_url);
@@ -59,10 +87,12 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
               <span className="size-text">{getRecommendationText()}</span>
             </>
           ) : (
-            <>
-              <span className="green-dot">●</span>
-              <span className="size-text">Highly Recommended</span>
-            </>
+            isProductInDormChecklist() ? (
+              <>
+                <span className="green-dot">●</span>
+                <span className="size-text">Highly Recommended</span>
+              </>
+            ) : null
           )}
         </div>
         
