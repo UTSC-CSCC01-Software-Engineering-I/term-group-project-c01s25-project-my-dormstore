@@ -53,7 +53,7 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 ![addedtocart](./images/addedtocart.png)
 
-![livechecklist](./images/livechecklist)
+![livechecklist](./images/livechecklist.png)
 
 - **Order Status Page with Tracking (SCRUM-35, SCRUM-39)**
 
