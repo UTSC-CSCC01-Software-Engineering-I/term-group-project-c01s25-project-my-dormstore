@@ -1027,6 +1027,7 @@ app.get("/api/admin/products", authenticateToken, async (req, res) => {
         id,
         name,
         price,
+        category,
         description,
         rating,
         image_url AS "imageUrl"
@@ -1042,19 +1043,20 @@ app.get("/api/admin/products", authenticateToken, async (req, res) => {
 
 // Add a new product
 app.post("/api/admin/products", authenticateToken, async (req, res) => {
-  const { name, price, description, image_url } = req.body;
+  const { name, price, category, description, image_url } = req.body;
   try {
     const result = await pool.query(
-      `INSERT INTO products (name, price, description, image_url)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO products (name, price, category, description, image_url)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING
          id,
          name,
          price,
+         category,
          description,
          rating,
          image_url AS "imageUrl"`,
-      [name, price, description, image_url]
+      [name, price, category, description, image_url]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -1066,23 +1068,25 @@ app.post("/api/admin/products", authenticateToken, async (req, res) => {
 // Update a product by ID
 app.put("/api/admin/products/:id", authenticateToken, async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const { name, price, description, image_url } = req.body;
+  const { name, price, category, description, image_url } = req.body;
   try {
     const result = await pool.query(
       `UPDATE products
          SET name        = $1,
              price       = $2,
-             description = $3,
-             image_url   = $4
-       WHERE id = $5
+             category    = $3,
+             description = $4,
+             image_url   = $5
+       WHERE id = $6
        RETURNING
          id,
          name,
          price,
+         category,
          description,
          rating,
          image_url AS "imageUrl"`,
-      [name, price, description, image_url, id]
+      [name, price, category, description, image_url, id]
     );
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Product not found" });
@@ -1109,5 +1113,128 @@ app.delete("/api/admin/products/:id", authenticateToken, async (req, res) => {
   } catch (err) {
     console.error("DELETE /api/products/:id error:", err);
     res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
+app.get("/api/admin/packages", authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        name,
+        price,
+        category,
+        description,
+        rating,
+        image_url AS "imageUrl"
+      FROM packages
+      ORDER BY name
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("GET /api/packages error:", err);
+    res.status(500).json({ error: "Failed to fetch packages" });
+  }
+});
+
+// Add a new package with package_items
+app.post("/api/admin/packages", authenticateToken, async (req, res) => {
+  const { name, price, category, description, image_url, rating, items } = req.body;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const pkgResult = await client.query(
+      `INSERT INTO packages (name, price, category, description, image_url, rating)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, price, category, description, rating, image_url AS "imageUrl"`,
+      [name, price, category, description, image_url, rating || 0]
+    );
+    const packageId = pkgResult.rows[0].id;
+    if (Array.isArray(items) && items.length > 0) {
+      for (const item of items) {
+        await client.query(
+          `INSERT INTO package_items (package_id, product_id, quantity) VALUES ($1, $2, $3)`,
+          [packageId, item.product_id, item.quantity]
+        );
+      }
+    }
+    await client.query("COMMIT");
+    res.status(201).json(pkgResult.rows[0]);
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("POST /api/packages error:", err);
+    res.status(500).json({ error: "Failed to add package" });
+  } finally {
+    client.release();
+  }
+});
+
+app.get("/api/admin/packages/:id/items", authenticateToken, async (req, res) => {
+  const packageId = parseInt(req.params.id, 10);
+  try {
+    const result = await pool.query(
+      `SELECT pi.product_id, p.name AS product_name, pi.quantity
+         FROM package_items pi
+         JOIN products p ON pi.product_id = p.id
+        WHERE pi.package_id = $1`,
+      [packageId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("GET /api/admin/packages/:id/items error:", err);
+    res.status(500).json({ error: "Failed to fetch package items" });
+  }
+});
+
+// Update a package by ID
+app.put("/api/admin/packages/:id", authenticateToken, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { name, price, category, description, image_url, rating } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE packages
+         SET name        = $1,
+             price       = $2,
+             category    = $3,
+             description = $4,
+             image_url   = $5,
+             rating      = $6
+       WHERE id = $7
+       RETURNING
+         id,
+         name,
+         price,
+         category,
+         description,
+         rating,
+         image_url AS "imageUrl"`,
+      [name, price, category, description, image_url, rating || 0, id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Package not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("PUT /api/packages/:id error:", err);
+    res.status(500).json({ error: "Failed to update package" });
+  }
+});
+
+// Delete a package by ID
+app.delete("/api/admin/packages/:id", authenticateToken, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  try {
+    await pool.query("DELETE FROM package_items WHERE package_id = $1", [id]);
+    const result = await pool.query(
+      "DELETE FROM packages WHERE id = $1 RETURNING id",
+      [id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Package not found" });
+    }
+    res.json({ message: "Package deleted", id: result.rows[0].id });
+  } catch (err) {
+    console.error("DELETE /api/packages/:id error:", err);
+    res.status(500).json({ error: "Failed to delete package" });
   }
 });
