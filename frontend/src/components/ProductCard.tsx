@@ -69,14 +69,13 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
   
   console.log("Image URL:", product.image_url);
 
-
   return (
     <div className="product-card">
       <Link to={`${linkPrefix}/${product.id}`} className="product-link">
         <div className="product-image-container">
         <img
           className="product-image"
-          src={product.image_url || "/images/product-test.jpg"}
+          src={product.image_url || product.image || "/images/product-test.jpg"}
           alt={product.name}
           onError={(e) => {
             e.currentTarget.onerror = null;

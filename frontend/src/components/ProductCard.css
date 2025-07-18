@@ -36,6 +36,9 @@
 .product-link {
   text-decoration: none;
   color: inherit;
+  display: block;
+  position: relative;
+  z-index: 1;
 }
 
 
@@ -91,6 +94,8 @@
   border: none;
   padding: 0;
   cursor: pointer;
+  z-index: 2;
+  position: relative;
 }
 
 .cart-icon {

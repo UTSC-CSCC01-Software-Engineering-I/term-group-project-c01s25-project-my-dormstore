@@ -20,6 +20,7 @@ interface CartContextType {
   totalItems: number;
   totalPrice: number;
   clearCart: () => void;
+  cartReady: boolean;
 }
 
 //? create the context with undefined as initial value
@@ -63,7 +64,7 @@ const loadCartFromStorage = (): CartItem[] => {
 const cartAPI = {
   // get cart items from backend
   async getCart() {
-    const response = await fetch(`http://localhost:5001/cart`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to get cart');
@@ -74,6 +75,7 @@ const cartAPI = {
   // add item to backend cart
   async addItem(product_id: number, quantity: number = 1, selected_size?: string, selected_color?: string) {
     const response = await fetch(`http://localhost:5001/cart`, {
+
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ product_id, quantity, selected_size, selected_color })
@@ -84,7 +86,7 @@ const cartAPI = {
 
   // update quantity of a cart item
   async updateItem(itemId: number, quantity: number) {
-    const response = await fetch(`http://localhost:5001/cart/${itemId}`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart/${itemId}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify({ quantity })
@@ -95,7 +97,7 @@ const cartAPI = {
 
   // remove a specific cart item
   async removeItem(itemId: number) {
-    const response = await fetch(`http://localhost:5001/cart/${itemId}`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart/${itemId}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
@@ -105,7 +107,7 @@ const cartAPI = {
 
   // clear the entire cart
   async clearCart() {
-    const response = await fetch(`http://localhost:5001/cart`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
@@ -118,6 +120,7 @@ const cartAPI = {
 export function CartProvider({ children }: { children: ReactNode }) {
   // Initialize with empty cart no matter what
   const [items, setItems] = useState<CartItem[]>([]);
+  const [cartReady, setCartReady] = useState(false);
 
   // Helper function to get product by ID
   const getProductById = async (productId: number): Promise<Product | null> => {
@@ -132,7 +135,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadCart() {
       if (isUserLoggedIn()) {
-        // Logged in
         try {
           const data = await cartAPI.getCart();
           const cartItems = await Promise.all(
@@ -154,11 +156,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
           setItems(cartItems.filter(Boolean));
         } catch (err) {
           setItems([]);
+        } finally {
+          setCartReady(true); // ✅ set after async load finishes
         }
       } else {
-        // Not logged in
         const savedCart = loadCartFromStorage();
         setItems(savedCart);
+        setCartReady(true); // ✅ local cart is ready
       }
     }
     loadCart();
@@ -369,6 +373,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalItems,
         totalPrice,
         clearCart,
+        cartReady
       }}
     >
       {children}

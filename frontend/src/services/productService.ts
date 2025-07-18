@@ -26,29 +26,40 @@ export const productService = {
 
   async getProductById(id: number): Promise<Product | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error('Failed to fetch product');
+      // First try /products/:id
+      const productResponse = await fetch(`${API_BASE_URL}/api/products/${id}`);
+      if (productResponse.ok) {
+        const data = await productResponse.json();
+        return {
+          ...data.product,
+          price: parseFloat(data.product.price),
+          rating: parseFloat(data.product.rating),
+          image: data.product.image || data.product.image_url 
+        };
       }
-      const data = await response.json();
-      
-      // Factory method: transform API data to match frontend expectations
-      const product = {
-        ...data.product,
-        price: parseFloat(data.product.price),
-        rating: parseFloat(data.product.rating),
-        image: data.product.image
-      };
-      
-      return product;
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      throw error;
+    } catch (err) {
+      console.warn("Product not found in /products/:id, trying /packages/:id...");
     }
+  
+    try {
+      // Fallback to /packages/:id
+      const packageResponse = await fetch(`${API_BASE_URL}/api/packages/${id}`);
+      if (packageResponse.ok) {
+        const pkg = await packageResponse.json(); // make sure backend sends raw object
+        return {
+          ...pkg,
+          price: parseFloat(pkg.price),
+          rating: parseFloat(pkg.rating),
+          image: pkg.image || pkg.image_url
+        };
+      }
+    } catch (err) {
+      console.error("Error fetching package by ID:", err);
+    }
+  
+    return null;
   },
+  
 
   async getProductsByCategory(category: string): Promise<Product[]> {
     try {

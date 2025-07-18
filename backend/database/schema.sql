@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 -- order_updates table
 CREATE TABLE IF NOT EXISTS order_updates (
   id SERIAL PRIMARY KEY,
-  order_name VARCHAR(255) NOT NULL,
+  order_number VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL,
   update_text TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
