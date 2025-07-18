@@ -51,34 +51,39 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 - **Dorm Checklist Auto-Check (SCRUM-37)**
 
-![profile](./images/profile.png)
+![addedtocart](./images/addedtocart.png)
 
-![userform](./images/userForm.png)
+![livechecklist](./images/livechecklist)
 
 - **Order Status Page with Tracking (SCRUM-35, SCRUM-39)**
 
-![checklist](./images/checklist.png)
+![orderhistory](./images/orderhistory.png)
 
+![orderdetail](./images/orderdetail.png)
 
 - **Purchase History in Profile (SCRUM-38)**
 
-![accountSetting](./images/accountSetting.png)
+![userprofile](./images/userprofile.png)
 
-- **Connected the backend of the ambassador's program with the frontend**
+![orderhistory](./images/orderhistory.png)
 
-![ambassador](./images/ambassador.png)
+![orderdetail](./images/orderdetail.png)
 
-![ambassador-db](./images/ambassador-db.png)
+- **add more**
 
-- **Built both the frontend and backend of the contactus page**
+![ambassador](./images/o.png)
 
-![contactus](./images/contact-us.png)
+![ambassador-db](./images/o-db.png)
 
-![contactus](./images/contact-db.png)
+- **add more**
 
-- **Products show in the cart (add/remove/quantity beside the cart**
+![contactus](./images/p-us.png)
 
-![contactus](./images/products.png)
+![contactus](./images/9-db.png)
+
+- **add more**
+
+![contactus](./images/0.png)
 
 
 
