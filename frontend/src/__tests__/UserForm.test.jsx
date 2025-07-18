@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import UserForm from './UserForm';
+import UserForm from '../components/userForm';
 
 test('submits form with correct data', async () => {
   // PREPARE

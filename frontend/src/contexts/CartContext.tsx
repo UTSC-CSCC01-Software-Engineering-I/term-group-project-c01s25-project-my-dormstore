@@ -74,7 +74,7 @@ const cartAPI = {
   
   // add item to backend cart
   async addItem(product_id: number, quantity: number = 1, selected_size?: string, selected_color?: string) {
-    const response = await fetch(`http://localhost:5001/cart`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
 
       method: 'POST',
       headers: getAuthHeaders(),
