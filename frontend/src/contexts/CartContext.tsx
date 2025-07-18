@@ -6,14 +6,17 @@ import { productService } from '../services/productService';
 interface CartItem extends Product {
   quantity: number;
   backendId?: number;
+  selectedSize?: string;
+  selectedColor?: string;
+  cartItemId?: string; // Unique identifier for cart operations
 }
 
 //? what our cart context will provide
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product) => void;
-  removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  addToCart: (product: Product, quantity?: number, selectedSize?: string, selectedColor?: string) => void;
+  removeFromCart: (cartItemId: string) => void;
+  updateQuantity: (cartItemId: string, quantity: number) => void;
   totalItems: number;
   totalPrice: number;
   clearCart: () => void;
@@ -43,7 +46,16 @@ const saveCartToStorage = (cartItems: CartItem[]) => {
 
 const loadCartFromStorage = (): CartItem[] => {
   const saved = localStorage.getItem('guestCart');
-  return saved ? JSON.parse(saved) : [];
+  if (!saved) return [];
+  
+  const cartItems = JSON.parse(saved);
+  // Ensure all items have cartItemId for backward compatibility
+  return cartItems.map((item: any) => {
+    if (!item.cartItemId) {
+      item.cartItemId = `local_${item.id}_${item.selectedSize || 'nosize'}_${item.selectedColor || 'nocolor'}_${Date.now()}_${Math.random()}`;
+    }
+    return item;
+  });
 };
 
 
@@ -60,11 +72,11 @@ const cartAPI = {
 
   
   // add item to backend cart
-  async addItem(product_id: number, quantity: number = 1) {
+  async addItem(product_id: number, quantity: number = 1, selected_size?: string, selected_color?: string) {
     const response = await fetch(`http://localhost:5001/cart`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ product_id, quantity })
+      body: JSON.stringify({ product_id, quantity, selected_size, selected_color })
     });
     if (!response.ok) throw new Error('Failed to add item');
     return response.json();
@@ -130,7 +142,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 return {
                   ...product,
                   quantity: item.quantity,
-                  backendId: item.id
+                  backendId: item.id,
+                  selectedSize: item.selected_size,
+                  selectedColor: item.selected_color,
+                  cartItemId: `backend_${item.id}` // Unique identifier for cart operations
                 };
               }
               return null;
@@ -149,10 +164,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loadCart();
   }, []);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, quantity: number = 1, selectedSize?: string, selectedColor?: string) => {
     if (isUserLoggedIn()) {
-      // use backend
-      cartAPI.addItem(product.id, 1)
+      // use backend with size/color
+      cartAPI.addItem(product.id, quantity, selectedSize, selectedColor)
         .then(() => cartAPI.getCart())
         .then(async data => {
           const cartItems = await Promise.all(
@@ -162,7 +177,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 return {
                   ...prod,
                   quantity: item.quantity,
-                  backendId: item.id
+                  backendId: item.id,
+                  selectedSize: item.selected_size,
+                  selectedColor: item.selected_color,
+                  cartItemId: `backend_${item.id}`
                 };
               }
               return null;
@@ -172,23 +190,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
         })
         .catch(() => {
           // fallback
+          alert('Failed to add item to cart. Please try again.');
         });
     } else {
       // Not logged in: use local state
       setItems(currentItems => {
-        // if product already exists in cart
-        const existingItem = currentItems.find(item => item.id === product.id);
+        // For localStorage, we need to check if the same product with same size/color already exists
+        const existingItem = currentItems.find(item => 
+          item.id === product.id && 
+          item.selectedSize === selectedSize && 
+          item.selectedColor === selectedColor
+        );
+        
         let newItems;
         if (existingItem) {
-          // if exists increase quantity by 1
+          // if exists increase quantity by the specified amount
           newItems = currentItems.map(item =>
-            item.id === product.id
-              ? { ...item, quantity: item.quantity + 1 }
+            (item.id === product.id && 
+             item.selectedSize === selectedSize && 
+             item.selectedColor === selectedColor)
+              ? { ...item, quantity: item.quantity + quantity }
               : item
           );
         } else {
-          // new item
-          newItems = [...currentItems, { ...product, quantity: 1 }];
+          // new item - create unique cartItemId for localStorage
+          const cartItemId = `local_${product.id}_${selectedSize || 'nosize'}_${selectedColor || 'nocolor'}_${Date.now()}`;
+          newItems = [...currentItems, { ...product, quantity, selectedSize, selectedColor, cartItemId }];
         }
         // Save to localStorage
         saveCartToStorage(newItems);
@@ -197,12 +224,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const removeFromCart = (productId: number) => {
+  const removeFromCart = (cartItemId: string) => {
     if (isUserLoggedIn()) {
-      // find the backend cart item id for this product
-      const item = items.find(i => i.id === productId);
-      if (!item || !item.backendId) return;
-      cartAPI.removeItem(item.backendId)
+      // For logged-in users, extract backendId from cartItemId
+      const backendId = parseInt(cartItemId.replace('backend_', ''));
+      cartAPI.removeItem(backendId)
         .then(() => cartAPI.getCart())
         .then(async data => {
           const cartItems = await Promise.all(
@@ -212,7 +238,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 return {
                   ...prod,
                   quantity: item.quantity,
-                  backendId: item.id
+                  backendId: item.id,
+                  selectedSize: item.selected_size,
+                  selectedColor: item.selected_color,
+                  cartItemId: `backend_${item.id}`
                 };
               }
               return null;
@@ -226,7 +255,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } else {
       // Not logged in: use local state and save to localStorage
       setItems(currentItems => {
-        const newItems = currentItems.filter(item => item.id !== productId);
+        // For localStorage, filter by cartItemId
+        const newItems = currentItems.filter(item => item.cartItemId !== cartItemId);
         // Save to localStorage
         saveCartToStorage(newItems);
         return newItems;
@@ -234,14 +264,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Update
-  const updateQuantity = (productId: number, quantity: number) => {
+  // Update by cartItemId
+  const updateQuantity = (cartItemId: string, quantity: number) => {
     if (isUserLoggedIn()) {
-      // find the backend cart item id for this product
-      const item = items.find(i => i.id === productId);
+      // find the backend cart item id for this cartItemId
+      const item = items.find(i => i.cartItemId === cartItemId);
       if (!item || !item.backendId) return;
       if (quantity < 1) {
-        removeFromCart(productId);
+        removeFromCart(cartItemId);
         return;
       }
       cartAPI.updateItem(item.backendId, quantity)
@@ -254,7 +284,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 return {
                   ...prod,
                   quantity: item.quantity,
-                  backendId: item.id
+                  backendId: item.id,
+                  selectedSize: item.selected_size,
+                  selectedColor: item.selected_color,
+                  cartItemId: `backend_${item.id}`
                 };
               }
               return null;
@@ -267,12 +300,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
     } else {
       if (quantity < 1) {
-        removeFromCart(productId);
+        removeFromCart(cartItemId);
         return;
       }
       setItems(currentItems => {
         const newItems = currentItems.map(item =>
-          item.id === productId
+          item.cartItemId === cartItemId
             ? { ...item, quantity }
             : item
         );
@@ -305,7 +338,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 return {
                   ...prod,
                   quantity: item.quantity,
-                  backendId: item.id
+                  backendId: item.id,
+                  selectedSize: item.selected_size,
+                  selectedColor: item.selected_color,
+                  cartItemId: `backend_${item.id}`
                 };
               }
               return null;
@@ -346,4 +382,4 @@ export function useCart() {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-} 
+}
