@@ -30,18 +30,18 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 #### Decisions that did not turn out as well as we hoped
 
-- **Delayed planning of cart checkout**  
+- **change**  
 
   We are still in the process of determining the best approach for implementing the card checkout functionality, which has led to some inconsistencies and conflicts in cart behavior.
 
 
 #### Planned changes
 
-- **Improve merge coordination and PR timing**
+- **change**
   
   Although our merging process went smoothly this time, we plan to implement a stricter pull request (PR) deadline, such as no merges within 24 hours of the sprint deadline to allow sufficient time for code reviews and conflict resolution.
 
-- **Clear Task Ownership and Prioritization**
+- **change**
 
   Each task will have a designated owner and a priority label (e.g., High, Medium, Low) to improve accountability and help the team focus on the most   critical items first.
 
@@ -89,15 +89,15 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 #### Goals and/or tasks that were planned but not met/completed:
 
-- **Admin Dashboard**
+- **change**
 
   Initially planned to create a dashboard for administrators to view user form submissions and track order data, but was deprioritized due to time      constraints and focus on user-facing features.
 
-- **Payment Processing Integration**
+- **change**
 
   Planned to begin integration with a payment gateway; however, this was postponed to a future sprint to prioritize checklist personalization,   account management, and order tracking.
 
-- **Mobile Responsiveness Improvements**
+- **change**
 
   While some UI components were tested on smaller screens, full mobile optimization was not completed and will be addressed in a future design- 
   focused sprint.
