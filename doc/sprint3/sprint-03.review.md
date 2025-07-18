@@ -5,7 +5,7 @@
  > _Suggestion:_ Have your review meeting a day or two before the due date. This way you will have some time to go over (and edit) this document, and all team members should have a chance to make their contribution.
 
 
-## Iteration 2 - Review & Retrospect
+## Iteration 3 - Review & Retrospect
 
  * When: July 19th, 2025
  * Where: Online (Discord)
