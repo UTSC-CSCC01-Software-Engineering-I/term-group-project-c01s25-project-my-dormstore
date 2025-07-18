@@ -57,9 +57,9 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 - **Order Status Page with Tracking (SCRUM-35, SCRUM-39)**
 
-![orderhistory](./images/orderhistory.png)
+![ordertracking](./images/ordertrackingpage.png)
 
-![orderdetail](./images/orderdetail.png)
+![orderdetail](./images/orderstatus.png)
 
 - **Purchase History in Profile (SCRUM-38)**
 
