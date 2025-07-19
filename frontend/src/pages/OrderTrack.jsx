@@ -26,7 +26,7 @@ export default function OrderTrackingPage() {
     const handleSubmitUpdate = async (e) => {
         e.preventDefault();
         try {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/order-updates`, {
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/order-updates`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
