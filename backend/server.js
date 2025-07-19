@@ -676,14 +676,14 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       `INSERT INTO orders (
         order_number, user_id, email, first_name, last_name, phone,
         address, city, province, postal_code, move_in_date,
-        subtotal, tax, shipping, total, payment_method,
+        subtotal, tax, shipping, total, payment_method, payment_status,
         billing_first_name, billing_last_name, billing_address, billing_city, billing_province, billing_postal_code
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
       RETURNING id, order_number`,
       [
         orderNumber, userId, email, firstName, lastName, phone,
         address, city, province, postalCode, moveInDate,
-        subtotal, tax, shipping, total, paymentMethod,
+        subtotal, tax, shipping, total, paymentMethod, 'paid',
         billingAddress?.firstName || null,
         billingAddress?.lastName || null,
         billingAddress?.address || null,
@@ -1062,6 +1062,129 @@ app.post("/api/admin/products", authenticateToken, async (req, res) => {
   } catch (err) {
     console.error("POST /api/products error:", err);
     res.status(500).json({ error: "Failed to add product" });
+  }
+});
+
+// Admin Dashboard Home Page Endpoints
+
+// Get revenue data for admin dashboard
+app.get("/api/admin/revenue", authenticateToken, async (req, res) => {
+  const { range } = req.query;
+  
+  try {
+    let dateFilter;
+    switch (range) {
+      case "7":
+        dateFilter = "created_at >= CURRENT_DATE - INTERVAL '7 days'";
+        break;
+      case "30":
+        dateFilter = "created_at >= CURRENT_DATE - INTERVAL '30 days'";
+        break;
+      case "365":
+        dateFilter = "created_at >= CURRENT_DATE - INTERVAL '365 days'";
+        break;
+      default:
+        dateFilter = "created_at >= CURRENT_DATE - INTERVAL '7 days'";
+    }
+
+    const result = await pool.query(
+      `SELECT 
+        COALESCE(SUM(total), 0) as total_revenue,
+        COUNT(*) as total_orders,
+        COALESCE(AVG(total), 0) as average_order_value
+       FROM orders 
+       WHERE ${dateFilter} AND payment_status IN ('completed', 'paid')`,
+      []
+    );
+
+    const revenueData = result.rows[0];
+    res.json({
+      totalRevenue: parseFloat(revenueData.total_revenue),
+      totalOrders: parseInt(revenueData.total_orders),
+      averageOrderValue: parseFloat(revenueData.average_order_value),
+      timeRange: range
+    });
+  } catch (error) {
+    console.error("Error fetching revenue data:", error);
+    res.status(500).json({ error: "Failed to fetch revenue data" });
+  }
+});
+
+// Get active orders for admin dashboard
+app.get("/api/admin/orders/active", authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        order_number,
+        first_name,
+        last_name,
+        total,
+        order_status,
+        created_at
+       FROM orders 
+       WHERE order_status IN ('processing', 'pending', 'shipping')
+       ORDER BY created_at DESC 
+       LIMIT 10`,
+      []
+    );
+
+    res.json({
+      activeOrders: result.rows.map(order => ({
+        orderNumber: order.order_number,
+        customerName: `${order.first_name} ${order.last_name}`,
+        total: parseFloat(order.total),
+        status: order.order_status,
+        createdAt: order.created_at
+      }))
+    });
+  } catch (error) {
+    console.error("Error fetching active orders:", error);
+    res.status(500).json({ error: "Failed to fetch active orders" });
+  }
+});
+
+// Get dashboard summary data
+app.get("/api/admin/dashboard/summary", authenticateToken, async (req, res) => {
+  try {
+    // Get today's revenue
+    const todayRevenue = await pool.query(
+      `SELECT COALESCE(SUM(total), 0) as today_revenue
+       FROM orders 
+       WHERE DATE(created_at) = CURRENT_DATE AND payment_status = 'completed'`,
+      []
+    );
+
+    // Get total orders today
+    const todayOrders = await pool.query(
+      `SELECT COUNT(*) as today_orders
+       FROM orders 
+       WHERE DATE(created_at) = CURRENT_DATE`,
+      []
+    );
+
+    // Get pending orders count
+    const pendingOrders = await pool.query(
+      `SELECT COUNT(*) as pending_count
+       FROM orders 
+       WHERE order_status IN ('pending', 'processing')`,
+      []
+    );
+
+    // Get total users
+    const totalUsers = await pool.query(
+      `SELECT COUNT(*) as user_count FROM users`,
+      []
+    );
+
+    res.json({
+      todayRevenue: parseFloat(todayRevenue.rows[0].today_revenue),
+      todayOrders: parseInt(todayOrders.rows[0].today_orders),
+      pendingOrders: parseInt(pendingOrders.rows[0].pending_count),
+      totalUsers: parseInt(totalUsers.rows[0].user_count)
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard summary:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard summary" });
   }
 });
 
