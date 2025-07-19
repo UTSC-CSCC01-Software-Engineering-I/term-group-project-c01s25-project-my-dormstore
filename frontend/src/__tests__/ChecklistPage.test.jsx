@@ -1,4 +1,3 @@
-// src/__tests__/ChecklistPage.test.jsx
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import ChecklistPage from "../pages/ChecklistPage";
@@ -6,8 +5,6 @@ import { MemoryRouter } from "react-router-dom";
 import { CartProvider } from "../contexts/CartContext";
 import '@testing-library/jest-dom';
 
-
-// Mock DormChecklistItems
 jest.mock("../data/dormChecklistItems", () => ({
   DormChecklistItems: {
     "La Cité Residence": [
@@ -29,7 +26,6 @@ jest.mock("../data/dormChecklistItems", () => ({
   },
 }));
 
-// Mock fetch user
 global.fetch = jest.fn(() =>
   Promise.resolve({
     json: () =>
