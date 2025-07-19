@@ -30,9 +30,8 @@ const AdminLogin = () => {
       const data = await res.json();
 
       if (res.ok) {
-        // Save the token for authenticated requests:
-        localStorage.setItem("token", data.token);
         localStorage.setItem("isAdmin", "true");
+        localStorage.setItem("token", data.token);
         navigate("/admin/home");
       } else {
         // API returns { error: "..."} on failure
