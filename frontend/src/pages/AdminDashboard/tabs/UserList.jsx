@@ -9,7 +9,7 @@ const UserList = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/admin/users', {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/users`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

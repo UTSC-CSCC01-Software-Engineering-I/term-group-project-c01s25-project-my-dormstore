@@ -699,7 +699,6 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       `INSERT INTO orders (
         order_number, user_id, email, first_name, last_name, phone,
         address, city, province, postal_code, move_in_date,
-        //merge conflicts here
         subtotal, tax, shipping, shipping_method, total, payment_method,
         billing_first_name, billing_last_name, billing_address, billing_city, billing_province, billing_postal_code
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
@@ -707,7 +706,6 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       [
         orderNumber, userId, email, firstName, lastName, phone,
         address, city, province, postalCode, moveInDate,
-        //merge conflicts here
         subtotal, tax, shippingCost || shipping, shippingMethod,
         total, paymentMethod,
         billingAddress?.firstName || null,
@@ -732,7 +730,7 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
     for (const item of cartResult.rows) {
       await client.query(
         `INSERT INTO order_items (
-          order_id, product_id, product_name, price, quantity, subtotal
+          order_id, product_id, product_name, product_price, quantity, subtotal
         ) VALUES ($1, $2, $3, $4, $5, $6)`,
         [
           orderId, item.product_id, item.product_name, item.price,

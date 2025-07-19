@@ -420,12 +420,15 @@ export default function ProductManagement() {
                     required
                     style={{ width: "4.5rem" }}
                   />
-                  <button onClick={() => handleRemovePackageItem(i)}>
+                  <button 
+                  className="cancel-button"
+                  type="button"
+                  onClick={() => handleRemovePackageItem(i)}>
                     ×
                   </button>
                 </div>
               ))}
-              <button onClick={handleAddPackageItem}>+ Add Product</button>
+              <button className="add-button" type="button" onClick={handleAddPackageItem}>+ Add Product</button>
             </div>
           )}
 
@@ -603,12 +606,15 @@ export default function ProductManagement() {
                           required
                           style={{ width: "4.5rem" }}
                         />
-                        <button onClick={() => handleRemoveEditItem(i)}>
+                        <button 
+                        className="cancel-button"
+                        type="button"
+                        onClick={() => handleRemoveEditItem(i)}>
                           ×
                         </button>
                       </div>
                     ))}
-                    <button onClick={handleAddEditItem}>+ Add Product</button>
+                    <button className="add-button" type="button" onClick={handleAddEditItem}>+ Add Product</button>
                   </td>
                 )}
 

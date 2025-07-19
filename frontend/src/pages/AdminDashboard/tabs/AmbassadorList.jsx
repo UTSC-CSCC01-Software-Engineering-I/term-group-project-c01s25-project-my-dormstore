@@ -9,7 +9,7 @@ const AmbassadorList = () => {
   useEffect(() => {
     const fetchAmbassadors = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/admin/ambassadors", {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/ambassadors`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -36,7 +36,7 @@ const AmbassadorList = () => {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/ambassadors/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/ambassadors/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`

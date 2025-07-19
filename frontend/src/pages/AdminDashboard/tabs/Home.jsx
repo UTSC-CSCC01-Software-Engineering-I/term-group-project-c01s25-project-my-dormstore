@@ -15,7 +15,7 @@ const Home = () => {
   const fetchRevenueData = async (timeRange) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5001/api/admin/revenue?range=${timeRange}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/revenue?range=${timeRange}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -37,7 +37,7 @@ const Home = () => {
   const fetchActiveOrders = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5001/api/admin/orders/active`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/orders/active`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"

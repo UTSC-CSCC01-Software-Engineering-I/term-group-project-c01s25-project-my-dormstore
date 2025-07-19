@@ -20,7 +20,7 @@ const AdminDashboard = () => {
   return (
     <div className="admin-dashboard">
       <aside className="sidebar">
-        <div className="logo">
+        <div className="adminlogo">
           <img src="/images/logo-mydormstore.png" alt="MyDormStore Logo" />
         </div>
         <nav className="nav-links">

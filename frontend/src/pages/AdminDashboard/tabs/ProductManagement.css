@@ -55,7 +55,11 @@
 }
 
 
-button {
+.add-button,
+.edit-button,
+.submit-button,
+.delete-button,
+.cancel-button  {
   font-family: inherit;
   font-size: 1rem;
   cursor: pointer;

@@ -1,4 +1,9 @@
-:root {
+.admin-dashboard {
+  display: flex;
+  height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-light);
+  overflow: hidden; 
   --main-blue: #C9EAFF;
   --text-dark: #333;
   --text-light: #555;
@@ -7,14 +12,6 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   --radius: 12px;
   --transition: all 0.2s ease;
-}
-
-.admin-dashboard {
-  display: flex;
-  height: 100vh;
-  font-family: 'Poppins', sans-serif;
-  background-color: var(--bg-light);
-  overflow: hidden; 
 }
 
 .sidebar {
@@ -28,10 +25,10 @@
   flex-shrink: 0;    
 }
 
-.logo {
+.adminlogo {
   margin-bottom: 2rem;
 }
-.logo img {
+.adminlogo img {
   max-width: 140px;
   height: auto;
   object-fit: contain;
@@ -75,6 +72,7 @@
   font-weight: bold;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
 .logout-button:hover {
   background-color: #35a7ed;
   color: var(--white);
