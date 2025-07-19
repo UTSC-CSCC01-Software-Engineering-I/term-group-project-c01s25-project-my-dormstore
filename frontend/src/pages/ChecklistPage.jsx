@@ -10,7 +10,7 @@ export default function ChecklistPage() {
   const [items, setItems] = useState([
     { id: 1, label: "Queen size bed", checked: false },
     { id: 2, label: "Laundry basket", checked: false },
-    { id: 3, label: "Extension cord", checked: false },
+    { id: 3, label: "Towel Set", checked: false },
     { id: 4, label: "Toiletries", checked: false },
   ]);
 
