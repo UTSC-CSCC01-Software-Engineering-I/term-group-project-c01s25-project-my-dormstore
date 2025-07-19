@@ -8,9 +8,9 @@ const AdminLogin = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-
   const isAdmin = localStorage.getItem("isAdmin") === "true";
   if (isAdmin) {
+    // Already logged in → go to dashboard
     return <Navigate to="/admin/home" />;
   }
 
@@ -19,20 +19,26 @@ const AdminLogin = () => {
     setError("");
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL || "http://localhost:5001"}/api/admin/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+      const data = await res.json();
 
       if (res.ok) {
         localStorage.setItem("isAdmin", "true");
+        localStorage.setItem("token", data.token);
         navigate("/admin/home");
       } else {
-        const data = await res.json();
-        setError(data.message || "Invalid email or password");
+        // API returns { error: "..."} on failure
+        setError(data.error || "Invalid email or password");
       }
     } catch (err) {
+      console.error("Login failed:", err);
       setError("Server error. Please try again later.");
     }
   };
@@ -41,9 +47,7 @@ const AdminLogin = () => {
     <div className="admin-login-page">
       <form className="admin-login-form" onSubmit={handleLogin}>
         <h2>Admin Login</h2>
-
         {error && <div className="error">{error}</div>}
-
         <input
           type="email"
           placeholder="Admin Email"
@@ -51,7 +55,6 @@ const AdminLogin = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-
         <input
           type="password"
           placeholder="Password"
@@ -59,7 +62,6 @@ const AdminLogin = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-
         <button type="submit">Login</button>
       </form>
     </div>
