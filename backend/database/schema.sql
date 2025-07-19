@@ -5,6 +5,10 @@ CREATE TABLE IF NOT EXISTS products (
     price DECIMAL(10,2) NOT NULL,
     description TEXT,
     rating DECIMAL(2,1) DEFAULT 0,
+    category VARCHAR(100),
+    size TEXT,
+    color TEXT,
+    image_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -37,9 +41,11 @@ CREATE TABLE IF NOT EXISTS cart_items (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   quantity INTEGER NOT NULL DEFAULT 1,
+  selected_size VARCHAR(50),
+  selected_color VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user_id, product_id)
+  UNIQUE(user_id, product_id, selected_size, selected_color)
 );
 
 -- orders table for completed orders
@@ -59,6 +65,7 @@ CREATE TABLE IF NOT EXISTS orders (
   subtotal DECIMAL(10,2) NOT NULL,
   tax DECIMAL(10,2) NOT NULL,
   shipping DECIMAL(10,2) NOT NULL,
+  shipping_method VARCHAR(100),
   total DECIMAL(10,2) NOT NULL,
   payment_method VARCHAR(100),
   payment_status VARCHAR(50) DEFAULT 'pending',

@@ -6,6 +6,10 @@ export interface Product {
   image?: string;
   description: string;
   rating: number;
+  size?: string; // Available sizes (comma-separated)
+  color?: string; // Available colors (comma-separated)
+  available_sizes?: string[];
+  available_colors?: string[];
   variant?: Variant[];
   included?: string[];
   created_at?: string;

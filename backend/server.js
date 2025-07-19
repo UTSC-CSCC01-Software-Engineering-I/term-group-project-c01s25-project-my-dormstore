@@ -100,7 +100,7 @@ app.post("/loginUser", async (req, res) => {
       const user = result.rows[0];
   
       if (user && (await bcrypt.compare(password, user.password))) {
-        const token = jwt.sign({ userId: user.id }, "secret-key", { expiresIn: "1h" });
+        const token = jwt.sign({ userId: user.id }, "secret-key", { expiresIn: "24h" });
   
         res.json({ response: "User logged in succesfully.", token: token }); 
       } else {
@@ -135,7 +135,7 @@ app.get("/cart", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const result = await pool.query(
-      "SELECT id, product_id, quantity, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
+      "SELECT id, product_id, quantity, selected_size, selected_color, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
       [userId]
     );
     res.json({ cartItems: result.rows });
@@ -149,7 +149,7 @@ app.get("/cart", authenticateToken, async (req, res) => {
 app.post("/cart", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { product_id, quantity = 1 } = req.body;
+    const { product_id, quantity = 1, selected_size, selected_color } = req.body;
 
     if (!product_id) {
       return res.status(400).json({ error: "Product ID is required" });
@@ -157,16 +157,36 @@ app.post("/cart", authenticateToken, async (req, res) => {
     if (quantity < 1) {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
-    const existingItem = await pool.query(
-      "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2",
-      [userId, product_id]
-    );
+
+    // Check for existing item with same product_id, size, and color
+    let existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2";
+    let queryParams = [userId, product_id];
+    
+    if (selected_size) {
+      existingItemQuery += " AND selected_size = $3";
+      queryParams.push(selected_size);
+      
+      if (selected_color) {
+        existingItemQuery += " AND selected_color = $4";
+        queryParams.push(selected_color);
+      } else {
+        existingItemQuery += " AND selected_color IS NULL";
+      }
+    } else if (selected_color) {
+      existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
+      queryParams.push(selected_color);
+    } else {
+      existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
+    }
+
+    const existingItem = await pool.query(existingItemQuery, queryParams);
+    
     if (existingItem.rows.length > 0) {
       // update existing item quantity
       const newQuantity = existingItem.rows[0].quantity + quantity;
       const result = await pool.query(
-        "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND product_id = $3 RETURNING *",
-        [newQuantity, userId, product_id]
+        "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
+        [newQuantity, existingItem.rows[0].id]
       );
       
       res.json({ 
@@ -175,9 +195,10 @@ app.post("/cart", authenticateToken, async (req, res) => {
       });
     } else {
       const result = await pool.query(
-        "INSERT INTO cart_items (user_id, product_id, quantity) VALUES ($1, $2, $3) RETURNING *",
-        [userId, product_id, quantity]
+        "INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [userId, product_id, quantity, selected_size || null, selected_color || null]
       );
+      
       res.status(201).json({ 
         message: "Item added to cart", 
         cartItem: result.rows[0] 
@@ -391,10 +412,10 @@ app.get("/api/products", async (req, res) => {
     let query, params;
     
     if (category) {
-      query = "SELECT id, name, price, description, rating, image_url, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
+      query = "SELECT id, name, price, description, rating, image_url, category, size, color, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
       params = [category];
     } else {
-      query = "SELECT id, name, price, description, rating, image_url, created_at, updated_at FROM products ORDER BY name";
+      query = "SELECT id, name, price, description, rating, image_url, category, size, color, created_at, updated_at FROM products ORDER BY name";
       params = [];
     }
     
@@ -411,7 +432,7 @@ app.get("/api/products/:id", async (req, res) => {
   try {
     const productId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, description, rating, image_url, created_at, updated_at FROM products WHERE id = $1",
+      "SELECT id, name, price, description, rating, image_url, category, size, color, created_at, updated_at FROM products WHERE id = $1",
       [productId]
     );
     
@@ -452,8 +473,8 @@ app.get("/api/packages/:id", async (req, res) => {
       return res.status(404).json({ error: "Package not found" });
     }
     
-    res.json({ package: result.rows[0] });
-  } catch (error) {
+    res.json(result.rows[0]);
+    } catch (error) {
     console.error("Error fetching package:", error);
     res.status(500).json({ error: "Failed to fetch package" });
   }
@@ -630,6 +651,8 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       subtotal,
       tax,
       shipping,
+      shippingMethod,
+      shippingCost,
       total,
       billingAddress
     } = req.body;
@@ -676,14 +699,17 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       `INSERT INTO orders (
         order_number, user_id, email, first_name, last_name, phone,
         address, city, province, postal_code, move_in_date,
-        subtotal, tax, shipping, total, payment_method, payment_status,
+        //merge conflicts here
+        subtotal, tax, shipping, shipping_method, total, payment_method,
         billing_first_name, billing_last_name, billing_address, billing_city, billing_province, billing_postal_code
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
       RETURNING id, order_number`,
       [
         orderNumber, userId, email, firstName, lastName, phone,
         address, city, province, postalCode, moveInDate,
-        subtotal, tax, shipping, total, paymentMethod, 'paid',
+        //merge conflicts here
+        subtotal, tax, shippingCost || shipping, shippingMethod,
+        total, paymentMethod,
         billingAddress?.firstName || null,
         billingAddress?.lastName || null,
         billingAddress?.address || null,
@@ -741,7 +767,9 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       order: {
         id: orderId,
         orderNumber: orderNumberGenerated,
-        total: total
+        total: total,
+        shippingMethod: shippingMethod,
+        shippingCost: shippingCost || shipping
       },
       balance: {
         remaining: parseFloat(updatedBalanceResult.rows[0].balance),

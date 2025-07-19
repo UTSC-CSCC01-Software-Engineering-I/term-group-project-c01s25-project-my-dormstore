@@ -8,7 +8,7 @@ export default function OrderTrackingPage() {
     const location = useLocation();
     const orderStatusRef = useRef(null);
     const orderTrackingRef = useRef(null);
-    const [trackingResult, setTrackingResult] = useState(null);
+
     const navigate = useNavigate();
 
     
@@ -140,25 +140,6 @@ export default function OrderTrackingPage() {
                         onChange={handleChange}
                     />    
                     <button onClick={handleTrackOrder}>Track Your Order</button>
-                    {trackingResult && (
-  <div className="tracking-result-box">
-    {trackingResult.success ? (
-      <>
-        <h3>Order <strong>{trackingResult.data.order_number}</strong></h3>
-        <p>For <strong>{trackingResult.data.email}</strong></p>
-        <div className="order-progress">
-          <div className={`step ${["Placed", "Processing", "Shipped", "Delivered"].indexOf(trackingResult.data.status) >= 0 ? "active" : ""}`}>Placed</div>
-          <div className={`step ${["Processing", "Shipped", "Delivered"].indexOf(trackingResult.data.status) >= 0 ? "active" : ""}`}>Processing</div>
-          <div className={`step ${["Shipped", "Delivered"].indexOf(trackingResult.data.status) >= 0 ? "active" : ""}`}>Shipped</div>
-          <div className={`step ${trackingResult.data.status === "Delivered" ? "active" : ""}`}>Delivered</div>
-        </div>
-        <p>Status: <span className={`status-badge ${trackingResult.data.status.toLowerCase()}`}>{trackingResult.data.status}</span></p>
-      </>
-    ) : (
-      <p style={{ color: "red" }}> {trackingResult.message}</p>
-    )}
-  </div>
-)}
                 </label>
             </div>
             <div className="tracking-image-container">

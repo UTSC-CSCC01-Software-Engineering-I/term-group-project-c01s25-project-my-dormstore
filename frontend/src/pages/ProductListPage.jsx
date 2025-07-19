@@ -37,7 +37,11 @@ const ProductListPage = ({ category }) => {
   const handleAddToCart = (productId) => {
     const product = products.find(p => p.id === productId);
     if (product) {
-      addToCart(product);
+      // For products without multiple size/color options
+      const finalSize = product.size && product.size.split(',').length === 1 ? product.size.trim() : undefined;
+      const finalColor = product.color && product.color.split(',').length === 1 ? product.color.trim() : undefined;
+      
+      addToCart(product, 1, finalSize, finalColor);
       console.log('Added to cart:', product.name);
     }
   };

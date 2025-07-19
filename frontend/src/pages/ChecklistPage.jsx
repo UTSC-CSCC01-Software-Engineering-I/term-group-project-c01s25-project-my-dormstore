@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
 import UserForm from "../components/userForm"; 
 import "./ChecklistPage.css";
+import { useCart } from "../contexts/CartContext"; 
 import { DormChecklistItems } from "../data/dormChecklistItems";
+import { useLocation } from "react-router-dom";
 
 
 export default function ChecklistPage() {
   const [items, setItems] = useState([
     { id: 1, label: "Queen size bed", checked: false },
     { id: 2, label: "Laundry basket", checked: false },
-    { id: 3, label: "Extension cord", checked: false },
+    { id: 3, label: "Towel Set", checked: false },
     { id: 4, label: "Toiletries", checked: false },
   ]);
 
@@ -16,6 +18,11 @@ export default function ChecklistPage() {
   const [selectedDorm, setSelectedDorm] = useState(""); 
   const [userName, setUserName] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const { items: cartItems, cartReady } = useCart();
+  const [checklistLoaded, setChecklistLoaded] = useState(false);
+  const location = useLocation();
+
+  
 
 
 
@@ -51,6 +58,7 @@ export default function ChecklistPage() {
       const updatedDorm = data.dorm || dorm;
       setSelectedDorm(data.dorm || "");
       setItems(DormChecklistItems[updatedDorm] || DormChecklistItems["default"]);
+      setChecklistLoaded(true);
 
     } catch (err) {
       console.error("Failed to update dorm:", err);
@@ -64,16 +72,17 @@ export default function ChecklistPage() {
     if (!token) return;
   
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/me`, { 
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
   
       const data = await response.json();
-      setSelectedDorm(data.dorm || "");
-      setItems(DormChecklistItems[data.dorm] || DormChecklistItems["default"]);
-
+      const dorm = data.dorm || "";
+  
+      setSelectedDorm(dorm);
+      setChecklistLoaded(true); 
   
       if (data.first_name || data.last_name) {
         setUserName(`${data.first_name || ""} ${data.last_name || ""}`.trim());
@@ -89,6 +98,12 @@ export default function ChecklistPage() {
       console.error("Failed to fetch user:", error);
     }
   };
+
+  useEffect(() => {
+    if (location.pathname.includes("checklist")) {
+      fetchUser();
+    }
+  }, [location.pathname]);
   
   
   useEffect(() => {
@@ -104,6 +119,23 @@ export default function ChecklistPage() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (!cartReady || !checklistLoaded) return;
+    if (!location.pathname.includes("checklist")) return;
+  
+    const dormChecklist = DormChecklistItems[selectedDorm] || DormChecklistItems["default"];
+  
+    const synced = dormChecklist.map((item) => {
+      const isInCart = cartItems.some((cartItem) =>
+        cartItem.name.toLowerCase().includes(item.label.toLowerCase())
+      );
+      return { ...item, checked: isInCart };
+    });
+  
+    setItems(synced);
+  }, [cartItems, cartReady, checklistLoaded, location.pathname, selectedDorm]);
+  
   
 
   return (

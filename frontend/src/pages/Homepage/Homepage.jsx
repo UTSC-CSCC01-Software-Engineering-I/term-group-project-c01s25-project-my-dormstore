@@ -106,6 +106,7 @@ const HomePage = () => {
                     <Link to="/products">
                         <img
                         src="/images/arrow-right.png"
+                        alt="arrow right"
                         className="arrow-icon"
                     />
                     </Link>
@@ -114,6 +115,7 @@ const HomePage = () => {
                 <div className="apartment-image-container">
                     <img
                     src="/images/apartment-boxes.png"
+                    alt="apartment boxes"
                     className="apartment-image"
                     />
                 </div>

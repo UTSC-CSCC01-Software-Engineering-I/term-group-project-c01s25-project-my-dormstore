@@ -1,6 +1,7 @@
 import { Product } from '../types/Product';
 import { Link } from 'react-router-dom';
 import { getCurrentUserBedSize } from '../utils/bedSizeHelper';
+import { DormChecklistItems } from '../data/dormChecklistItems';
 import './ProductCard.css';
 
 
@@ -11,7 +12,17 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: ProductCardProps) => {
+  // Check if product has  size or color
+  const hasMultipleSizes = product.size && product.size.split(',').length > 1;
+  const hasMultipleColors = product.color && product.color.split(',').length > 1;
+  const needsOptionsSelection = hasMultipleSizes || hasMultipleColors;
+
   const handleAddToCart = () => {
+    if (needsOptionsSelection) {
+      window.location.href = `${linkPrefix}/${product.id}`;
+      return;
+    }
+    // Quick add for products without options
     onAddToCart(product.id);
   };
   
@@ -28,6 +39,33 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
     }
     return "Highly Recommended";
   };
+
+  // Check if this product is in the user's dorm checklist
+  const isProductInDormChecklist = () => {
+    try {
+      const email = localStorage.getItem("userEmail");
+      if (!email) return false;
+      const userInfo = localStorage.getItem(`userInfo_${email}`);
+      if (!userInfo) return false;
+      
+       const parsed = JSON.parse(userInfo);
+      const userDorm: string = parsed.dorm;
+      
+      if (!userDorm || !DormChecklistItems[userDorm as keyof typeof DormChecklistItems]) return false;
+      
+      // see if product name contains any word from checklist items
+      const dormItems = DormChecklistItems[userDorm as keyof typeof DormChecklistItems];
+      const productName = product.name.toLowerCase();
+      return dormItems.some((item: any) => {
+        const itemLabel = item.label.toLowerCase();
+        return productName.includes(itemLabel) || itemLabel.includes(productName);
+      });
+      
+    } 
+    catch (error) {
+      return false;
+    }
+  };
   
   console.log("Image URL:", product.image_url);
 
@@ -37,7 +75,7 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
         <div className="product-image-container">
         <img
           className="product-image"
-          src={product.image_url || "/images/product-test.jpg"}
+          src={product.image_url || product.image || "/images/product-test.jpg"}
           alt={product.name}
           onError={(e) => {
             e.currentTarget.onerror = null;
@@ -58,10 +96,12 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
               <span className="size-text">{getRecommendationText()}</span>
             </>
           ) : (
-            <>
-              <span className="green-dot">●</span>
-              <span className="size-text">Highly Recommended</span>
-            </>
+            isProductInDormChecklist() ? (
+              <>
+                <span className="green-dot">●</span>
+                <span className="size-text">Highly Recommended</span>
+              </>
+            ) : null
           )}
         </div>
         
@@ -70,8 +110,8 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
           <button 
             className="cart-icon-btn"
             onClick={handleAddToCart}
-            aria-label={`Add ${product.name} to cart`}
-            >
+            aria-label={needsOptionsSelection ? `Select options for ${product.name}` : `Add ${product.name} to cart`}
+          >
             <img src="/images/Shopping-cart.png" alt="Add to Cart" className="cart-icon" />
           </button>
         </div>

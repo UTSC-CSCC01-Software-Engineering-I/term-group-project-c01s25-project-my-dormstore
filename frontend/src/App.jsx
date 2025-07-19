@@ -30,7 +30,7 @@ import Blog from "./pages/OurStoryBlog/Blog/Blog";
 import BlogDetail from "./pages/OurStoryBlog/Blog/BlogDetail";
 import Ambassador from "./pages/OurStoryBlog/Ambassador/Ambassador";
 import OurStory from "./pages/OurStoryBlog/OurStory/OurStory";
-import OrderTrack from "./pages/OrderTrack";
+import OrderTrack from "./pages/OrderTrackingPage";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage";
 import CheckoutPaymentPage from "./pages/CheckoutPage/CheckoutPaymentPage";
 import ReviewPage from "./pages/CheckoutPage/ReviewPage";

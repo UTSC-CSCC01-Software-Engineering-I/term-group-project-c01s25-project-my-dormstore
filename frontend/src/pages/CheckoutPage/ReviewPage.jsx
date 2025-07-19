@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "./ReviewPage.css";
 import { useCart } from "../../contexts/CartContext.tsx";
 import { useCheckout } from "../../contexts/CheckoutContext.tsx";
+import CheckoutProgress from '../../components/CheckoutProgress';
 
 export default function ReviewPage() {
   const navigate = useNavigate();
@@ -25,10 +26,11 @@ export default function ReviewPage() {
   const paymentMethod = checkoutData.payment.method === "card" 
     ? `${checkoutData.payment.cardName} ending in ${checkoutData.payment.cardNumber.slice(-4)}`
     : checkoutData.payment.method;
+  const shippingMethod = checkoutData.shippingMethod || "Standard Shipping";
+  const shippingCost = checkoutData.shippingCost || 0;
 
   // Calculate totals
   const subtotal = totalPrice;
-  const shippingCost = 0; // Free shipping
   const tax = subtotal * 0.13; // 13% tax rate
   const total = subtotal + shippingCost + tax;
 
@@ -59,6 +61,8 @@ export default function ReviewPage() {
         subtotal: subtotal,
         tax: tax,
         shipping: shippingCost,
+        shippingMethod: checkoutData.shippingMethod,
+        shippingCost: checkoutData.shippingCost,
         total: total,
         // Include billing address if different from shipping
         billingAddress: checkoutData.payment.sameAsShipping ? null : checkoutData.payment.billingAddress
@@ -113,105 +117,107 @@ export default function ReviewPage() {
 
   return (
     <form className="checkout-container review" onSubmit={handlePlaceOrder}>
-      <div className="checkout-left">
-        <h2>Checkout</h2>
+      <CheckoutProgress currentStep={3} />
+      <div className="checkout-content">
+        <div className="checkout-left">
+          <h2>Checkout</h2>
 
-        {/* Error Display */}
-        {error && (
-          <div className="error-message">
-            <p>{error}</p>
-            <button 
-              type="button" 
-              onClick={() => navigate("/checkout")}
-              className="btn-add-funds"
-            >
-              Add Funds
-            </button>
-          </div>
-        )}
+          {/* Error Display */}
+          {error && (
+            <div className="error-message">
+              <p>{error}</p>
+              <button 
+                type="button" 
+                onClick={() => navigate("/checkout")}
+                className="btn-add-funds"
+              >
+                Add Funds
+              </button>
+            </div>
+          )}
 
-        <section className="checkout-section review-item">
-          <label>
-            <input type="radio" readOnly checked />
-            <span className="review-label">Move-in date</span>
-            <span className="review-value">{moveInDate}</span>
-            <Link to="/checkout" className="edit-link">Edit</Link>
-          </label>
-        </section>
-
-        <section className="checkout-section review-item">
-          <label>
-            <input type="radio" readOnly checked />
-            <span className="review-label">Notifications to</span>
-            <span className="review-value">{email}</span>
-            <Link to="/checkout" className="edit-link">Edit</Link>
-          </label>
-        </section>
-
-        <section className="checkout-section review-item">
-          <label>
-            <input type="radio" readOnly checked />
-            <span className="review-label">Delivery</span>
-            <span className="review-value">{deliveryAddress}</span>
-            <Link to="/checkout" className="edit-link">Edit</Link>
-          </label>
-        </section>
-
-        {!checkoutData.payment.sameAsShipping && (
           <section className="checkout-section review-item">
             <label>
               <input type="radio" readOnly checked />
-              <span className="review-label">Billing</span>
-              <span className="review-value">{billingAddress}</span>
+              <span className="review-label">Move-in date</span>
+              <span className="review-value">{moveInDate}</span>
+              <Link to="/checkout" className="edit-link">Edit</Link>
+            </label>
+          </section>
+
+          <section className="checkout-section review-item">
+            <label>
+              <input type="radio" readOnly checked />
+              <span className="review-label">Notifications to</span>
+              <span className="review-value">{email}</span>
+              <Link to="/checkout" className="edit-link">Edit</Link>
+            </label>
+          </section>
+
+          <section className="checkout-section review-item">
+            <label>
+              <input type="radio" readOnly checked />
+              <span className="review-label">Shipping</span>
+              <span className="review-value">{shippingMethod} - ${shippingCost.toFixed(2)}</span>
+              <Link to="/checkout" className="edit-link">Edit</Link>
+            </label>
+          </section>
+
+          {!checkoutData.payment.sameAsShipping && (
+            <section className="checkout-section review-item">
+              <label>
+                <input type="radio" readOnly checked />
+                <span className="review-label">Billing</span>
+                <span className="review-value">{billingAddress}</span>
+                <Link to="/checkout/payment" className="edit-link">Edit</Link>
+              </label>
+            </section>
+          )}
+
+          <section className="checkout-section review-item">
+            <label>
+              <input type="radio" readOnly checked />
+              <span className="review-label">Paying with</span>
+              <span className="review-value">{paymentMethod}</span>
               <Link to="/checkout/payment" className="edit-link">Edit</Link>
             </label>
           </section>
-        )}
 
-        <section className="checkout-section review-item">
-          <label>
-            <input type="radio" readOnly checked />
-            <span className="review-label">Paying with</span>
-            <span className="review-value">{paymentMethod}</span>
-            <Link to="/checkout/payment" className="edit-link">Edit</Link>
-          </label>
-        </section>
+          <button 
+            type="submit" 
+            className="btn-place-order"
+            disabled={isPlacingOrder}
+          >
+            {isPlacingOrder ? "PLACING ORDER..." : "PLACE ORDER"}
+          </button>
 
-        <button 
-          type="submit" 
-          className="btn-place-order"
-          disabled={isPlacingOrder}
-        >
-          {isPlacingOrder ? "PLACING ORDER..." : "PLACE ORDER"}
-        </button>
-
-        <p className="legal">
-          By placing an order, you agree to be bound by The Dorm Store's{" "}
-          <Link to="/terms">Terms</Link> and{" "}
-          <Link to="/privacy">Privacy Policy</Link>.
-        </p>
-      </div>
-
-      <div className="checkout-right">
-        <h3>Order Summary</h3>
-        {items.map((item) => (
-          <div key={item.id} className="summary-item">
-            <img
-              src={item.image || "/images/basic-bedding.jpg"}
-              alt={item.name}
-            />
-            <div>
-              <p className="item-title">{item.name}</p>
-              <p>${item.price.toFixed(2)}</p>
-              <p>Qt: {item.quantity}</p>
+          <p className="legal">
+            By placing an order, you agree to be bound by The Dorm Store's{" "}
+            <Link to="/terms">Terms</Link> and{" "}
+            <Link to="/privacy">Privacy Policy</Link>.
+          </p>
+        </div>
+        <div className="checkout-right">
+          <h3>Order Summary</h3>
+          {items.map((item) => (
+            <div key={item.id} className="summary-item">
+              <img
+                src={item.image || "/images/basic-bedding.jpg"}
+                alt={item.name}
+              />
+              <div>
+                <p className="item-title">{item.name}</p>
+                <p>${item.price.toFixed(2)}</p>
+                <p>Qt: {item.quantity}</p>
+              </div>
             </div>
+          ))}
+          <div className="summary-totals">
+            <div><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+            <div><span>Shipping</span><span>Free</span></div>
+            <div><span>Tax</span><span>${tax.toFixed(2)}</span></div>
+            <div className="total"><span>Order total</span><span>${total.toFixed(2)}</span></div>
           </div>
-        ))}
-        <div className="summary-totals">
-          <div><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-          <div><span>Shipping</span><span>Free</span></div>
-          <div><span>Tax</span><span>${tax.toFixed(2)}</span></div>
-          <div className="total"><span>Order total</span><span>${total.toFixed(2)}</span></div>
         </div>
       </div>
     </form>

@@ -6,8 +6,8 @@ let timeoutId = null;
 export default function NavBar({ isLoggedIn }) {
   const location = useLocation();
 
-  const itemPaths = ["/products", "/bathroom", "/tech", "/storage", "/laundry", "/desk", "/decor"];
-  const packagePaths = ["/packages", "/bedding", "/living", "/caring"];
+  const itemPaths = React.useMemo(() => ["/products", "/bathroom", "/tech", "/storage", "/laundry", "/desk", "/decor"], []);
+  const packagePaths = React.useMemo(() => ["/packages", "/bedding", "/living", "/caring"], []);
 
   const [baseSection, setBaseSection] = useState(null);        
   const [activeDropdown, setActiveDropdown] = useState(null); 
@@ -24,7 +24,7 @@ export default function NavBar({ isLoggedIn }) {
       setBaseSection(null);
       setActiveDropdown(null);
     }
-  }, [location.pathname]);
+  }, [location.pathname, itemPaths, packagePaths]);
 
   const handleMouseEnter = (menu) => {
     clearTimeout(timeoutId);

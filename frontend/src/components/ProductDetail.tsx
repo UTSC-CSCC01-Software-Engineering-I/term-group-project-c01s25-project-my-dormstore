@@ -1,4 +1,4 @@
-import react from 'react'
+
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import { productService } from '../services/productService'
@@ -18,6 +18,8 @@ export default function ProductDetail()  {
 
   const { addToCart } = useCart()
   const [quantity, setQuantity] = useState(1)
+  const [selectedSize, setSelectedSize] = useState<string>('')
+  const [selectedColor, setSelectedColor] = useState<string>('')
 
   const isPackage = location.pathname.startsWith('/packages/')
 
@@ -72,7 +74,26 @@ export default function ProductDetail()  {
   }
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product)
+      // For bedding products, check if size is selected
+      const availableSizes = product.size ? product.size.split(',') : []
+      const availableColors = product.color ? product.color.split(',') : []
+      
+      if (product.category?.toLowerCase() === 'bedding') {
+        if (availableSizes.length > 1 && !selectedSize) {
+          alert('Please select a size');
+          return;
+        }
+        if (availableColors.length > 1 && !selectedColor) {
+          alert('Please select a color');
+          return;
+        }
+      }
+      
+      // Determine final size and color
+      const finalSize = selectedSize || (availableSizes.length === 1 ? availableSizes[0] : undefined);
+      const finalColor = selectedColor || (availableColors.length === 1 ? availableColors[0] : undefined);
+      
+      addToCart(product, quantity, finalSize, finalColor)
     }
   }
 
@@ -136,14 +157,41 @@ export default function ProductDetail()  {
           </p>
         )}
 
-        <p className="section-subtitle">Laundry Hamper Colour</p>
-        <div className="variants">
-          {product.variant?.map(v => (
-            <button key={v.id} className="variant-button">
-              {v.label}
-            </button>
-          ))}
-        </div>
+        {/* Size Selection for Bedding */}
+        {product.category?.toLowerCase() === 'bedding' && product.size && (
+          <>
+            <p className="section-subtitle">Size</p>
+            <div className="size-options">
+              {product.size.split(',').map(size => (
+                <button 
+                  key={size.trim()} 
+                  className={`size-button ${selectedSize === size.trim() ? 'selected' : ''}`}
+                  onClick={() => setSelectedSize(size.trim())}
+                >
+                  {size.trim()}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Color Selection for Bedding */}
+        {product.category?.toLowerCase() === 'bedding' && product.color && (
+          <>
+            <p className="section-subtitle">Color</p>
+            <div className="color-options">
+              {product.color.split(',').map(color => (
+                <button 
+                  key={color.trim()} 
+                  className={`color-button ${selectedColor === color.trim() ? 'selected' : ''}`}
+                  onClick={() => setSelectedColor(color.trim())}
+                >
+                  {color.trim()}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         <p className="section-subtitle">Quantity</p>
         <div className="quantity-add">
