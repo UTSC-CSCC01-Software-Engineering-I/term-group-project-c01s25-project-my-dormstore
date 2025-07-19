@@ -23,6 +23,19 @@
   font-size: 2.5rem;
   font-weight: bold;
   color: #333;
+  margin-bottom: 1rem;
+}
+
+.revenue-stats {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.revenue-stats p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .order-list {
@@ -34,6 +47,7 @@
 .order-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 0.75rem 1rem;
   margin-top: 0.5rem;
   background-color: #f3f8ff;
@@ -41,10 +55,74 @@
   font-weight: 500;
 }
 
-.status.in-progress {
-  background-color: #cce7ff;
-  color: #005fa3;
+.order-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.order-number {
+  font-weight: bold;
+  color: #333;
+}
+
+.customer-name {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.order-total {
+  font-size: 0.9rem;
+  color: #28a745;
+  font-weight: bold;
+}
+
+.status {
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status.processing {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status.pending {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status.shipping {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status.in-progress {
+  background-color: #cce7ff;
+  color: #005fa3;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid #f5c6cb;
+}
+
+.no-orders {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 1rem;
 }
