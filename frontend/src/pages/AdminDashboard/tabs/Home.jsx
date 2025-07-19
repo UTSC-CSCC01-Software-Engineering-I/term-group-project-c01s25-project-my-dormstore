@@ -106,9 +106,9 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Orders In Progress Section */}
+      {/* Recent Orders Section */}
       <div className="dashboard-card order-progress-card">
-        <h3>Orders In Progress</h3>
+        <h3>Recent Orders (from Admin Orders)</h3>
         {activeOrders.length > 0 ? (
           <ul className="order-list">
             {activeOrders.map((order) => (

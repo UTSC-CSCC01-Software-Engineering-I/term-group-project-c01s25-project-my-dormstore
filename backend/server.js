@@ -1151,7 +1151,7 @@ app.get("/api/admin/revenue", authenticateToken, async (req, res) => {
   }
 });
 
-// Get active orders for admin dashboard
+// Get active orders for admin dashboard - matches admin orders page exactly
 app.get("/api/admin/orders/active", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
@@ -1163,7 +1163,6 @@ app.get("/api/admin/orders/active", authenticateToken, async (req, res) => {
         order_status,
         created_at
        FROM orders 
-       WHERE order_status IN ('processing', 'pending', 'shipping')
        ORDER BY created_at DESC 
        LIMIT 10`,
       []
