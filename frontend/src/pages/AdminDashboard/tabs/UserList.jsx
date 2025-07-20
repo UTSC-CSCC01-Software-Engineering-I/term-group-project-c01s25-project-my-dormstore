@@ -1,78 +1,88 @@
-import React, { useState } from "react";
-import "./UserList.css";
+import React, { useState, useEffect } from 'react';
+import './UserList.css';
 
 const UserList = () => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      firstName: "Alice",
-      lastName: "Johnson",
-      email: "alice@example.com",
-      phone: "123-456-7890",
-      address: "123 Dorm Lane, Room 201",
-    },
-    {
-      id: 2,
-      firstName: "Bob",
-      lastName: "Smith",
-      email: "bob@example.com",
-      phone: "987-654-3210",
-      address: "456 Campus Rd, Apt 5B",
-    },
-    {
-      id: 3,
-      firstName: "Charlie",
-      lastName: "Lee",
-      email: "charlie@example.com",
-      phone: "555-123-4567",
-      address: "789 University Blvd, Unit 9",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState(null);
+  const token = localStorage.getItem('token');
 
-  const handleDelete = (id) => {
-    setUsers((prev) => prev.filter((user) => user.id !== id));
-  };
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/users`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.status === 401 || res.status === 403) {
+          throw new Error('Not authorized. Please log in as admin.');
+        }
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.statusText}`);
+        }
+        const data = await res.json();
+        setUsers(data);
+      } catch (err) {
+        console.error('Fetch users failed:', err);
+        setError(err.message);
+      }
+    };
+
+    fetchUsers();
+  }, [token]);
+
+  if (error) {
+    return <p className="error-text">{error}</p>;
+  }
 
   return (
     <div className="user-list-page">
       <h1>User List</h1>
-      <div className="dashboard-card">
-        <table className="user-table">
-          <thead>
-            <tr>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Address</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.firstName}</td>
-                <td>{user.lastName}</td>
-                <td>{user.email}</td>
-                <td>{user.phone}</td>
-                <td>{user.address}</td>
-                <td>
-                  <button className="delete-button" onClick={() => handleDelete(user.id)}>
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {users.length === 0 && (
+      {users.length === 0 ? (
+        <p>No users found.</p>
+      ) : (
+        <div className="dashboard-card">
+          <table className="user-table">
+            <thead>
               <tr>
-                <td colSpan="6" className="empty-text">
-                  No users found.
-                </td>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Action</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {users.map(({ id, firstName, lastName, email, phone, address }) => (
+                <tr key={id}>
+                  <td>{firstName}</td>
+                  <td>{lastName}</td>
+                  <td>{email}</td>
+                  <td>{phone}</td>
+                  <td>{address}</td>
+                  <td>
+                    <button
+                      className="delete-button"
+                      onClick={async () => {
+                        await fetch(`http://localhost:5001/api/admin/users/${id}`, {
+                          method: 'DELETE',
+                          headers: {
+                            'Authorization': `Bearer ${token}`
+                          }
+                        });
+                        setUsers(prev => prev.filter(u => u.id !== id));
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

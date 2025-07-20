@@ -34,7 +34,7 @@ h4 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 30px;
+  padding: 32px 35px;
   background-color: white;
 }
 
@@ -54,7 +54,7 @@ h4 {
   position: relative;
   display: flex;
   align-items: center;
-  bottom: 10px;
+  bottom: 2px;
 }
 
 .search-bar input {
@@ -75,10 +75,10 @@ h4 {
 .header-icons {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding-right: 30px;
+  gap: 25px;
+  padding-right: 28px;
   align-items: flex-start;
-  margin-bottom: 17px;
+  margin-bottom: 15px;
 }
 
 .header-icons span {
@@ -104,6 +104,7 @@ h4 {
   gap: 85px;  
   background-color: white;
   padding-left: 65px;
+  margin-top: 25px;
   margin-bottom: 35px;
 }
 

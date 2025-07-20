@@ -23,6 +23,7 @@ async function addPackagesTables() {
         price DECIMAL(10,2) NOT NULL,
         category VARCHAR(100) NOT NULL,
         description TEXT,
+        image_url   TEXT,
         rating DECIMAL(2,1) DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

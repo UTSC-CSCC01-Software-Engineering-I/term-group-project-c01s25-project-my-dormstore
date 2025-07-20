@@ -1,132 +1,304 @@
+
 .product-management-page {
   padding: 2rem;
   font-family: Arial, sans-serif;
+  background: #f8fbff;
+  min-height: 100vh;
 }
 
 .product-management-page h1 {
   font-size: 2rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.3rem;
   color: #333;
+  font-weight: 600;
 }
 
-.top-bar {
+
+.top-controls {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-  background-color: #ffffff;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.top-controls label {
+  font-size: 1rem;
+  color: #345;
+  font-weight: 500;
 }
 
-.top-bar-inner {
-  max-width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
-
-
-.add-button {
-  background-color: #eaf6ff;
-  color: rgb(88, 88, 88);
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
+.top-controls select {
+  padding: 0.6rem 1.6rem;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #e3f4ff, #cde8ff);
+  border: 1px solid #91d7ff;
+  color: #234;
+  font-weight: 600;
+  font-size: 1rem;
+  appearance: none;
   cursor: pointer;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.65rem auto;
 }
 
-.add-button:hover {
-  background-color: #839db1;
-  color: #ffffff;
+.top-controls select:hover {
+  background: linear-gradient(145deg, #d0e9ff, #b8ddff);
+  border-color: #6cc0f2;
+}
+.top-controls select:focus {
+  outline: none;
+  border-color: #4da8da;
+  box-shadow: 0 0 0 3px rgba(77,168,218,0.3);
+  background: #fff;
 }
 
+
+.add-button,
+.edit-button,
+.submit-button,
+.delete-button,
+.cancel-button  {
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  padding: 1rem 1.5rem;
+  margin: 0 1rem;
+}
+
+.add-button,
+.add-form button,
+.product-table td .edit-button,
+.product-table td .submit-button,
+.product-table td .cancel-button,
+.product-table td .delete-button {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.add-button,
+.add-form button,
+.product-table td .edit-button,
+.product-table td .submit-button {
+  background: linear-gradient(145deg, #317a9c, #2a6c8c);
+}
+.add-button:hover,
+.add-form button:hover,
+.product-table td .edit-button:hover,
+.product-table td .submit-button:hover {
+  background: linear-gradient(145deg, #275f7e, #1f4f6a);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+}
+.add-button:active,
+.add-form button:active,
+.product-table td .edit-button:active,
+.product-table td .submit-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 4px rgba(0,0,0,0.2);
+}
+
+.product-table td .cancel-button {
+  background: linear-gradient(145deg, #d24f4f, #c03f3f);
+}
+.product-table td .cancel-button:hover {
+  background: linear-gradient(145deg, #aa3f3f, #992f2f);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+}
+.product-table td .cancel-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 4px rgba(0,0,0,0.2);
+}
+
+.product-table td .delete-button {
+  background: linear-gradient(145deg, #c83232, #b12626);
+}
+.product-table td .delete-button:hover {
+  background: linear-gradient(145deg, #991f1f, #881717);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+}
+.product-table td .delete-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 4px rgba(0,0,0,0.2);
+}
+
+.package-item-row button {
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  background: #e04444;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  transition: background 0.15s, transform 0.1s;
+}
+.package-item-row button:hover {
+  background: #ab1d1d;
+  transform: translateY(-1px);
+}
+.package-item-row button:active {
+  transform: translateY(0);
+}
+
+/* Add/Edit Form */
 .add-form {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  background-color: #f9f9f9;
+  gap: 0.8rem;
+  background: #f9f9f9;
   border: 1px solid #ddd;
-  padding: 1.2rem;
+  padding: 1.3rem;
   margin-bottom: 1.5rem;
-  border-radius: 10px;
-  max-width: 500px;
-}
-
-.add-form input,
-.add-form textarea {
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  width: 100%;
-}
-
-.add-form button {
-  width: fit-content;
-  padding: 0.6rem 1.2rem;
-  background-color: #4da8da;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.add-form button:hover {
-  background-color: #357ca5;
-}
-
-.dashboard-card {
-  background-color: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  overflow-x: auto;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(120,160,230,0.07);
+}
+.add-form input,
+.add-form textarea,
+.add-form select {
+  padding: 0.7rem;
+  border: 1.1px solid #c0d9ef;
+  border-radius: 7px;
+  font-size: 1rem;
+  width: 100%;
+  background: #fff;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.add-form input:focus,
+.add-form textarea:focus,
+.add-form select:focus {
+  border-color: #4da8da;
+  box-shadow: 0 1px 6px rgba(80,180,255,0.07);
 }
 
+.package-items-form {
+  border-top: 1px solid #e5eef7;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+.package-items-form label {
+  font-weight: 500;
+  color: #234;
+  margin-bottom: 0.5rem;
+}
+.package-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.package-item-row select,
+.package-item-row input {
+  padding: 0.6rem;
+  border: 1px solid #c0d9ef;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #fff;
+}
+.package-item-row input {
+  width: 7rem;
+  min-width: 60px;
+  max-width: 120px;
+
+}
+
+/* Data Table */
 .product-table {
   width: 100%;
   border-collapse: collapse;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(90,150,200,0.07);
+  overflow: hidden;
 }
-
 .product-table th,
 .product-table td {
   padding: 0.8rem 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e5eef7;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
-
 .product-table th {
-  background-color: #f5f5f5;
-  font-weight: bold;
+  background: #f5f8fb;
+  font-weight: 700;
+  color: #385068;
 }
-
 .product-img {
-  width: 60px;
-  height: 60px;
+  width: 120px;
+  height: 120px;
   object-fit: cover;
   border-radius: 8px;
+  border: 1px solid #e6f0fa;
+}
+.product-name {
+  font-weight: 600;
+  color: #23324d;
 }
 
-.desc-toggle {
-  background: none;
-  border: none;
-  color: #0077cc;
-  cursor: pointer;
-  font-size: 0.9rem;
-  padding: 0;
-}
-
-.modify-button {
-  background-color: #eaf6ff;
-  color: rgb(53, 52, 52);
-  border: none;
+.product-table td input[type="text"],
+.product-table td input[type="number"],
+.product-table td select,
+.product-table td textarea {
+  padding: 0.7rem;
+  border: 1.1px solid #a9c7e3;
   border-radius: 6px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  background: #fff;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.product-table td input:focus,
+.product-table td select:focus,
+.product-table td textarea:focus {
+  border-color: #4da8da;
+  box-shadow: 0 1px 8px rgba(80,180,255,0.14);
 }
 
-.modify-button:hover {
-  background-color: #87cbff;
+.description-cell {
+  max-width: 230px;
+  white-space: pre-line;
+  color: #475467;
+}
+.desc-box {
+  background: #f6fbff;
+  border: 1px solid #cae2f8;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  color: #23324d;
+  max-width: 215px;
+  max-height: 120px;  
+  overflow-y: auto;
+}
+
+.error-text {
+  color: #d33434;
+  font-weight: 500;
+  padding: 0.8rem 1.2rem;
+  background: #fff5f5;
+  border: 1.3px solid #ffe3e3;
+  border-radius: 7px;
+  max-width: 420px;
+  margin: 1.2rem auto;
+}
+
+.package-item-row input,
+.product-table td input[type="number"] {
+  min-width: 70px;
+  width: 110px;
+  max-width: 150px;
 }

@@ -1,131 +1,189 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Orders.css";
+
+const API = process.env.REACT_APP_API_URL || "http://localhost:5001";
+
+const statusOptions = [
+  { value: "processing", label: "Processing" },
+  { value: "shipped", label: "Shipped" },
+  { value: "arrived", label: "Arrived" },
+];
 
 const Orders = () => {
   const [filterStatus, setFilterStatus] = useState("All");
-
-  const [orders, setOrders] = useState([
-    {
-      id: "ORD001",
-      address: "123 College St, Toronto, ON",
-      shippingDate: "2025-07-15",
-      shippingNumber: "TRACK123456",
-      status: "Wait for Process",
-      products: [
-        { name: "Shower Caddy", quantity: 1, price: 16.99 },
-        { name: "Towel Set", quantity: 2, price: 49.99 },
-      ],
-    },
-    {
-      id: "ORD002",
-      address: "456 Dorm Rd, Waterloo, ON",
-      shippingDate: "2025-07-13",
-      shippingNumber: "TRACK789012",
-      status: "Shipping",
-      products: [
-        { name: "String Lights", quantity: 1, price: 19.99 },
-        { name: "Power Strip", quantity: 1, price: 10.99 },
-      ],
-    },
-  ]);
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const [orders, setOrders] = useState([]);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [orderItems, setOrderItems] = useState({});
+  const [loadingItems, setLoadingItems] = useState(null);
 
-  const filteredOrders =
-    filterStatus === "All"
-      ? orders
-      : orders.filter((order) => order.status === filterStatus);
+  useEffect(() => {
+    fetch(`${API}/api/admin/orders`)
+      .then(res => res.json())
+      .then(data => setOrders(data))
+      .catch(() => setOrders([]));
+  }, []);
 
-  const handleStatusChange = (index, newStatus) => {
-    const updated = [...orders];
-    updated[index].status = newStatus;
-    setOrders(updated);
+  const handleStatusChange = (orderId, newStatus) => {
+    setOrders(prev =>
+      prev.map(order =>
+        order.id === orderId
+          ? { ...order, order_status: newStatus }
+          : order
+      )
+    );
+    fetch(`${API}/api/admin/orders/${orderId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order_status: newStatus }),
+    })
+      .then(res => res.json())
+      .catch(err => {
+        console.error("Failed to update order status", err);
+      });
   };
 
-  const toggleExpand = (orderId) => {
-    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
+  const fetchOrderItems = (orderId) => {
+    setLoadingItems(orderId);
+    fetch(`${API}/api/admin/order_items?order_id=${orderId}`)
+      .then(res => res.json())
+      .then(data => {
+        setOrderItems(prev => ({ ...prev, [orderId]: data }));
+        setLoadingItems(null);
+      })
+      .catch(() => setLoadingItems(null));
   };
+
+  const handleExpand = (orderId) => {
+    if (expandedOrderId === orderId) {
+      setExpandedOrderId(null);
+    } else {
+      setExpandedOrderId(orderId);
+      if (!orderItems[orderId]) {
+        fetchOrderItems(orderId);
+      }
+    }
+  };
+
+  const filteredOrders = orders.filter(order => {
+    if (filterStatus !== "All" && order.order_status !== filterStatus) return false;
+    if (!searchTerm.trim()) return true;
+    const keyword = searchTerm.trim().toLowerCase();
+    const fullName = `${order.first_name} ${order.last_name}`.toLowerCase();
+    const addressString = [order.address, order.city, order.province, order.postal_code].filter(Boolean).join(", ").toLowerCase();
+    return (
+      order.order_number.toLowerCase().includes(keyword) ||
+      fullName.includes(keyword) ||
+      addressString.includes(keyword) ||
+      (order.order_status && order.order_status.toLowerCase().includes(keyword)) ||
+      (order.payment_status && order.payment_status.toLowerCase().includes(keyword))
+    );
+  });
 
   return (
     <div className="orders-page">
       <h1>Orders</h1>
-
-      <div className="filter-bar">
-        <label htmlFor="status-filter">Filter by Status:</label>
-        <select
-          id="status-filter"
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="All">All</option>
-          <option value="Wait for Process">Wait for Process</option>
-          <option value="Shipping">Shipping</option>
-          <option value="Arrived">Arrived</option>
-        </select>
+      <div className="orders-toolbar">
+        <div className="filter-bar">
+          <label htmlFor="status-filter">Filter by Status:</label>
+          <select
+            id="status-filter"
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+          >
+            <option value="All">All</option>
+            {statusOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+        <input
+          className="orders-search"
+          type="text"
+          placeholder="Search by Order #, Name, Address, Status..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+        />
       </div>
-
       <div className="dashboard-card">
         <table className="orders-table">
           <thead>
             <tr>
-              <th>Order ID</th>
-              <th>Address</th>
-              <th>Shipping Date</th>
-              <th>Shipping Number</th>
-              <th>Status</th>
               <th>Actions</th>
+              <th>Order #</th>
+              <th>Full Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Move In Date</th>
+              <th>Shipping</th>
+              <th>Shipping Method</th>
+              <th>Payment Status</th>
+              <th>Order Status</th>
             </tr>
           </thead>
           <tbody>
             {filteredOrders.length > 0 ? (
-              filteredOrders.map((order, index) => (
+              filteredOrders.map(order => (
                 <React.Fragment key={order.id}>
                   <tr>
-                    <td>{order.id}</td>
-                    <td>{order.address}</td>
-                    <td>{order.shippingDate}</td>
-                    <td>{order.shippingNumber}</td>
                     <td>
-                      <select
-                        value={order.status}
-                        onChange={(e) =>
-                          handleStatusChange(index, e.target.value)
-                        }
-                      >
-                        <option value="Wait for Process">Wait for Process</option>
-                        <option value="Shipping">Shipping</option>
-                        <option value="Arrived">Arrived</option>
-                      </select>
-                    </td>
-                    <td>
-                      <button onClick={() => toggleExpand(order.id)}>
-                        {expandedOrderId === order.id ? "Hide" : "View All"}
+                      <button onClick={() => handleExpand(order.id)}>
+                        {expandedOrderId === order.id ? "Hide Details" : "View Order Details"}
                       </button>
                     </td>
+                    <td>{order.order_number}</td>
+                    <td>{order.first_name} {order.last_name}</td>
+                    <td>{order.phone}</td>
+                    <td>
+                      {[order.address, order.city, order.province, order.postal_code].filter(Boolean).join(", ")}
+                    </td>
+                    <td>{order.move_in_date ? order.move_in_date.slice(0, 10) : ""}</td>
+                    <td>{order.shipping}</td>
+                    <td>{order.shipping_method}</td>
+                    <td>{order.payment_status}</td>
+                    <td>
+                      <select
+                        value={order.order_status}
+                        onChange={e => handleStatusChange(order.id, e.target.value)}
+                      >
+                        {statusOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </td>
                   </tr>
-
                   {expandedOrderId === order.id && (
                     <tr>
-                      <td colSpan="6">
-                        <div className="product-list">
-                          <table className="products-table">
-                            <thead>
-                              <tr>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {order.products.map((product, i) => (
-                                <tr key={i}>
-                                  <td>{product.name}</td>
-                                  <td>{product.quantity}</td>
-                                  <td>${product.price.toFixed(2)}</td>
+                      <td colSpan="10">
+                        <div style={{ padding: "1rem 0" }}>
+                          {loadingItems === order.id ? (
+                            <div>Loading order items...</div>
+                          ) : orderItems[order.id] && orderItems[order.id].length > 0 ? (
+                            <table className="products-table">
+                              <thead>
+                                <tr>
+                                  <th>Product ID</th>
+                                  <th>Name</th>
+                                  <th>Price</th>
+                                  <th>Quantity</th>
+                                  <th>Subtotal</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody>
+                                {orderItems[order.id].map((item, idx) => (
+                                  <tr key={idx}>
+                                    <td>{item.product_id}</td>
+                                    <td>{item.product_name}</td>
+                                    <td>${Number(item.product_price).toFixed(2)}</td>
+                                    <td>{item.quantity}</td>
+                                    <td>${Number(item.subtotal).toFixed(2)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div>No order items found.</div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -134,7 +192,7 @@ const Orders = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" style={{ textAlign: "center", padding: "1rem" }}>
+                <td colSpan="10" style={{ textAlign: "center", padding: "1rem" }}>
                   No orders found.
                 </td>
               </tr>
