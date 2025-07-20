@@ -37,13 +37,13 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 #### Planned changes
 
-- **change**
+- **Enforce PR Deadlines**
   
-  Although our merging process went smoothly this time, we plan to implement a stricter pull request (PR) deadline, such as no merges within 24 hours of the sprint deadline to allow sufficient time for code reviews and conflict resolution.
+  Although our merging process was smoother than previous sprints, we will implement a stricter pull request policy—no PRs merged within 24 hours of the sprint deadline—to improve code quality and allow time for full team reviews.
 
-- **change**
+- **Assign Task Owners and Priorities**
 
-  Each task will have a designated owner and a priority label (e.g., High, Medium, Low) to improve accountability and help the team focus on the most   critical items first.
+To enhance accountability and ensure focus on the most impactful features, we will assign a clear owner and priority level (High, Medium, Low) to each task going forward.
 
 ## Product - Review
 
