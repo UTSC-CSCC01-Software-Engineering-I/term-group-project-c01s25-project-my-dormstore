@@ -1204,7 +1204,7 @@ app.get("/api/admin/revenue", authenticateToken, async (req, res) => {
         COUNT(*) as total_orders,
         COALESCE(AVG(total), 0) as average_order_value
        FROM orders 
-       WHERE ${dateFilter} AND payment_status IN ('completed', 'paid')`,
+       WHERE ${dateFilter}`,
       []
     );
 
