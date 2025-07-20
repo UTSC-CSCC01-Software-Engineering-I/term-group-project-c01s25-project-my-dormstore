@@ -1053,34 +1053,40 @@ app.delete('/api/admin/ambassadors/:id', authenticateToken, async (req, res) => 
 });
 
 async function autoUpdatePackageStock(packageId) {
-  const itemsResult = await pool.query(
-    `SELECT product_id, quantity FROM package_items WHERE package_id = $1`,
-    [packageId]
-  );
-  if (itemsResult.rows.length === 0) return;
+  try {
+    const itemsResult = await pool.query(
+      `SELECT product_id, quantity FROM package_items WHERE package_id = $1`,
+      [packageId]
+    );
+    if (!itemsResult?.rows?.length) return;
 
-  const productIds = itemsResult.rows.map(row => row.product_id);
-  const stockResult = await pool.query(
-    `SELECT id, stock FROM products WHERE id = ANY($1)`,
-    [productIds]
-  );
-  const stockMap = {};
-  for (const row of stockResult.rows) stockMap[row.id] = Number(row.stock);
+    const productIds = itemsResult.rows.map(row => row.product_id);
+    const stockResult = await pool.query(
+      `SELECT id, stock FROM products WHERE id = ANY($1)`,
+      [productIds]
+    );
+    if (!stockResult?.rows?.length) return;
 
-  let maxPossible = Infinity;
-  for (const item of itemsResult.rows) {
-    const pStock = stockMap[item.product_id];
-    if (pStock === undefined) return;
-    const need = Number(item.quantity);
-    if (!need) return;
-    const canMake = Math.floor(pStock / need);
-    if (canMake < maxPossible) maxPossible = canMake;
+    const stockMap = {};
+    for (const row of stockResult.rows) stockMap[row.id] = Number(row.stock);
+
+    let maxPossible = Infinity;
+    for (const item of itemsResult.rows) {
+      const pStock = stockMap[item.product_id];
+      if (pStock === undefined) return;
+      const need = Number(item.quantity);
+      if (!need) return;
+      const canMake = Math.floor(pStock / need);
+      if (canMake < maxPossible) maxPossible = canMake;
+    }
+
+    await pool.query(
+      `UPDATE packages SET stock = $1 WHERE id = $2`,
+      [maxPossible, packageId]
+    );
+  } catch (err) {
+    console.error("autoUpdatePackageStock error:", err);
   }
-
-  await pool.query(
-    `UPDATE packages SET stock = $1 WHERE id = $2`,
-    [maxPossible, packageId]
-  );
 }
 
 
@@ -1282,7 +1288,7 @@ app.put("/api/admin/products/:id", authenticateToken, async (req, res) => {
       `SELECT DISTINCT package_id FROM package_items WHERE product_id = $1`, [id]
     );
     for (const row of pkgIdsResult.rows) {
-      await updatePackageStock(row.package_id);
+      await autoUpdatePackageStock(row.package_id);
     }
     res.json(result.rows[0]);
   } catch (err) {
@@ -1508,7 +1514,7 @@ app.delete("/api/admin/products/:id", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
     for (const row of pkgIdsResult.rows) {
-      await updatePackageStock(row.package_id);
+      await autoUpdatePackageStock(row.package_id);
     }
     res.json({ message: "Product deleted", id: result.rows[0].id });
   } catch (err) {
@@ -1633,3 +1639,5 @@ app.put("/api/admin/orders/:id/status", async (req, res) => {
     res.status(500).json({ error: "Failed to update order status" });
   }
 });
+
+module.exports = { app, pool };
