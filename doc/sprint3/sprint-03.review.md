@@ -85,7 +85,7 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 - **admin dashboard**
 
-![contactus](./images/adminhomepng)
+![contactus](./images/adminhome.png)
 
 ![contactus](./images/adminorders.png)
 
