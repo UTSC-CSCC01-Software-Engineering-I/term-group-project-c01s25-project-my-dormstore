@@ -30,10 +30,9 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 #### Decisions that did not turn out as well as we hoped
 
-- **change**  
+- We are still in the process of determining the best approach for implementing the cart checkout logic, particularly around residence-based validation and cart content re-evaluation. This caused inconsistent behaviors, such as mismatch between shipping cost and selected residence, and occasional bugs when switching residences mid-checkout.
 
-  We are still in the process of determining the best approach for implementing the card checkout functionality, which has led to some inconsistencies and conflicts in cart behavior.
-
+  Additionally, while we completed all 14 work items in this sprint, we deprioritized mobile screen optimization, which has impacted the mobile usability of several key pages (e.g., profile, admin dashboard, and order summary).
 
 #### Planned changes
 
@@ -43,7 +42,7 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 - **Assign Task Owners and Priorities**
 
-To enhance accountability and ensure focus on the most impactful features, we will assign a clear owner and priority level (High, Medium, Low) to each task going forward.
+  To enhance accountability and ensure focus on the most impactful features, we will assign a clear owner and priority level (High, Medium, Low) to   each task going forward.
 
 ## Product - Review
 
