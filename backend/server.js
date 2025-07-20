@@ -991,25 +991,29 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE a user by ID -admindashboard
 app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
-  const id = parseInt(req.params.id, 10);
+  const id = +req.params.id;
   try {
+    await pool.query('BEGIN');
+    await pool.query('DELETE FROM orders WHERE user_id = $1', [id]);
     const result = await pool.query(
       'DELETE FROM users WHERE id = $1 RETURNING id',
       [id]
     );
-
     if (result.rowCount === 0) {
+      await pool.query('ROLLBACK');
       return res.status(404).json({ error: 'User not found' });
     }
-
-    res.json({ message: 'User deleted successfully' });
+    await pool.query('COMMIT');
+    res.json({ message: 'User and related orders deleted' });
   } catch (err) {
-    console.error(`DELETE /api/users/${id} error:`, err);
-    res.status(500).json({ error: 'Failed to delete user' });
+    await pool.query('ROLLBACK');
+    console.error(`DELETE /api/admin/users/${id} Failed:`, err);
+    res.status(500).json({ error: err.detail || 'Failed to delete user' });
   }
 });
+
+
 
 //GET all ambassadors for admin dashboard
 app.get('/api/admin/ambassadors', authenticateToken, async (req, res) => {
