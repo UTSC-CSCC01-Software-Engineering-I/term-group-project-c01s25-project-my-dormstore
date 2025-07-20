@@ -38,7 +38,6 @@ import SuccessPage from "./pages/CheckoutPage/SuccessPage";
 import AdminLogin from "./pages/AdminLogin/AdminLogin";
 import AdminLayout from "./pages/adminlayout";
 import Home from "./pages/AdminDashboard/tabs/Home";
-import InventoryCheck from "./pages/AdminDashboard/tabs/InventoryCheck";
 import Orders from "./pages/AdminDashboard/tabs/Orders";
 import OrderUpdate from "./pages/AdminDashboard/tabs/OrderUpdate";
 import AmbassadorList from "./pages/AdminDashboard/tabs/AmbassadorList";
@@ -262,7 +261,6 @@ function AppContent() {
           >
             <Route index element={<Navigate to="home" />} />
             <Route path="home" element={<Home />} />
-            <Route path="inventory" element={<InventoryCheck />} />
             <Route path="orders" element={<Orders />} />
             <Route path="update" element={<OrderUpdate />} />
             <Route path="ambassadors" element={<AmbassadorList />} />

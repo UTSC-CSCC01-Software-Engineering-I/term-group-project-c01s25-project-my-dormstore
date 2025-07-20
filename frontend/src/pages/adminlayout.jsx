@@ -18,7 +18,6 @@ const AdminLayout = () => {
         </div>
         <nav className="nav-links">
           <NavLink to="home" className={({ isActive }) => isActive ? "link active" : "link"}>Home</NavLink>
-          <NavLink to="inventory" className={({ isActive }) => isActive ? "link active" : "link"}>Inventory Check</NavLink>
           <NavLink to="orders" className={({ isActive }) => isActive ? "link active" : "link"}>Orders</NavLink>
           <NavLink to="update" className={({ isActive }) => isActive ? "link active" : "link"}>Order Update</NavLink>
           <NavLink to="products" className={({ isActive }) => isActive ? "link active" : "link"}>Product Management</NavLink>
