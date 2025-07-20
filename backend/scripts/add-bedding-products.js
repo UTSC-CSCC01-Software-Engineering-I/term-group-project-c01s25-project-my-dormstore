@@ -3,7 +3,7 @@ import 'dotenv/config';
 
 const { Pool } = pg;
 
-// One bedding product with multiple sizes for testing cart warnings
+// Two bedding products with multiple sizes for testing cart warnings
 const beddingProducts = [
   {
     name: "Sheet Set",
@@ -13,6 +13,25 @@ const beddingProducts = [
     rating: 4.5,
     size: "Twin, Twin XL, Double, Double XL, Queen",
     color: "White, Blue, Gray, Pink, Green, Purple, Red"
+  },
+  ,
+  {
+    name: "Mattress Protector",
+    price: 64.99,
+    category: "Bedding",
+    description: "Warm and cozy comforter. Perfect for dorm rooms.",
+    rating: 4.3,
+    size: "Twin, Twin XL, Double",
+    color: "White, Blue, Gray, Navy, Pink, Green"
+  }, 
+  {
+    name: "Comforter",
+    price: 64.99,
+    category: "Bedding",
+    description: "Warm and cozy comforter. Perfect for dorm rooms.",
+    rating: 4.3,
+    size: "Twin, Twin XL, Double",
+    color: "White, Blue, Gray, Navy, Pink, Green"
   }
 ];
 
@@ -26,7 +45,7 @@ async function addBeddingProducts() {
   });
 
   try {
-    console.log('Adding bedding product to database...');
+    console.log('Adding bedding products to database...');
     
     let addedCount = 0;
     let skippedCount = 0;
@@ -46,7 +65,7 @@ async function addBeddingProducts() {
         }
         
         // Insert new product
-        const result = await pool.query(
+        await pool.query(
           'INSERT INTO products (name, price, category, description, rating, size, color) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
           [product.name, product.price, product.category, product.description, product.rating, product.size, product.color]
         );
