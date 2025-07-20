@@ -18,13 +18,14 @@ jest.mock("react-router-dom", () => {
 describe("OrderTrackingPage", () => {
   beforeEach(() => {
     process.env.REACT_APP_API_URL = "http://localhost:5000"; 
-    global.fetch = jest.fn((url) => {
-      if (url.includes("/api/order-updates")) {
+    global.fetch = jest.fn((url, options) => {
+      if (url.includes("/api/admin/order-updates")) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({}),
         });
       }
+    
       return Promise.resolve({
         ok: false,
         json: () => Promise.resolve({}),
