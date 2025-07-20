@@ -14,7 +14,6 @@ const beddingProducts = [
     size: "Twin, Twin XL, Double, Double XL, Queen",
     color: "White, Blue, Gray, Pink, Green, Purple, Red"
   },
-  ,
   {
     name: "Mattress Protector",
     price: 64.99,
