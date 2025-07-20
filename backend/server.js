@@ -425,6 +425,10 @@ app.delete("/cart", authenticateToken, async (req, res) => {
 
   app.get('/api/order-tracking', async (req, res) => {
     const { orderNumber, emailOrPhone } = req.query;
+
+    if (!orderNumber || !emailOrPhone) {
+      return res.status(400).json({ success: false, message: "Missing order number or email/phone" });
+    }
   
     try {
       const result = await pool.query(
@@ -1790,3 +1794,12 @@ app.get("/api/admin/dashboard/summary", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch dashboard summary" });
   }
 });
+
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+export default app;
