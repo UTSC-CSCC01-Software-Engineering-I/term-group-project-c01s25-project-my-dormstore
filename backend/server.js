@@ -1052,7 +1052,6 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
 });
 
 
-
 //GET all ambassadors for admin dashboard
 app.get('/api/admin/ambassadors', authenticateToken, async (req, res) => {
   try {
