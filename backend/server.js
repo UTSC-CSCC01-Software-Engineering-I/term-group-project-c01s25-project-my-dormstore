@@ -384,6 +384,45 @@ app.delete("/cart", authenticateToken, async (req, res) => {
     }
   });
 
+  app.get("/api/admin/all-order-updates", async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT 
+           id,
+           order_number,
+           email,
+           update_text,
+           status,
+           created_at
+         FROM order_updates
+         ORDER BY created_at DESC`
+      );
+  
+      res.json({ data: result.rows });
+    } catch (err) {
+      console.error("Database fetch error:", err);
+      res.status(500).json({ error: "Failed to fetch order updates" });
+    }
+  });
+  
+  app.patch("/api/admin/update-status", async (req, res) => {
+    const { id, status } = req.body;
+    if (!id || !status) {
+      return res.status(400).json({ error: "Missing id or status" });
+    }
+  
+    try {
+      await pool.query(
+        `UPDATE order_updates SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+        [status, id]
+      );
+      res.json({ message: "Update status updated successfully" });
+    } catch (err) {
+      console.error("Update status error:", err);
+      res.status(500).json({ error: "Failed to update status" });
+    }
+  });
+
   app.get('/api/order-tracking', async (req, res) => {
     const { orderNumber, emailOrPhone } = req.query;
   
@@ -920,7 +959,6 @@ app.put("/api/order-status", async (req, res) => {
 
 app.get("/api/order-details/:orderNumber", async (req, res) => {
   const { orderNumber } = req.params;
-  console.log("Received orderNumber:", orderNumber); // ✅ Add this
 
   if (!orderNumber) {
     return res.status(400).json({ error: "Missing order number" });

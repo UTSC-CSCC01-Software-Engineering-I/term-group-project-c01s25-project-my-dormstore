@@ -1,32 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./OrderUpdate.css";
 
-const dummyOrders = [
-  {
-    id: "ORD-1001",
-    email: "alice@example.com",
-    message: "Please ship to the side door.",
-    status: "wait for process",
-  },
-  {
-    id: "ORD-1002",
-    email: "bob@example.com",
-    message: "Change the delivery time to afternoon.",
-    status: "processing",
-  },
-];
 
 const OrderUpdate = () => {
-  const [orders, setOrders] = useState(dummyOrders);
+  const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    const fetchUpdates = async () => {
+      try {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/all-order-updates`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, 
+          },
+        });
+  
+        const data = await res.json();
+  
+        if (res.ok) {
+          setOrders(
+            data.data.map((row) => ({
+              updateId: row.id,           
+              orderNumber: row.order_number,
+              email: row.email,
+              message: row.update_text,
+              status: row.status,
+            }))
+          );
+        } else {
+          console.error("Error:", data.error);
+        }
+      } catch (err) {
+        console.error("Failed to fetch updates:", err);
+      }
+    };
+  
+    fetchUpdates();
+  }, []);
 
   const handleStatusChange = (id, newStatus) => {
     setOrders((prev) =>
       prev.map((order) =>
-        order.id === id ? { ...order, status: newStatus } : order
+        order.updateId === id ? { ...order, status: newStatus } : order
       )
     );
+
+    fetch(`${process.env.REACT_APP_API_URL}/api/admin/update-status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ id, status: newStatus }),
+    }).catch((err) => console.error("Failed to update status:", err));
   };
+
 
   const filteredOrders =
     filter === "all"
@@ -58,14 +86,14 @@ const OrderUpdate = () => {
         </thead>
         <tbody>
           {filteredOrders.map((order) => (
-            <tr key={order.id}>
-              <td>{order.id}</td>
+            <tr key={order.updateId}>
+              <td>{order.orderNumber}</td>
               <td>{order.email}</td>
               <td>{order.message}</td>
               <td>
                 <select
                   value={order.status}
-                  onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                  onChange={(e) => handleStatusChange(order.updateId, e.target.value)}
                 >
                   <option value="wait for process">Wait for Process</option>
                   <option value="processing">Processing</option>
