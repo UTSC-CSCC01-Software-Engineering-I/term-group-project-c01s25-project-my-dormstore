@@ -88,18 +88,10 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 #### Goals and/or tasks that were planned but not met/completed:
 
-- **change**
+- **Inventory Management Functionality**
 
-  Initially planned to create a dashboard for administrators to view user form submissions and track order data, but was deprioritized due to time      constraints and focus on user-facing features.
+  We had initially planned to implement inventory tracking for products and packages, allowing admins to view and manage stock levels. However, due to time constraints and a focus on completing higher-priority user-facing features (e.g., cart validation, order tracking, and admin dashboards), this functionality was postponed and will be revisited in a future sprint.
 
-- **change**
-
-  Planned to begin integration with a payment gateway; however, this was postponed to a future sprint to prioritize checklist personalization,   account management, and order tracking.
-
-- **change**
-
-  While some UI components were tested on smaller screens, full mobile optimization was not completed and will be addressed in a future design- 
-  focused sprint.
 
 ## Meeting Highlights
 
