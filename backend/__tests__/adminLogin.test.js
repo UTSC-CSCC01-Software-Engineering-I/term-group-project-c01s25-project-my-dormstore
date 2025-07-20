@@ -35,6 +35,6 @@ describe('POST /api/admin/login', () => {
       .post('/api/admin/login')
       .send({ email: 'admin@example.com'  }); 
 
-    expect(res.statusCode).toBe(400); // You may update this if your server responds differently
+    expect(res.statusCode).toBe(401); 
   });
 });
