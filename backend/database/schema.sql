@@ -104,3 +104,10 @@ CREATE TABLE IF NOT EXISTS admin_users (
 INSERT INTO admin_users (email, password)
 VALUES ('admin@example.com', 'admin123');
 
+CREATE TABLE order_packages (
+  id SERIAL PRIMARY KEY,
+  order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+  package_id INTEGER REFERENCES packages(id) ON DELETE CASCADE,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

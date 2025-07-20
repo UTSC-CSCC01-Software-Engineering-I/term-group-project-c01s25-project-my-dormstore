@@ -292,17 +292,28 @@ export default function ProductManagement() {
 
       <div className="top-controls">
         <label>Category Type:</label>
-        <select
-          value={categoryType}
-          onChange={(e) => {
-            setCategoryType(e.target.value);
-            setShowAddForm(false);
-            setEditingId(null);
-          }}
-        >
-          <option value="product">product</option>
-          <option value="package">package</option>
-        </select>
+        <div className="category-toggle">
+          <button
+            className={`toggle-btn ${categoryType === "product" ? "active" : ""}`}
+            onClick={() => {
+              setCategoryType("product");
+              setShowAddForm(false);
+              setEditingId(null);
+            }}
+          >
+          Product
+          </button>
+          <button
+            className={`toggle-btn ${categoryType === "package" ? "active" : ""}`}
+            onClick={() => {
+              setCategoryType("package");
+              setShowAddForm(false);
+              setEditingId(null);
+            }}
+          >
+          Package
+          </button>
+        </div>
         <button
           className="add-button"
           onClick={() => {
@@ -310,7 +321,7 @@ export default function ProductManagement() {
             setEditingId(null);
           }}
         >
-          {showAddForm ? "Cancel" : `Add ${categoryType}`}
+          {showAddForm ? "Cancel" : `+ Add ${categoryType === "product" ? "Product" : "Package"}`}
         </button>
       </div>
 

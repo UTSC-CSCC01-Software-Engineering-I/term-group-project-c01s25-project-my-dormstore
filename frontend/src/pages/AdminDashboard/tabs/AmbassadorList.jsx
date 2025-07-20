@@ -77,7 +77,7 @@ const AmbassadorList = () => {
                 <td>{email}</td>
                 <td>
                   <button
-                    className="delete-button"
+                    className="delete-button-ad"
                     onClick={() => handleDelete(id)}
                   >
                     Delete

@@ -54,7 +54,7 @@ h4 {
   position: relative;
   display: flex;
   align-items: center;
-  bottom: 2px;
+  bottom: 0px;
 }
 
 .search-bar input {
@@ -104,7 +104,7 @@ h4 {
   gap: 85px;  
   background-color: white;
   padding-left: 65px;
-  margin-top: 25px;
+  margin-top: 13px;
   margin-bottom: 35px;
 }
 

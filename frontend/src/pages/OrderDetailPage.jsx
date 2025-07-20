@@ -7,8 +7,8 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/api/order-details?orderNumber=${orderId}`)
-      .then(res => res.json())
+    fetch(`${process.env.REACT_APP_API_URL}/api/order-details/${orderId}`)
+    .then(res => res.json())
       .then(data => setOrder(data.order)) 
       .catch(err => console.error("Failed to load order details", err));
   }, [orderId]);
@@ -20,7 +20,7 @@ export default function OrderDetailPage() {
       <div className="order-box">
         <h2>Order #<span className="order-number">{order.order_number}</span></h2>
         <p><strong>Placed on:</strong> {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</p>
-        <p><strong>Status:</strong> {order.status || 'N/A'}</p>
+        <p><strong>Status:</strong> {order.order_status || 'N/A'}</p>
         <p><strong>Payment:</strong> {order.payment_method || 'N/A'}</p>
 
         <hr className="divider" />

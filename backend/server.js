@@ -384,8 +384,51 @@ app.delete("/cart", authenticateToken, async (req, res) => {
     }
   });
 
+  app.get("/api/admin/all-order-updates", async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT 
+           id,
+           order_number,
+           email,
+           update_text,
+           status,
+           created_at
+         FROM order_updates
+         ORDER BY created_at DESC`
+      );
+  
+      res.json({ data: result.rows });
+    } catch (err) {
+      console.error("Database fetch error:", err);
+      res.status(500).json({ error: "Failed to fetch order updates" });
+    }
+  });
+  
+  app.patch("/api/admin/update-status", async (req, res) => {
+    const { id, status } = req.body;
+    if (!id || !status) {
+      return res.status(400).json({ error: "Missing id or status" });
+    }
+  
+    try {
+      await pool.query(
+        `UPDATE order_updates SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+        [status, id]
+      );
+      res.json({ message: "Update status updated successfully" });
+    } catch (err) {
+      console.error("Update status error:", err);
+      res.status(500).json({ error: "Failed to update status" });
+    }
+  });
+
   app.get('/api/order-tracking', async (req, res) => {
     const { orderNumber, emailOrPhone } = req.query;
+
+    if (!orderNumber || !emailOrPhone) {
+      return res.status(400).json({ success: false, message: "Missing order number or email/phone" });
+    }
   
     try {
       const result = await pool.query(
@@ -395,15 +438,16 @@ app.delete("/cart", authenticateToken, async (req, res) => {
       );
   
       if (result.rows.length > 0) {
-        res.status(200).json(result.rows[0]);
+        res.status(200).json({ success: true, data: result.rows[0] }); 
       } else {
-        res.status(404).json({ message: "Order not found" });
+        res.status(404).json({ success: false, message: "Order not found" });
       }
     } catch (err) {
       console.error("Tracking error:", err);
-      res.status(500).json({ error: "Server error" });
+      res.status(500).json({ success: false, error: "Server error" });
     }
   });
+  
 
 // Products API endpoints
 app.get("/api/products", async (req, res) => {
@@ -917,8 +961,8 @@ app.put("/api/order-status", async (req, res) => {
   }
 });
 
-app.get("/api/order-details", async (req, res) => {
-  const { orderNumber } = req.query;
+app.get("/api/order-details/:orderNumber", async (req, res) => {
+  const { orderNumber } = req.params;
 
   if (!orderNumber) {
     return res.status(400).json({ error: "Missing order number" });
@@ -930,7 +974,7 @@ app.get("/api/order-details", async (req, res) => {
               json_agg(json_build_object(
                 'product_id', oi.product_id,
                 'product_name', oi.product_name,
-                'product_price', oi.price,
+                'product_price', oi.product_price,
                 'quantity', oi.quantity,
                 'subtotal', oi.subtotal
               )) AS items
@@ -951,6 +995,7 @@ app.get("/api/order-details", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch order details" });
   }
 });
+
 
 app.get("/api/order-history", authenticateToken, async (req, res) => {
   try {
@@ -988,25 +1033,28 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE a user by ID -admindashboard
 app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
-  const id = parseInt(req.params.id, 10);
+  const id = +req.params.id;
   try {
+    await pool.query('BEGIN');
+    await pool.query('DELETE FROM orders WHERE user_id = $1', [id]);
     const result = await pool.query(
       'DELETE FROM users WHERE id = $1 RETURNING id',
       [id]
     );
-
     if (result.rowCount === 0) {
+      await pool.query('ROLLBACK');
       return res.status(404).json({ error: 'User not found' });
     }
-
-    res.json({ message: 'User deleted successfully' });
+    await pool.query('COMMIT');
+    res.json({ message: 'User and related orders deleted' });
   } catch (err) {
-    console.error(`DELETE /api/users/${id} error:`, err);
-    res.status(500).json({ error: 'Failed to delete user' });
+    await pool.query('ROLLBACK');
+    console.error(`DELETE /api/admin/users/${id} Failed:`, err);
+    res.status(500).json({ error: err.detail || 'Failed to delete user' });
   }
 });
+
 
 //GET all ambassadors for admin dashboard
 app.get('/api/admin/ambassadors', authenticateToken, async (req, res) => {
@@ -1160,7 +1208,7 @@ app.get("/api/admin/revenue", authenticateToken, async (req, res) => {
         COUNT(*) as total_orders,
         COALESCE(AVG(total), 0) as average_order_value
        FROM orders 
-       WHERE ${dateFilter} AND payment_status IN ('completed', 'paid')`,
+       WHERE ${dateFilter}`,
       []
     );
 
@@ -1627,6 +1675,130 @@ app.put("/api/admin/orders/:id/status", async (req, res) => {
   }
 });
 
+app.get("/api/admin/revenue", authenticateToken, async (req, res) => {
+  const { range } = req.query;
+  
+  try {
+    let dateFilter;
+    switch (range) {
+      case "7":
+        dateFilter = "created_at >= CURRENT_DATE - INTERVAL '7 days'";
+        break;
+      case "30":
+        dateFilter = "created_at >= CURRENT_DATE - INTERVAL '30 days'";
+        break;
+      case "365":
+        dateFilter = "created_at >= CURRENT_DATE - INTERVAL '365 days'";
+        break;
+      default:
+        dateFilter = "created_at >= CURRENT_DATE - INTERVAL '7 days'";
+    }
+
+    const result = await pool.query(
+      `SELECT 
+        COALESCE(SUM(total), 0) as total_revenue,
+        COUNT(*) as total_orders,
+        COALESCE(AVG(total), 0) as average_order_value
+       FROM orders 
+       WHERE ${dateFilter}`,
+      []
+    );
+
+    const revenueData = result.rows[0];
+    res.json({
+      totalRevenue: parseFloat(revenueData.total_revenue),
+      totalOrders: parseInt(revenueData.total_orders),
+      averageOrderValue: parseFloat(revenueData.average_order_value),
+      timeRange: range
+    });
+  } catch (error) {
+    console.error("Error fetching revenue data:", error);
+    res.status(500).json({ error: "Failed to fetch revenue data" });
+  }
+});
+
+// Get active orders for admin dashboard
+app.get("/api/admin/orders/active", authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        order_number,
+        first_name,
+        last_name,
+        total,
+        order_status,
+        created_at
+       FROM orders 
+       WHERE order_status IN ('processing', 'pending', 'shipping')
+       ORDER BY created_at DESC 
+       LIMIT 10`,
+      []
+    );
+
+    res.json({
+      activeOrders: result.rows.map(order => ({
+        orderNumber: order.order_number,
+        customerName: `${order.first_name} ${order.last_name}`,
+        total: parseFloat(order.total),
+        status: order.order_status,
+        createdAt: order.created_at
+      }))
+    });
+  } catch (error) {
+    console.error("Error fetching active orders:", error);
+    res.status(500).json({ error: "Failed to fetch active orders" });
+  }
+});
+
+// Get dashboard summary data
+app.get("/api/admin/dashboard/summary", authenticateToken, async (req, res) => {
+  try {
+    // Get today's revenue
+    const todayRevenue = await pool.query(
+      `SELECT COALESCE(SUM(total), 0) as today_revenue
+       FROM orders 
+       WHERE DATE(created_at) = CURRENT_DATE AND payment_status = 'completed'`,
+      []
+    );
+
+    // Get total orders today
+    const todayOrders = await pool.query(
+      `SELECT COUNT(*) as today_orders
+       FROM orders 
+       WHERE DATE(created_at) = CURRENT_DATE`,
+      []
+    );
+
+    // Get pending orders count
+    const pendingOrders = await pool.query(
+      `SELECT COUNT(*) as pending_count
+       FROM orders 
+       WHERE order_status IN ('pending', 'processing')`,
+      []
+    );
+
+    // Get total users
+    const totalUsers = await pool.query(
+      `SELECT COUNT(*) as user_count FROM users`,
+      []
+    );
+
+    res.json({
+      todayRevenue: parseFloat(todayRevenue.rows[0].today_revenue),
+      todayOrders: parseInt(todayOrders.rows[0].today_orders),
+      pendingOrders: parseInt(pendingOrders.rows[0].pending_count),
+      totalUsers: parseInt(totalUsers.rows[0].user_count)
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard summary:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard summary" });
+  }
+});
+
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
