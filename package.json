@@ -3,5 +3,12 @@
     "dotenv": "^17.2.0",
     "pg": "^8.16.3",
     "react-router-dom": "^7.7.0"
+  },
+  "scripts": {
+    "test": "./test-runner.sh",
+    "test:backend": "cd backend && npm test -- --testPathPattern='checkout-features.test.js' --verbose",
+    "test:frontend": "cd frontend && npm test -- --testPathPattern='CheckoutProgress.test.jsx|CheckoutShipping.test.jsx|AdminDashboardHome.test.jsx' --watchAll=false --verbose",
+    "test:coverage": "cd frontend && npm test -- --coverage --testPathPattern='CheckoutProgress.test.jsx|CheckoutShipping.test.jsx|AdminDashboardHome.test.jsx' --watchAll=false",
+    "test:integration": "cd backend && PG_USER=haotianzhang PG_HOST=localhost PG_DATABASE=mydormstore PG_PWD=\"\" PG_PORT=5432 PORT=5001 node server.js & sleep 3 && curl -X POST \"http://localhost:5001/api/admin/login\" -H \"Content-Type: application/json\" -d '{\"email\": \"admin@example.com\", \"password\": \"admin123\"}' && pkill -f \"node server.js\""
   }
 }
