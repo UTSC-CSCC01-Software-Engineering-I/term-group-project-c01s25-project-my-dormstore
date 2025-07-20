@@ -4,9 +4,11 @@ import "./Orders.css";
 const API = process.env.REACT_APP_API_URL || "http://localhost:5001";
 
 const statusOptions = [
-  { value: "processing", label: "Processing" },
-  { value: "shipped", label: "Shipped" },
-  { value: "arrived", label: "Arrived" },
+  { value: "confirmed", label: "Order Confirmed" },
+  { value: "processing", label: "Order Processed" },
+  { value: "shipped", label: "Order Shipped" },
+  { value: "in transit", label: "On the way" },
+  { value: "delivered", label: "Order Delivered" },
 ];
 
 const Orders = () => {

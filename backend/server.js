@@ -395,15 +395,16 @@ app.delete("/cart", authenticateToken, async (req, res) => {
       );
   
       if (result.rows.length > 0) {
-        res.status(200).json(result.rows[0]);
+        res.status(200).json({ success: true, data: result.rows[0] }); 
       } else {
-        res.status(404).json({ message: "Order not found" });
+        res.status(404).json({ success: false, message: "Order not found" });
       }
     } catch (err) {
       console.error("Tracking error:", err);
-      res.status(500).json({ error: "Server error" });
+      res.status(500).json({ success: false, error: "Server error" });
     }
   });
+  
 
 // Products API endpoints
 app.get("/api/products", async (req, res) => {
@@ -917,8 +918,9 @@ app.put("/api/order-status", async (req, res) => {
   }
 });
 
-app.get("/api/order-details", async (req, res) => {
-  const { orderNumber } = req.query;
+app.get("/api/order-details/:orderNumber", async (req, res) => {
+  const { orderNumber } = req.params;
+  console.log("Received orderNumber:", orderNumber); // ✅ Add this
 
   if (!orderNumber) {
     return res.status(400).json({ error: "Missing order number" });
@@ -930,7 +932,7 @@ app.get("/api/order-details", async (req, res) => {
               json_agg(json_build_object(
                 'product_id', oi.product_id,
                 'product_name', oi.product_name,
-                'product_price', oi.price,
+                'product_price', oi.product_price,
                 'quantity', oi.quantity,
                 'subtotal', oi.subtotal
               )) AS items
@@ -951,6 +953,7 @@ app.get("/api/order-details", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch order details" });
   }
 });
+
 
 app.get("/api/order-history", authenticateToken, async (req, res) => {
   try {

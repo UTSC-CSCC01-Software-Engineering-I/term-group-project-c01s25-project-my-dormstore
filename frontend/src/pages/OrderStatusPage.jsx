@@ -57,7 +57,7 @@ export default function OrderStatusPage() {
   if (!order) return <p>Loading order info...</p>;
 
   const currentStepIndex = steps.findIndex(step =>
-    statusMap[step.label]?.includes(order.status?.toLowerCase())
+    statusMap[step.label]?.includes(order.order_status?.toLowerCase())
   );
 
   return (
@@ -79,14 +79,14 @@ export default function OrderStatusPage() {
                 </div>
 
                 <div className="status-title">
-                    <p><strong>Order Status:</strong> <span className="status-highlight">{order.status}</span></p>
+                    <p><strong>Order Status:</strong> <span className="status-highlight">{order.order_status}</span></p>
                     <p><strong>Estimated Delivery:</strong> {order.estimated_delivery || "TBD"}</p>
                 </div>
                 <div className="order-progress-bar">
                     <div
                         className="progress-fill"
                         style={{
-                            width: `${((currentStepIndex + 0.5) / (steps.length - 1)) * 100}%`
+                          width: `${((currentStepIndex + 0.1) / (steps.length - 1)) * 100}%`
                         }}
                     />
                     {steps.map((step, index) => (

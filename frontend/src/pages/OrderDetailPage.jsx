@@ -7,8 +7,8 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/api/order-details?orderNumber=${orderId}`)
-      .then(res => res.json())
+    fetch(`${process.env.REACT_APP_API_URL}/api/order-details/${orderId}`)
+    .then(res => res.json())
       .then(data => setOrder(data.order)) 
       .catch(err => console.error("Failed to load order details", err));
   }, [orderId]);

@@ -63,9 +63,9 @@ const UserList = () => {
                   <td>{address}</td>
                   <td>
                     <button
-                      className="delete-button"
+                      className="delete-button-ad"
                       onClick={async () => {
-                        await fetch(`http://localhost:5001/api/admin/users/${id}`, {
+                        await fetch(`${process.env.REACT_APP_API_URL}/api/admin/users/${id}`, {
                           method: 'DELETE',
                           headers: {
                             'Authorization': `Bearer ${token}`

@@ -35,3 +35,31 @@
 .ambassador-table tr:hover {
   background-color: #f1f8ff;
 }
+
+.delete-button-ad {
+  background-color: #d26668;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+}
+
+.delete-button-ad:hover {
+  background-color: #f44141;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.delete-button-ad:active {
+  transform: scale(0.96);
+}
+
+.ambassador-table td:last-child {
+  text-align: center;
+}
