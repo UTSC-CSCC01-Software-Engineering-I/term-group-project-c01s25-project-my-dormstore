@@ -4,7 +4,6 @@ import OrderTrackingPage from "../pages/OrderTrackingPage";
 import { MemoryRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 
-// Mock useNavigate from react-router-dom
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => {
   const actual = jest.requireActual("react-router-dom");
@@ -17,16 +16,16 @@ jest.mock("react-router-dom", () => {
 
 
 describe("OrderTrackingPage", () => {
-  // ✅ Global alert mock
   beforeEach(() => {
-    process.env.REACT_APP_API_URL = "http://localhost:5000"; // or any valid dummy value
-    global.fetch = jest.fn((url) => {
-      if (url.includes("/api/order-updates")) {
+    process.env.REACT_APP_API_URL = "http://localhost:5000"; 
+    global.fetch = jest.fn((url, options) => {
+      if (url.includes("/api/admin/order-updates")) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({}),
         });
       }
+    
       return Promise.resolve({
         ok: false,
         json: () => Promise.resolve({}),
