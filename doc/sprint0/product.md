@@ -64,13 +64,6 @@ My Dorm Store is an e-commerce platform offering custom care packages and move-i
   - Progress indicator updates accurately at each step.  
   - Data persists when navigating between steps (e.g., hitting “Back”).  
 
-- **On-the-Fly Shipping Calculator (Calendar Popup)**  
-  Present a small calendar widget for selecting the student’s move-in date. Immediately recalculate and display shipping cost once the move-in date and residence address are chosen.  
-  **Completion Criteria:**  
-  - Calendar popup displays without errors.  
-  - Selecting a move-in date triggers a backend calculation.  
-  - Shipping cost updates and displays accurately based on date and address.  
-
 - **Persistent Residence Profile**  
   Save the student’s school, dorm building, room number, and move-in date in their account profile so these details auto-populate on subsequent visits and avoid repeated data entry.  
   **Completion Criteria:**  
