@@ -344,8 +344,7 @@ app.delete("/cart", authenticateToken, async (req, res) => {
     }
   });
   
-  //change it to admin orderupdates
-  app.post("/api/admin/order-updates", async (req, res) => {
+  app.post("/api/order-updates", async (req, res) => {
     const { orderNumber, email, update } = req.body;
   
     if (!orderNumber || !email || !update) {
@@ -386,7 +385,11 @@ app.delete("/cart", authenticateToken, async (req, res) => {
 
   app.get('/api/order-tracking', async (req, res) => {
     const { orderNumber, emailOrPhone } = req.query;
-  
+    
+    if (!orderNumber || !emailOrPhone) {
+      return res.status(400).json({ success: false, message: "Missing order number or email/phone" });
+    }
+
     try {
       const result = await pool.query(
         `SELECT * FROM orders 
@@ -401,10 +404,9 @@ app.delete("/cart", authenticateToken, async (req, res) => {
       }
     } catch (err) {
       console.error("Tracking error:", err);
-      res.status(500).json({ success: false, error: "Server error" });
+      res.status(500).json({ error: "Server error" });
     }
   });
-  
 
 // Products API endpoints
 app.get("/api/products", async (req, res) => {
@@ -702,7 +704,7 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
         address, city, province, postal_code, move_in_date,
         subtotal, tax, shipping, shipping_method, total, payment_method,
         billing_first_name, billing_last_name, billing_address, billing_city, billing_province, billing_postal_code
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
       RETURNING id, order_number`,
       [
         orderNumber, userId, email, firstName, lastName, phone,
@@ -731,7 +733,7 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
     for (const item of cartResult.rows) {
       await client.query(
         `INSERT INTO order_items (
-          order_id, product_id, product_name, product_price, quantity, subtotal
+          order_id, product_id, product_name, price, quantity, subtotal
         ) VALUES ($1, $2, $3, $4, $5, $6)`,
         [
           orderId, item.product_id, item.product_name, item.price,
@@ -900,7 +902,7 @@ app.post("/api/admin/login", async (req, res) => {
   }
 });
 
-app.put("/api/order-status", async (req, res) => {
+app.put("/api/admin/order-status", async (req, res) => {
   const { orderNumber, status } = req.body;
   if (!orderNumber || !status) {
     return res.status(400).json({ error: "Missing fields" });
@@ -932,7 +934,7 @@ app.get("/api/order-details/:orderNumber", async (req, res) => {
               json_agg(json_build_object(
                 'product_id', oi.product_id,
                 'product_name', oi.product_name,
-                'product_price', oi.product_price,
+                'product_price', oi.price,
                 'quantity', oi.quantity,
                 'subtotal', oi.subtotal
               )) AS items
@@ -954,7 +956,6 @@ app.get("/api/order-details/:orderNumber", async (req, res) => {
   }
 });
 
-
 app.get("/api/order-history", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -970,120 +971,11 @@ app.get("/api/order-history", authenticateToken, async (req, res) => {
   }
 });
 
-// GET all users for admin dashboard
-app.get('/api/admin/users', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT
-        id,
-        first_name  AS "firstName",
-        last_name   AS "lastName",
-        email,
-        phone,
-        address
-      FROM users
-      ORDER BY id
-    `);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('GET /api/users error:', err);
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
-});
-
-app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
-  const id = +req.params.id;
-  try {
-    await pool.query('BEGIN');
-    await pool.query('DELETE FROM orders WHERE user_id = $1', [id]);
-    const result = await pool.query(
-      'DELETE FROM users WHERE id = $1 RETURNING id',
-      [id]
-    );
-    if (result.rowCount === 0) {
-      await pool.query('ROLLBACK');
-      return res.status(404).json({ error: 'User not found' });
-    }
-    await pool.query('COMMIT');
-    res.json({ message: 'User and related orders deleted' });
-  } catch (err) {
-    await pool.query('ROLLBACK');
-    console.error(`DELETE /api/admin/users/${id} Failed:`, err);
-    res.status(500).json({ error: err.detail || 'Failed to delete user' });
-  }
-});
-
-
-
-//GET all ambassadors for admin dashboard
-app.get('/api/admin/ambassadors', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT
-        id,
-        first_name  AS "firstName",
-        last_name   AS "lastName",
-        email
-      FROM ambassadors
-      ORDER BY id
-    `);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('GET /api/ambassadors error:', err);
-    res.status(500).json({ error: 'Failed to fetch ambassadors' });
-  }
-});
-
-// DELETE an ambassador by ID - admin dashboard
-app.delete('/api/admin/ambassadors/:id', authenticateToken, async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  try {
-    const result = await pool.query(
-      'DELETE FROM ambassadors WHERE id = $1 RETURNING id',
-      [id]
-    );
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Ambassador not found' });
-    }
-    res.json({ message: 'Ambassador deleted successfully' });
-  } catch (err) {
-    console.error(`DELETE /api/ambassadors/${id} error:`, err);
-    res.status(500).json({ error: 'Failed to delete ambassador' });
-  }
-});
-
-async function autoUpdatePackageStock(packageId) {
-  const itemsResult = await pool.query(
-    `SELECT product_id, quantity FROM package_items WHERE package_id = $1`,
-    [packageId]
-  );
-  if (itemsResult.rows.length === 0) return;
-
-  const productIds = itemsResult.rows.map(row => row.product_id);
-  const stockResult = await pool.query(
-    `SELECT id, stock FROM products WHERE id = ANY($1)`,
-    [productIds]
-  );
-  const stockMap = {};
-  for (const row of stockResult.rows) stockMap[row.id] = Number(row.stock);
-
-  let maxPossible = Infinity;
-  for (const item of itemsResult.rows) {
-    const pStock = stockMap[item.product_id];
-    if (pStock === undefined) return;
-    const need = Number(item.quantity);
-    if (!need) return;
-    const canMake = Math.floor(pStock / need);
-    if (canMake < maxPossible) maxPossible = canMake;
-  }
-
-  await pool.query(
-    `UPDATE packages SET stock = $1 WHERE id = $2`,
-    [maxPossible, packageId]
-  );
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
 }
-
-
 
 // Get all products
 app.get("/api/admin/products", authenticateToken, async (req, res) => {

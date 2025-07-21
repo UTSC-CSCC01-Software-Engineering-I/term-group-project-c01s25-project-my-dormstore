@@ -1,5 +1,5 @@
 // src/components/CartScreen.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./CartScreen.css";
 import { useCart } from "../contexts/CartContext.tsx";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +7,20 @@ import { getCurrentUserBedSize } from "../utils/bedSizeHelper";
 
 // Simple compatibility warning
 const CartCompatibilityWarning = ({ cartItems }) => {
-  const userBedSize = getCurrentUserBedSize();
+  const [userBedSize, setUserBedSize] = useState(getCurrentUserBedSize());
+  
+  // Listen for dorm changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUserBedSize(getCurrentUserBedSize());
+    };
+    window.addEventListener("storage", handleStorageChange);
+        setUserBedSize(getCurrentUserBedSize());
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [cartItems]);
   
   if (!userBedSize) return null; // No dorm info, no warnings
   
