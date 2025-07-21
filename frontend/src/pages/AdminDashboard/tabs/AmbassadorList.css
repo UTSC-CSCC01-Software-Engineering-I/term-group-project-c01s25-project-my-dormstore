@@ -1,0 +1,65 @@
+.ambassador-list-page {
+  padding: 2rem;
+  background-color: #f8f9fc;
+  min-height: 100vh;
+}
+
+.ambassador-list-page h1 {
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.ambassador-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.ambassador-table th,
+.ambassador-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e4e4e4;
+}
+
+.ambassador-table th {
+  background-color: #c9eaff;
+  color: #333;
+  font-weight: 600;
+}
+
+.ambassador-table tr:hover {
+  background-color: #f1f8ff;
+}
+
+.delete-button-ad {
+  background-color: #d26668;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+}
+
+.delete-button-ad:hover {
+  background-color: #f44141;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.delete-button-ad:active {
+  transform: scale(0.96);
+}
+
+.ambassador-table td:last-child {
+  text-align: center;
+}

@@ -5,15 +5,20 @@
   "proxy": "localhost:5000",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "start": "node --env-file=.env server.js",
     "dev": "nodemon --env-file=.env server.js",
     "setup-db": "node --env-file=.env scripts/setup-database.js",
     "clear-products": "node --env-file=.env scripts/clear-products.js",
     "add-categories": "node --env-file=.env scripts/add-categories.js",
     "add-products": "node --env-file=.env scripts/add-products.js",
+    "add-sample-products": "node --env-file=.env scripts/add-sample-products.js",
     "add-packages-tables": "node --env-file=.env scripts/add-packages-table.js",
     "add-all-packages": "node --env-file=.env scripts/add-all-packages.js",
+    "add-package-items": "node --env-file=.env scripts/add-package-items.js",
+    "add-bedding-products": "node --env-file=.env scripts/add-bedding-products.js",
+    "clear-packages": "node --env-file=.env scripts/clear-packages.js",
+    "check-database": "node --env-file=.env scripts/check-database-contents.js",
     "add-users": "node --env-file=.env scripts/add-users.js",
     "add-order-updates": "node --env-file=.env scripts/add-order-updates.js"
   },
@@ -25,13 +30,16 @@
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2",
     "pg": "^8.16.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "dotenv": "^17.2.0",
+    "jest": "^30.0.4",
+    "nodemon": "^3.1.9",
+    "supertest": "^7.1.3"
   }
 }

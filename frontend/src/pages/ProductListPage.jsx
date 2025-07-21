@@ -35,10 +35,13 @@ const ProductListPage = ({ category }) => {
   }, [category]);
 
   const handleAddToCart = (productId) => {
-    // Find the product by ID and add it to cart
     const product = products.find(p => p.id === productId);
     if (product) {
-      addToCart(product);
+      // For products without multiple size/color options
+      const finalSize = product.size && product.size.split(',').length === 1 ? product.size.trim() : undefined;
+      const finalColor = product.color && product.color.split(',').length === 1 ? product.color.trim() : undefined;
+      
+      addToCart(product, 1, finalSize, finalColor);
       console.log('Added to cart:', product.name);
     }
   };
@@ -46,10 +49,7 @@ const ProductListPage = ({ category }) => {
   if (loading) {
     return (
       <div className="product-list-page">
-        <div className="page-header">
-          <h1>Shop by Items</h1>
-          <p>Loading products...</p>
-        </div>
+        <p>Loading products...</p>
       </div>
     );
   }
@@ -57,25 +57,20 @@ const ProductListPage = ({ category }) => {
   if (error) {
     return (
       <div className="product-list-page">
-        <div className="page-header">
-          <h1>Shop by Items</h1>
-          <p style={{ color: 'red' }}>{error}</p>
-        </div>
+        <p style={{ color: 'red' }}>{error}</p>
       </div>
     );
   }
 
   return (
     <div className="product-list-page">
-      <div className="page-header">
-        <h1>{category ? `${category} Items` : 'Shop by Items'}</h1>
-      </div>
       <ProductList 
         products={products} 
         onAddToCart={handleAddToCart}
+        category={category}
       />
     </div>
   );
 };
 
-export default ProductListPage; 
+export default ProductListPage;

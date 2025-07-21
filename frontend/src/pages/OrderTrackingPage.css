@@ -201,3 +201,56 @@
   font-size: 1rem;
   max-width: 400px;
 }
+
+.order-progress {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.step {
+  flex: 1;
+  text-align: center;
+  padding: 10px 5px;
+  border-top: 3px solid #d9d9d9;
+  position: relative;
+  font-weight: 500;
+}
+
+.step.active {
+  border-top-color: #1890ff;
+  color: #1890ff;
+}
+
+.step::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background-color: #d9d9d9;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 5px;
+}
+
+.step.active::before {
+  background-color: #1890ff;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.status-badge.processing {
+  background-color: #ffe58f;
+  color: #ad8b00;
+}
+.status-badge.shipped {
+  background-color: #91d5ff;
+  color: #0050b3;
+}
+.status-badge.delivered {
+  background-color: #b7eb8f;
+  color: #237804;
+}

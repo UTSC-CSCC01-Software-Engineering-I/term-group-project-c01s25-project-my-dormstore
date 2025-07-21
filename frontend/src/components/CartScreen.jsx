@@ -1,8 +1,54 @@
 // src/components/CartScreen.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./CartScreen.css";
 import { useCart } from "../contexts/CartContext.tsx";
 import { useNavigate } from "react-router-dom";
+import { getCurrentUserBedSize } from "../utils/bedSizeHelper";
+
+// Simple compatibility warning
+const CartCompatibilityWarning = ({ cartItems }) => {
+  const [userBedSize, setUserBedSize] = useState(getCurrentUserBedSize());
+  
+  // Listen for dorm changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUserBedSize(getCurrentUserBedSize());
+    };
+    window.addEventListener("storage", handleStorageChange);
+        setUserBedSize(getCurrentUserBedSize());
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [cartItems]);
+  
+  if (!userBedSize) return null; // No dorm info, no warnings
+  
+  // Find bedding items that don't match user's dorm bed size
+  const incompatibleItems = cartItems.filter(item => {
+    // Only check bedding category items
+    if (!item.category || item.category.toLowerCase() !== 'bedding') return false;
+    
+    // Check if the selected size doesn't match user's bed size
+    return item.selectedSize && item.selectedSize !== userBedSize;
+  });
+  
+  if (incompatibleItems.length === 0) return null;
+  
+  return (
+    <div className="cart-warning">
+      <div className="warning-header">Size Compatibility Warning</div>
+      <div className="warning-text">
+        Some bedding items may not fit your dorm (requires {userBedSize}):
+      </div>
+      {incompatibleItems.map(item => (
+        <div key={item.id} className="warning-item">
+          • {item.name} - Selected: {item.selectedSize}{item.selectedColor ? `, ${item.selectedColor}` : ''} (Recommended: {userBedSize})
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function CartScreen() {
   const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
@@ -17,6 +63,9 @@ export default function CartScreen() {
     <div className="cart-screen-container">
       <div className="cart-main">
         <h2 className="cart-title">My Cart</h2>
+        
+        <CartCompatibilityWarning cartItems={items} />
+        
         <div className="cart-items-list">
           {items.length === 0 ? (
             <div className="cart-empty">Your cart is empty.</div>
@@ -30,13 +79,23 @@ export default function CartScreen() {
                 />
                 <div className="cart-item-info">
                   <div className="cart-item-name">{item.name}</div>
-                  {item.size && (
-                    <div className="cart-item-size">Size: {item.size}</div>
+                  
+                  {/* Size and Color Options */}
+                  {(item.selectedSize || item.selectedColor) && (
+                    <div className="cart-item-options">
+                      {item.selectedSize && (
+                        <span className="cart-item-size">Size: {item.selectedSize}</span>
+                      )}
+                      {item.selectedColor && (
+                        <span className="cart-item-color">Color: {item.selectedColor}</span>
+                      )}
+                    </div>
                   )}
+                  
                   <div className="cart-item-qty-controls">
                     <button
                       onClick={() =>
-                        updateQuantity(item.id, item.quantity - 1)
+                        updateQuantity(item.cartItemId, item.quantity - 1)
                       }
                       className="qty-btn"
                     >
@@ -45,7 +104,7 @@ export default function CartScreen() {
                     <span className="cart-item-qty">{item.quantity}</span>
                     <button
                       onClick={() =>
-                        updateQuantity(item.id, item.quantity + 1)
+                        updateQuantity(item.cartItemId, item.quantity + 1)
                       }
                       className="qty-btn"
                     >
@@ -58,7 +117,7 @@ export default function CartScreen() {
                 </div>
                 <button
                   className="cart-item-delete"
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item.cartItemId)}
                   title="Remove from cart"
                 >
                   🗑️

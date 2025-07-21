@@ -1,18 +1,18 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useRef, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import "./OrderTrackingPage.css";
 
 export default function OrderTrackingPage() {
     const location = useLocation();
     const orderStatusRef = useRef(null);
     const orderTrackingRef = useRef(null);
-    const [trackingResult, setTrackingResult] = useState(null);
 
+    const navigate = useNavigate();
 
     
     const [form, setForm] = useState({
-        orderName: "",
         email: "",
         orderUpdate: "",
         trackingOrderNumber: "",
@@ -26,13 +26,13 @@ export default function OrderTrackingPage() {
     const handleSubmitUpdate = async (e) => {
         e.preventDefault();
         try {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/order-updates`, {
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/order-updates`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              orderName: form.orderName,
+              orderNumber: form.trackingOrderNumber,
               email: form.email,
               update: form.orderUpdate,
             }),
@@ -52,43 +52,15 @@ export default function OrderTrackingPage() {
     };
       
 
-    const handleTrackOrder = async () => {
-        const { trackingOrderNumber, trackingEmail } = form;
-      
-        if (!trackingOrderNumber || !trackingEmail) {
-          alert("Please enter both order number and email/phone.");
-          return;
-        }
-      
-        try {
-          const queryParams = new URLSearchParams({
-            orderNumber: trackingOrderNumber,
-            emailOrPhone: trackingEmail, 
-          });
-      
-          const res = await fetch(
-            `${process.env.REACT_APP_API_URL}/api/order-tracking?${queryParams}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-      
-          if (res.ok) {
-            const data = await res.json();
-            setTrackingResult({ success: true, data });
-          } else if (res.status === 404) {
-            setTrackingResult({ success: false, message: "Order not found." });
-          } else {
-            setTrackingResult({ success: false, message: "An error occurred." });
-          }
-        } catch (error) {
-          console.error("Tracking error:", error);
-          setTrackingResult({ success: false, message: "Network error." });
-        }
-      
+    const handleTrackOrder = () => {
+      const { trackingOrderNumber, trackingEmail } = form;
+    
+      if (!trackingOrderNumber || !trackingEmail) {
+        alert("Please enter both order number and email/phone.");
+        return;
+      }
+    
+      navigate(`/order-status/${trackingOrderNumber}?email=${trackingEmail}`);
     };
       
       
@@ -126,9 +98,9 @@ export default function OrderTrackingPage() {
             <div className="form-row">
                 <input
                 type="text"
-                name="orderName"
-                placeholder="Order Name"
-                value={form.orderName}
+                name="trackingOrderNumber"
+                placeholder="Order Number"
+                value={form.trackingOrderNumber}
                 onChange={handleChange}
                 />
                 <input
@@ -168,19 +140,6 @@ export default function OrderTrackingPage() {
                         onChange={handleChange}
                     />    
                     <button onClick={handleTrackOrder}>Track Your Order</button>
-                    {trackingResult && (
-                        <div className="tracking-result-box">
-                            {trackingResult.success ? (
-                                <p>
-                                    📦 Order <strong>{trackingResult.data.order_number}</strong> for{" "}
-                                    <strong>{trackingResult.data.email}</strong> is currently{" "}
-                                    <strong style={{ color: "blue" }}>{trackingResult.data.status}</strong>.
-                                </p>
-                            ) : (
-                                <p style={{ color: "red" }}>❌ {trackingResult.message}</p>
-                            )}
-                        </div>
-                    )}
                 </label>
             </div>
             <div className="tracking-image-container">

@@ -60,3 +60,32 @@
   color: #2a7ae2;
   text-decoration: underline;
 }
+
+.error-message {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  color: #721c24;
+}
+
+.error-message p {
+  margin: 0 0 12px 0;
+  font-weight: 500;
+}
+
+.btn-add-funds {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.btn-add-funds:hover {
+  background: #0056b3;
+}

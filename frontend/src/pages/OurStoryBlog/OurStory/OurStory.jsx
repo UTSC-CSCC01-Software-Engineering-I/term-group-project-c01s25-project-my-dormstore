@@ -7,7 +7,7 @@ const OurStory = () => {
         <div className="section-wrapper">
             <section className="ourstoryblog-section1">
                 <div className="ourstoryblog-img1">
-                    <img src="/images/ourstoryblog1.png" className="fade-in-up"  />
+                    <img src="/images/ourstoryblog1.png" alt="Our story" className="fade-in-up"  />
                 </div>
                 <div className="ourstoryblog-card">
                     <h2 className="card-subtitle">Our Story</h2>
@@ -29,7 +29,7 @@ const OurStory = () => {
                     </p>
                 </div>
                 <div className="ourstoryblog-img2">
-                    <img src="/images/ourstoryblog2.png" className="fade-in-up" />
+                    <img src="/images/ourstoryblog2.png" alt="Dorm life" className="fade-in-up" />
                 </div>
             </section>
         </div>
@@ -37,7 +37,7 @@ const OurStory = () => {
         <div className="section-wrapper"> 
             <section className="ourstoryblog-section3">
                 <div className="ourstoryblog-img3">
-                    <img src="/images/ourstoryblog3.png" className="fade-in-up" />
+                    <img src="/images/ourstoryblog3.png" alt="Student experience" className="fade-in-up" />
                 </div>
                 <div className="intro-text">
                     <h1>We get it because we've been there.</h1>
@@ -55,7 +55,7 @@ const OurStory = () => {
                     </p>
                 </div>
                 <div className="ourstoryblog-img4">
-                    <img src="/images/ourstoryblog4.png" className="fade-in-up" />
+                    <img src="/images/ourstoryblog4.png" alt="Dorm shopping solution" className="fade-in-up" />
                 </div>
             </section>
         </div>

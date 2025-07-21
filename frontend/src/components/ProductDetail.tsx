@@ -1,46 +1,63 @@
-import react from 'react'
+
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { productService } from '../services/productService.ts'
-import { useCart } from '../contexts/CartContext.tsx'
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
+import { productService } from '../services/productService'
+import { packageService } from '../services/packageService'
+import { useCart } from '../contexts/CartContext'
 import { Product } from '../types/Product'
 import './ProductDetail.css'
 
 export default function ProductDetail()  {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const [product, setProduct] = useState<Product | null>(null)
+  const [packageDetails, setPackageDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const { addToCart } = useCart()
   const [quantity, setQuantity] = useState(1)
+  const [selectedSize, setSelectedSize] = useState<string>('')
+  const [selectedColor, setSelectedColor] = useState<string>('')
+
+  const isPackage = location.pathname.startsWith('/packages/')
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchItem = async () => {
       if (!id) return;
       
       try {
         setLoading(true)
-        const fetchedProduct = await productService.getProductById(Number(id))
-        setProduct(fetchedProduct)
+        
+        if (isPackage) {
+          // Fetch package details with included products
+          const packageData = await packageService.getPackageDetails(Number(id))
+          setProduct(packageData)
+          setPackageDetails(packageData)
+        } else {
+          const fetchedItem = await productService.getProductById(Number(id))
+          setProduct(fetchedItem)
+          setPackageDetails(null)
+        }
+        
         setError(null)
       } catch (err) {
-        setError('Failed to load product')
-        console.error('Error fetching product:', err)
+        setError(`Failed to load ${isPackage ? 'package' : 'product'}`)
+        console.error(`Error fetching ${isPackage ? 'package' : 'product'}:`, err)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchProduct()
-  }, [id])
+    fetchItem()
+  }, [id, isPackage])
   
 
   if (loading) {
     return (
       <div className="product-detail">
-        <h2>Loading product...</h2>
+        <h2>Loading {isPackage ? 'package' : 'product'}...</h2>
       </div>
     )
   }
@@ -48,7 +65,7 @@ export default function ProductDetail()  {
   if (error || !product) {
     return (
       <div className="product-detail not-found">
-        <h2>{error || "Product not found"}</h2>
+        <h2>{error || `${isPackage ? 'Package' : 'Product'} not found`}</h2>
         <button className="back-button" onClick={() => navigate(-1)}>
           ← Back
         </button>
@@ -57,7 +74,26 @@ export default function ProductDetail()  {
   }
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product)
+      // For bedding products, check if size is selected
+      const availableSizes = product.size ? product.size.split(',') : []
+      const availableColors = product.color ? product.color.split(',') : []
+      
+      if (product.category?.toLowerCase() === 'bedding') {
+        if (availableSizes.length > 1 && !selectedSize) {
+          alert('Please select a size');
+          return;
+        }
+        if (availableColors.length > 1 && !selectedColor) {
+          alert('Please select a color');
+          return;
+        }
+      }
+      
+      // Determine final size and color
+      const finalSize = selectedSize || (availableSizes.length === 1 ? availableSizes[0] : undefined);
+      const finalColor = selectedColor || (availableColors.length === 1 ? availableColors[0] : undefined);
+      
+      addToCart(product, quantity, finalSize, finalColor)
     }
   }
 
@@ -65,10 +101,15 @@ export default function ProductDetail()  {
     <div className="product-detail">
       {/* Left: Image */}
       <img
-        src={product.image}
+        src={product.image_url || "/images/product-test.jpg"}
         alt={product.name}
         className="product-image"
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = "/images/product-test.jpg";
+        }}
       />
+
 
       {/* Right: Info */}
       <div className="product-info">
@@ -76,7 +117,7 @@ export default function ProductDetail()  {
           className="back-button"
           onClick={() => navigate(-1)}
         >
-          ← Back to list
+          ← Back to {isPackage ? 'packages' : 'products'}
         </button>
 
         <h1 className="product-title">{product.name}</h1>
@@ -116,14 +157,41 @@ export default function ProductDetail()  {
           </p>
         )}
 
-        <p className="section-subtitle">Laundry Hamper Colour</p>
-        <div className="variants">
-          {product.variant?.map(v => (
-            <button key={v.id} className="variant-button">
-              {v.label}
-            </button>
-          ))}
-        </div>
+        {/* Size Selection for Bedding */}
+        {product.category?.toLowerCase() === 'bedding' && product.size && (
+          <>
+            <p className="section-subtitle">Size</p>
+            <div className="size-options">
+              {product.size.split(',').map(size => (
+                <button 
+                  key={size.trim()} 
+                  className={`size-button ${selectedSize === size.trim() ? 'selected' : ''}`}
+                  onClick={() => setSelectedSize(size.trim())}
+                >
+                  {size.trim()}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Color Selection for Bedding */}
+        {product.category?.toLowerCase() === 'bedding' && product.color && (
+          <>
+            <p className="section-subtitle">Color</p>
+            <div className="color-options">
+              {product.color.split(',').map(color => (
+                <button 
+                  key={color.trim()} 
+                  className={`color-button ${selectedColor === color.trim() ? 'selected' : ''}`}
+                  onClick={() => setSelectedColor(color.trim())}
+                >
+                  {color.trim()}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         <p className="section-subtitle">Quantity</p>
         <div className="quantity-add">
@@ -139,16 +207,62 @@ export default function ProductDetail()  {
         </div>
       </div>
 
-      {/* Delivery, to be implemented */}
+      {isPackage && packageDetails?.included_products && packageDetails.included_products.length > 0 && (
+        <div className="package-included-products">
+          <h2 className="section-title">What's Included in This Package</h2>
+          <div className="included-products-grid">
+            {packageDetails.included_products.map((includedProduct: any) => {
+              // show as non-clickable card w
+              if (includedProduct.is_intended) {
+                return (
+                  <div 
+                    key={includedProduct.id} 
+                    className="included-product-card intended-product"
+                  >
+                    <div className="included-product-info">
+                      <h3 className="included-product-name">{includedProduct.name}</h3>
+                    </div>
+                  </div>
+                );
+              }
+              
+              // Otherwise show as clickable card with full details
+              return (
+                <Link 
+                  key={includedProduct.id} 
+                  to={`/products/${includedProduct.id}`} 
+                  className="included-product-card"
+                >
+                  <div className="included-product-info">
+                    <h3 className="included-product-name">{includedProduct.name}</h3>
+                    <p className="included-product-price">${parseFloat(includedProduct.price).toFixed(2)} CAD</p>
+                    <p className="included-product-quantity">Quantity: {includedProduct.quantity}</p>
+                    <p className="included-product-description">{includedProduct.description}</p>
+                  </div>
+                  <div className="included-product-arrow">→</div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Product/Package Details */}
       <div className="product-details-list">
-        <h2 className="section-title">Product Details</h2>
+        <h2 className="section-title">{isPackage ? 'Package' : 'Product'} Details</h2>
         <p className="section-text">{product.description}</p>
-        <p className="section-subtitle">Includes:</p>
-        <ul className="includes-list">
-          {product.included?.map(item => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+        
+        {/* Show includes for products only (packages show detailed products above) */}
+        {!isPackage && product.included && (
+          <>
+            <p className="section-subtitle">Includes:</p>
+            <ul className="includes-list">
+              {product.included?.map(item => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </>
+        )}
 
         <div className="delivery-section">
           <p className="section-subtitle">Delivery</p>

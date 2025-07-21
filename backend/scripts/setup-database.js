@@ -26,15 +26,29 @@ async function setupDatabase() {
     
     console.log('Database setup completed successfully!');
     
-    // verify by querying the products
-    const result = await pool.query('SELECT * FROM products');
-    console.log(` Found ${result.rows.length} products in database`);
-    result.rows.forEach(product => {
-      console.log(`   - ${product.name}: $${product.price}`);
-    });
+    // verify by querying the tables
+    const tables = ['products', 'users', 'cart_items', 'orders', 'order_items', 'order_updates'];
+    
+    for (const table of tables) {
+      try {
+        const result = await pool.query(`SELECT COUNT(*) FROM ${table}`);
+        console.log(`   - ${table}: ${result.rows[0].count} records`);
+      } catch (err) {
+        console.log(`   - ${table}: Error checking table`);
+      }
+    }
+    
+    // show products if any exist
+    const productsResult = await pool.query('SELECT * FROM products LIMIT 3');
+    if (productsResult.rows.length > 0) {
+      console.log('\nSample products:');
+      productsResult.rows.forEach(product => {
+        console.log(`   - ${product.name}: $${product.price}`);
+      });
+    }
     
   } catch (error) {
-    console.error(' Database setup failed:', error.message);
+    console.error('Database setup failed:', error.message);
   } finally {
     await pool.end();
   }

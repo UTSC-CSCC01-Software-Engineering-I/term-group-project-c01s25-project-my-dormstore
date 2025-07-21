@@ -15,6 +15,8 @@ html {
   text-align: center;
   padding: 5px 0;
   font-size: 14px;
+  justify-content: center;
+  align-items: center;
 }
 
 h4 {
@@ -22,11 +24,17 @@ h4 {
   font-weight: normal;
 }
 
+.left-section,
+.header-icons {
+  display: flex;
+  align-items: center;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 30px;
+  padding: 32px 35px;
   background-color: white;
 }
 
@@ -46,10 +54,11 @@ h4 {
   position: relative;
   display: flex;
   align-items: center;
+  bottom: 0px;
 }
 
 .search-bar input {
-  padding: 15px 16px 15px 40px; 
+  padding: 14px 16px 15px 40px; 
   width: 280px;
   border-radius: 30px;
   border: 1px solid #ccc;
@@ -66,17 +75,20 @@ h4 {
 .header-icons {
   display: flex;
   align-items: center;
-  gap: 23px;
-  padding-right: 30px;
+  gap: 25px;
+  padding-right: 28px;
+  align-items: flex-start;
+  margin-bottom: 15px;
 }
 
 .header-icons span {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
+
 }
 
 .header-icons img {
@@ -92,7 +104,8 @@ h4 {
   gap: 85px;  
   background-color: white;
   padding-left: 65px;
-  margin-bottom: 20px;
+  margin-top: 13px;
+  margin-bottom: 35px;
 }
 
 .nav-bar a {
