@@ -425,6 +425,10 @@ app.delete("/cart", authenticateToken, async (req, res) => {
 
   app.get('/api/order-tracking', async (req, res) => {
     const { orderNumber, emailOrPhone } = req.query;
+
+    if (!orderNumber || !emailOrPhone) {
+      return res.status(400).json({ success: false, message: "Missing order number or email/phone" });
+    }
   
     try {
       const result = await pool.query(
@@ -1089,12 +1093,12 @@ app.delete('/api/admin/ambassadors/:id', authenticateToken, async (req, res) => 
   }
 });
 
-async function autoUpdatePackageStock(packageId) {
+export async function autoUpdatePackageStock(packageId) {
   const itemsResult = await pool.query(
     `SELECT product_id, quantity FROM package_items WHERE package_id = $1`,
     [packageId]
   );
-  if (itemsResult.rows.length === 0) return;
+  if (!itemsResult.rows || itemsResult.rows.length === 0) return;
 
   const productIds = itemsResult.rows.map(row => row.product_id);
   const stockResult = await pool.query(
@@ -1314,12 +1318,11 @@ app.put("/api/admin/products/:id", authenticateToken, async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Product not found" });
     }
-    // 自动同步所有相关 package
     const pkgIdsResult = await pool.query(
       `SELECT DISTINCT package_id FROM package_items WHERE product_id = $1`, [id]
     );
     for (const row of pkgIdsResult.rows) {
-      await updatePackageStock(row.package_id);
+      await autoUpdatePackageStock(row.package_id);
     }
     res.json(result.rows[0]);
   } catch (err) {
@@ -1545,7 +1548,7 @@ app.delete("/api/admin/products/:id", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
     for (const row of pkgIdsResult.rows) {
-      await updatePackageStock(row.package_id);
+      await autoUpdatePackageStock(row.package_id);
     }
     res.json({ message: "Product deleted", id: result.rows[0].id });
   } catch (err) {
@@ -1790,3 +1793,13 @@ app.get("/api/admin/dashboard/summary", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch dashboard summary" });
   }
 });
+
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
+
+export { pool };
+export default app;

@@ -8,8 +8,8 @@ import { useLocation } from "react-router-dom";
 
 export default function ChecklistPage() {
   const [items, setItems] = useState([
-    { id: 1, label: "Queen size bed", checked: false },
-    { id: 2, label: "Laundry basket", checked: false },
+    { id: 1, label: "bedding", checked: false },
+    { id: 2, label: "bathroom essentials", checked: false },
     { id: 3, label: "Towel Set", checked: false },
     { id: 4, label: "Toiletries", checked: false },
   ]);
@@ -21,10 +21,6 @@ export default function ChecklistPage() {
   const { items: cartItems, cartReady } = useCart();
   const [checklistLoaded, setChecklistLoaded] = useState(false);
   const location = useLocation();
-
-  
-
-
 
 
   const toggleCheck = (id) => {
