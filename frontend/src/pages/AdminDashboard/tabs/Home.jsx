@@ -46,13 +46,15 @@ const Home = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setActiveOrders(data.activeOrders);
+        setActiveOrders(data.activeOrders || []);
       } else {
         setError("Failed to fetch active orders");
+        setActiveOrders([]);
       }
     } catch (err) {
       console.error("Error fetching active orders:", err);
       setError("Error fetching active orders");
+      setActiveOrders([]);
     }
   };
 
@@ -109,7 +111,7 @@ const Home = () => {
       {/* Recent Orders Section */}
       <div className="dashboard-card order-progress-card">
         <h3>Recent Orders (from Admin Orders)</h3>
-        {activeOrders.length > 0 ? (
+        {activeOrders && activeOrders.length > 0 ? (
           <ul className="order-list">
             {activeOrders.map((order) => (
               <li key={order.orderNumber} className="order-item">
