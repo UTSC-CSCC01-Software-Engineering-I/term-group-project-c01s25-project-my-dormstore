@@ -1,6 +1,7 @@
-const express = require('express');
-const request = require('supertest');
-const jwt = require('jsonwebtoken');
+import express from 'express';
+import request from 'supertest';
+import jwt from 'jsonwebtoken';
+import { jest } from '@jest/globals';
 
 // Create a minimal express app for testing
 function createTestApp(pool) {
@@ -67,7 +68,9 @@ describe('Admin Revenue & Recent Orders Endpoints', () => {
 
   describe('GET /api/admin/revenue', () => {
     it('returns revenue data for a given range', async () => {
-      pool.query.mockResolvedValue({ rows: [{ total_revenue: 1000, total_orders: 5, average_order_value: 200 }] });
+      pool.query.mockResolvedValue({
+        rows: [{ total_revenue: 1000, total_orders: 5, average_order_value: 200 }]
+      });
       const res = await request(app)
         .get('/api/admin/revenue?range=7')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -79,6 +82,7 @@ describe('Admin Revenue & Recent Orders Endpoints', () => {
         timeRange: '7',
       });
     });
+
     it('returns 500 on db error', async () => {
       pool.query.mockRejectedValue(new Error('DB error'));
       const res = await request(app)
@@ -91,10 +95,26 @@ describe('Admin Revenue & Recent Orders Endpoints', () => {
 
   describe('GET /api/admin/orders/active', () => {
     it('returns recent active orders', async () => {
-      pool.query.mockResolvedValue({ rows: [
-        { order_number: '1001', first_name: 'Alice', last_name: 'Smith', total: 100, order_status: 'Processing', created_at: '2024-07-01' },
-        { order_number: '1002', first_name: 'Bob', last_name: 'Lee', total: 200, order_status: 'Shipped', created_at: '2024-07-02' },
-      ] });
+      pool.query.mockResolvedValue({
+        rows: [
+          {
+            order_number: '1001',
+            first_name: 'Alice',
+            last_name: 'Smith',
+            total: 100,
+            order_status: 'Processing',
+            created_at: '2024-07-01'
+          },
+          {
+            order_number: '1002',
+            first_name: 'Bob',
+            last_name: 'Lee',
+            total: 200,
+            order_status: 'Shipped',
+            created_at: '2024-07-02'
+          },
+        ]
+      });
       const res = await request(app)
         .get('/api/admin/orders/active')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -108,6 +128,7 @@ describe('Admin Revenue & Recent Orders Endpoints', () => {
         createdAt: '2024-07-01',
       });
     });
+
     it('returns 500 on db error', async () => {
       pool.query.mockRejectedValue(new Error('DB error'));
       const res = await request(app)
@@ -117,4 +138,4 @@ describe('Admin Revenue & Recent Orders Endpoints', () => {
       expect(res.body).toHaveProperty('error', 'Failed to fetch active orders');
     });
   });
-}); 
+});

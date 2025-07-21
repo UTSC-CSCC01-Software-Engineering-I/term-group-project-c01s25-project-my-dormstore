@@ -22,10 +22,6 @@
     "add-users": "node --env-file=.env scripts/add-users.js",
     "add-order-updates": "node --env-file=.env scripts/add-order-updates.js"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "transform": {}
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",

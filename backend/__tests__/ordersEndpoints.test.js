@@ -4,7 +4,7 @@ process.env.NODE_ENV = 'test';
 import request from 'supertest';
 import { jest } from '@jest/globals';
 import jwt from 'jsonwebtoken';
-import app, { pool } from '../server.js';
+import app, { pool} from '../server.js';
 
 // Dummy test to ensure SECRET isn't tree-shaken
 test('setup secret-key', () => {});
