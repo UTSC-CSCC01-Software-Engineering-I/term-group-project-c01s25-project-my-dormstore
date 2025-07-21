@@ -1626,3 +1626,5 @@ app.put("/api/admin/orders/:id/status", async (req, res) => {
     res.status(500).json({ error: "Failed to update order status" });
   }
 });
+
+module.exports = app;

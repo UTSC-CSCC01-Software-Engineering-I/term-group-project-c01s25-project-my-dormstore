@@ -1,79 +1,46 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, fireEvent } from '@testing-library/react';
+import OrderTrackingPage from '../pages/OrderTrackingPage';
+import { MemoryRouter } from 'react-router-dom';
+import '@testing-library/jest-dom';
 
-// Mock fetch
-global.fetch = jest.fn();
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+    useLocation: () => ({ hash: '' }),
+  };
+});
 
-// Mock environment variables
-process.env.REACT_APP_API_URL = 'http://localhost:3001';
-
-const renderWithRouter = (component) => {
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  );
-};
-
-describe('Order Tracking Features', () => {
+describe('OrderTrackingPage (smoke tests)', () => {
   beforeEach(() => {
-    fetch.mockClear();
+    process.env.REACT_APP_API_URL = 'http://localhost:5000';
+    window.alert = jest.fn();
+    jest.clearAllMocks();
   });
 
-  describe('Order Status Page', () => {
-    test('should render order tracking form', () => {
-      renderWithRouter(<div>Order Tracking Form</div>);
-      
-      expect(screen.getByText('Order Tracking Form')).toBeInTheDocument();
-    });
-
-    test('should handle order number input', () => {
-      renderWithRouter(<div>Order Tracking Form</div>);
-      
-      const orderInput = screen.getByPlaceholderText('Order Number');
-      if (orderInput) {
-        fireEvent.change(orderInput, { target: { value: '12345' } });
-        expect(orderInput.value).toBe('12345');
-      }
-    });
-
-    test('should handle email input', () => {
-      renderWithRouter(<div>Order Tracking Form</div>);
-      
-      const emailInput = screen.getByPlaceholderText('Email');
-      if (emailInput) {
-        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-        expect(emailInput.value).toBe('test@example.com');
-      }
-    });
+  test('renders both update and tracking sections', () => {
+    render(
+      <MemoryRouter>
+        <OrderTrackingPage />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole('heading', { name: /Order Updates/i, level: 2 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Order Tracking/i, level: 2 })).toBeInTheDocument();
   });
 
-  describe('Order History', () => {
-    test('should display order history', () => {
-      renderWithRouter(<div>Order History</div>);
-      
-      expect(screen.getByText('Order History')).toBeInTheDocument();
-    });
-
-    test('should show order details', () => {
-      renderWithRouter(<div>Order Details</div>);
-      
-      expect(screen.getByText('Order Details')).toBeInTheDocument();
-    });
-  });
-
-  describe('Purchase History', () => {
-    test('should display purchase history in profile', () => {
-      renderWithRouter(<div>Purchase History</div>);
-      
-      expect(screen.getByText('Purchase History')).toBeInTheDocument();
-    });
-
-    test('should show order timestamps', () => {
-      renderWithRouter(<div>Order Timestamps</div>);
-      
-      expect(screen.getByText('Order Timestamps')).toBeInTheDocument();
-    });
+  test('renders order number and email input fields', () => {
+    render(
+      <MemoryRouter>
+        <OrderTrackingPage />
+      </MemoryRouter>
+    );
+    // There are two order number fields (one for updates, one for tracking)
+    const orderInputs = screen.getAllByPlaceholderText('Order Number');
+    expect(orderInputs.length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByPlaceholderText(/^Email$/)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/email or phone number/i)).toBeInTheDocument();
   });
 }); 
