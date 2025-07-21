@@ -86,7 +86,7 @@ export default function OrderStatusPage() {
                     <div
                         className="progress-fill"
                         style={{
-                          width: `${((currentStepIndex + 0.1) / (steps.length - 1)) * 100}%`
+                          width: `${((currentStepIndex + 0.5) / (steps.length - 0.5)) * 100}%`
                         }}
                     />
                     {steps.map((step, index) => (

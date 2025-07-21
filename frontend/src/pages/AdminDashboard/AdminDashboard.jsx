@@ -1,7 +1,6 @@
 import React from "react";
 import { NavLink, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Home from "./tabs/Home";
-import InventoryCheck from "./tabs/InventoryCheck";
 import Orders from "./tabs/Orders";
 import OrderUpdate from "./tabs/OrderUpdate";
 import AmbassadorList from "./tabs/AmbassadorList";
@@ -25,7 +24,6 @@ const AdminDashboard = () => {
         </div>
         <nav className="nav-links">
           <NavLink to="/admin/home" className={({ isActive }) => isActive ? "link active" : "link"}>Home</NavLink>
-          <NavLink to="/admin/inventory" className={({ isActive }) => isActive ? "link active" : "link"}>Inventory Check</NavLink>
           <NavLink to="/admin/orders" className={({ isActive }) => isActive ? "link active" : "link"}>Orders</NavLink>
           <NavLink to="/admin/update" className={({ isActive }) => isActive ? "link active" : "link"}>Order Update</NavLink>
           <NavLink to="/admin/products" className={({ isActive }) => isActive ? "link active" : "link"}>Product Management</NavLink>
@@ -42,7 +40,6 @@ const AdminDashboard = () => {
         <Routes>
           <Route path="/" element={<Navigate to="/admin/home" />} />
           <Route path="home" element={<Home />} />
-          <Route path="inventory" element={<InventoryCheck />} />
           <Route path="orders" element={<Orders />} />
           <Route path="update" element={<OrderUpdate />} />
           <Route path="ambassadors" element={<AmbassadorList />} />
