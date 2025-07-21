@@ -920,8 +920,9 @@ app.put("/api/admin/order-status", async (req, res) => {
   }
 });
 
-app.get("/api/order-details", async (req, res) => {
-  const { orderNumber } = req.query;
+app.get("/api/order-details/:orderNumber", async (req, res) => {
+  const { orderNumber } = req.params;
+  console.log("Received orderNumber:", orderNumber); 
 
   if (!orderNumber) {
     return res.status(400).json({ error: "Missing order number" });
@@ -1525,5 +1526,5 @@ app.put("/api/admin/orders/:id/status", async (req, res) => {
   }
 });
 
-export default app;
 export { pool };
+export default app;
