@@ -1155,6 +1155,7 @@ app.get("/api/admin/products", authenticateToken, async (req, res) => {
 // Add a new product
 app.post("/api/admin/products", authenticateToken, async (req, res) => {
   const { name, price, category, description, image_url, size, color, stock, active } = req.body;
+  const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
   try {
     const result = await pool.query(
       `INSERT INTO products (name, price, category, description, image_url, size, color, stock, active)
@@ -1171,7 +1172,7 @@ app.post("/api/admin/products", authenticateToken, async (req, res) => {
          color,
          stock,
          active`,
-      [name, price, category, description, image_url, size, color, stock ?? 0, active ?? true]
+      [name, price, formattedCategory, description, image_url, size, color, stock ?? 0, active ?? true]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
