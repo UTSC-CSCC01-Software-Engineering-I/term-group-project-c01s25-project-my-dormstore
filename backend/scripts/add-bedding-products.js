@@ -12,7 +12,8 @@ const beddingProducts = [
     description: "Soft, breathable sheet set. Includes fitted sheet, flat sheet, and 2 pillowcases.",
     rating: 4.5,
     size: "Twin, Twin XL, Double, Double XL, Queen",
-    color: "White, Blue, Gray, Pink, Green, Purple, Red"
+    color: "White, Blue, Gray, Pink, Green, Purple, Red",
+    image_url: "https://drive.google.com/thumbnail?id=19q27TuMy6T_3R70x1sthbZdVD9unD4cV"
   },
   {
     name: "Mattress Protector",
@@ -21,7 +22,8 @@ const beddingProducts = [
     description: "Warm and cozy comforter. Perfect for dorm rooms.",
     rating: 4.3,
     size: "Twin, Twin XL, Double",
-    color: "White, Blue, Gray, Navy, Pink, Green"
+    color: "White, Blue, Gray, Navy, Pink, Green",
+    image_url: "https://drive.google.com/thumbnail?id=1Ax2TSEvNWVekRdxvS8WYFt3lZRbjwsuz"
   }, 
   {
     name: "Comforter",
@@ -30,7 +32,8 @@ const beddingProducts = [
     description: "Warm and cozy comforter. Perfect for dorm rooms.",
     rating: 4.3,
     size: "Twin, Twin XL, Double",
-    color: "White, Blue, Gray, Navy, Pink, Green"
+    color: "White, Blue, Gray, Navy, Pink, Green",
+    image_url: "https://drive.google.com/thumbnail?id=1HrjtTbNDsUEVemLKRGFeFpuoVSiCuMai"
   }
 ];
 
@@ -65,8 +68,8 @@ async function addBeddingProducts() {
         
         // Insert new product
         await pool.query(
-          'INSERT INTO products (name, price, category, description, rating, size, color) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-          [product.name, product.price, product.category, product.description, product.rating, product.size, product.color]
+          'INSERT INTO products (name, price, category, description, rating, size, color, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+          [product.name, product.price, product.category, product.description, product.rating, product.size, product.color, product.image_url]
         );
         
         addedCount++;
