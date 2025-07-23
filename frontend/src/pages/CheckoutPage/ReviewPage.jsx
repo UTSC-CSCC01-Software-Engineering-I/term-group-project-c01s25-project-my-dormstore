@@ -214,7 +214,7 @@ export default function ReviewPage() {
           ))}
           <div className="summary-totals">
             <div><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-            <div><span>Shipping</span><span>Free</span></div>
+            <div><span>Shipping</span><span>${shippingCost.toFixed(2)}</span></div>
             <div><span>Tax</span><span>${tax.toFixed(2)}</span></div>
             <div className="total"><span>Order total</span><span>${total.toFixed(2)}</span></div>
           </div>
