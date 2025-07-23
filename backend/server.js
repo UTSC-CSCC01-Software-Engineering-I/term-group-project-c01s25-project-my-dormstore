@@ -495,7 +495,7 @@ app.get("/api/products/:id", async (req, res) => {
 app.get("/api/packages", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, created_at, updated_at FROM packages ORDER BY category, name"
+      "SELECT id, name, price, category, description, rating, image_url, size, color, created_at, updated_at FROM packages ORDER BY category, name"
     );
     res.json({ packages: result.rows });
   } catch (error) {
@@ -509,7 +509,7 @@ app.get("/api/packages/:id", async (req, res) => {
   try {
     const packageId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     
@@ -531,7 +531,7 @@ app.get("/api/packages/:id/details", async (req, res) => {
     
     // Get package info
     const packageResult = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     

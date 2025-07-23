@@ -12,7 +12,9 @@ const packages = [
     category: "Bedding",
     description: "template",
     rating: 0.0,
-    image_url: "https://drive.google.com/thumbnail?id=15TvY0Z_8DEvwS0CDT36LtWXtFGecEjgk"
+    image_url: "https://drive.google.com/thumbnail?id=15TvY0Z_8DEvwS0CDT36LtWXtFGecEjgk",
+    size: "Twin, Twin XL, Double, Double XL, Queen",
+    color: "White, Blue, Gray"
   },
   {
     name: "Standard Bedding Package", 
@@ -20,8 +22,8 @@ const packages = [
     category: "Bedding",
     description: "template",
     rating: 0.0,
-    image_url: "https://drive.google.com/thumbnail?id=1u7kcVrm_Sl6G5yJsO3kJxkXzIuIWgp06"
-
+    image_url: "https://drive.google.com/thumbnail?id=1u7kcVrm_Sl6G5yJsO3kJxkXzIuIWgp06",
+    size: "Twin, Twin XL, Double, Double XL, Queen"
   },
   {
     name: "Sleep Country Complete Bedding Package",
@@ -29,7 +31,9 @@ const packages = [
     category: "Bedding", 
     description: "template",
     rating: 0.0,
-    image_url: "https://drive.google.com/thumbnail?id=1UUanG5c1Pmi_v1-0UDo_Dq4ClEZyHKmo"
+    image_url: "https://drive.google.com/thumbnail?id=1UUanG5c1Pmi_v1-0UDo_Dq4ClEZyHKmo",
+    size: "Twin, Twin XL, Double, Double XL, Queen",
+
   },
   {
     name: "Deluxe Bedding Package",
@@ -37,7 +41,8 @@ const packages = [
     category: "Bedding",
     description: "template",
     rating: 0.0,
-    image_url: "https://drive.google.com/thumbnail?id=1GUqV6OidDM0oOT1dZ6dKJ73UshpGhqAU"
+    image_url: "https://drive.google.com/thumbnail?id=1GUqV6OidDM0oOT1dZ6dKJ73UshpGhqAU",
+    size: "Twin, Twin XL, Double, Double XL, Queen"
   },
 
   // Living Category
@@ -189,8 +194,8 @@ async function addAllPackages() {
     
     for (const pkg of packages) {
       const result = await pool.query(
-        'INSERT INTO packages (name, price, category, description, rating, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-        [pkg.name, pkg.price, pkg.category, pkg.description, pkg.rating, pkg.image_url]
+        'INSERT INTO packages (name, price, category, description, rating, image_url, size, color) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+        [pkg.name, pkg.price, pkg.category, pkg.description, pkg.rating, pkg.image_url, pkg.size || '', pkg.color || '']
       );
       
       addedCount++;

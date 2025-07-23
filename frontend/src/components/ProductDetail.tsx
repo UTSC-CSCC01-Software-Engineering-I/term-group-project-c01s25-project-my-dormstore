@@ -72,28 +72,26 @@ export default function ProductDetail()  {
       </div>
     )
   }
+  const hasSizes = !!product.size && product.size.split(',').length > 0 && product.size.split(',')[0].trim() !== '';
+  const hasColors = !!product.color && product.color.split(',').length > 0 && product.color.split(',')[0].trim() !== '';
+
   const handleAddToCart = () => {
     if (product) {
-      // For bedding products, check if size is selected
-      const availableSizes = product.size ? product.size.split(',') : []
-      const availableColors = product.color ? product.color.split(',') : []
-      
-      if (product.category?.toLowerCase() === 'bedding') {
-        if (availableSizes.length > 1 && !selectedSize) {
-          alert('Please select a size');
-          return;
-        }
-        if (availableColors.length > 1 && !selectedColor) {
-          alert('Please select a color');
-          return;
-        }
+      // Check if size/color selection is required
+      const availableSizes = product.size ? product.size.split(',') : [];
+      const availableColors = product.color ? product.color.split(',') : [];
+      if (hasSizes && availableSizes.length > 1 && !selectedSize) {
+        alert('Please select a size');
+        return;
       }
-      
+      if (hasColors && availableColors.length > 1 && !selectedColor) {
+        alert('Please select a color');
+        return;
+      }
       // Determine final size and color
       const finalSize = selectedSize || (availableSizes.length === 1 ? availableSizes[0] : undefined);
       const finalColor = selectedColor || (availableColors.length === 1 ? availableColors[0] : undefined);
-      
-      addToCart(product, quantity, finalSize, finalColor)
+      addToCart(product, quantity, finalSize, finalColor);
     }
   }
 
@@ -157,12 +155,12 @@ export default function ProductDetail()  {
           </p>
         )}
 
-        {/* Size Selection for Bedding */}
-        {product.category?.toLowerCase() === 'bedding' && product.size && (
+        {/* Size Selection (for both products and packages) */}
+        {hasSizes && (
           <>
             <p className="section-subtitle">Size</p>
             <div className="size-options">
-              {product.size.split(',').map(size => (
+              {product.size!.split(',').map(size => (
                 <button 
                   key={size.trim()} 
                   className={`size-button ${selectedSize === size.trim() ? 'selected' : ''}`}
@@ -175,12 +173,12 @@ export default function ProductDetail()  {
           </>
         )}
 
-        {/* Color Selection for Bedding */}
-        {product.category?.toLowerCase() === 'bedding' && product.color && (
+        {/* Color Selection (for both products and packages) */}
+        {hasColors && (
           <>
             <p className="section-subtitle">Color</p>
             <div className="color-options">
-              {product.color.split(',').map(color => (
+              {product.color!.split(',').map(color => (
                 <button 
                   key={color.trim()} 
                   className={`color-button ${selectedColor === color.trim() ? 'selected' : ''}`}
