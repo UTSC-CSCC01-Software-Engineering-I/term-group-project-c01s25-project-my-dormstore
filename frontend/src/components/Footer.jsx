@@ -13,14 +13,13 @@ export default function Footer() {
             <li><a href="/signin">Sign in</a></li>
             <li><a href="/register">Register</a></li>
             <li><a href="/order-status">Order Status</a></li>
-            <li><a href="/returns">Returns</a></li>
+            <li><a href="/order-status#order-tracking">Order Tracking</a></li>
           </ul>
         </div>
         <div className="footer-col">
           <h4>Help</h4>
           <ul>
-            <li><a href="/stock-available">Stock Available</a></li>
-            <li><a href="/planner">Planner</a></li>
+          <li><a href="/our-story">Services</a></li>
             <li><a href="/faq">FAQ</a></li>
           </ul>
         </div>
