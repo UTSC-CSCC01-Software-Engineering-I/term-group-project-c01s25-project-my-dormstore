@@ -181,8 +181,23 @@ export default function CheckoutPage() {
             <p>Choose the rate that you want to use for shipping</p>
             <div className="shipping-options-list">
               {SHIPPING_OPTIONS.map(opt => (
-                <label key={opt.label} className={`shipping-option-label${selectedShipping === opt.label ? ' selected' : ''}`}
-                  style={{ display: 'flex', alignItems: 'center', marginBottom: 8, cursor: 'pointer', fontWeight: 500 }}>
+                <label
+                key={opt.label}
+                className={`shipping-option-label${selectedShipping === opt.label ? ' selected' : ''}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: selectedShipping === opt.label ? '2px solid #007bff' : '1px solid #ccc',
+                  backgroundColor: selectedShipping === opt.label ? '#f0f8ff' : '#fff',
+                  cursor: 'pointer',
+                  marginBottom: '13px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                   <input
                     type="radio"
                     name="shippingService"
@@ -191,10 +206,15 @@ export default function CheckoutPage() {
                     onChange={() => setSelectedShipping(opt.label)}
                     style={{ marginRight: 12 }}
                   />
-                  <span style={{ flex: 1 }}>{opt.label}</span>
-                  <span style={{ marginRight: 16 }}>${opt.cost.toFixed(2)}</span>
-                  <span style={{ color: '#666', fontSize: '0.95em' }}>{opt.delivery}</span>
-                </label>
+                  <span style={{ fontWeight: 500 }}>{opt.label}</span>
+                </div>
+              
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 600 }}>${opt.cost.toFixed(2)}</div>
+                  <div style={{ color: '#666', fontSize: '0.9em', marginTop: '7px' }}>{opt.delivery}</div>
+                </div>
+              </label>
+              
               ))}
             </div>
           </section>

@@ -52,9 +52,9 @@ export default function CheckoutPaymentPage() {
 
             <div className="payment-options">
               {[
-                { id: "paypal",    label: "Pay with PayPal",    logo: "/images/paypal-logo.png" },
-                { id: "shopPay",   label: "Pay with shopPay",   logo: "/images/shop-pay-logo.png" },
-                { id: "googlePay", label: "Pay with GooglePay", logo: "/images/google-pay-logo.png" },
+                { id: "paypal",    label: "Pay with PayPal",    logo: "/images/paypal.png" },
+                { id: "shopPay",   label: "Pay with shopPay",   logo: "/images/shoppay.png" },
+                { id: "googlePay", label: "Pay with GooglePay", logo: "/images/googlepat.png" },
                 { id: "card",      label: "Pay with credit card", icon: <i className="far fa-credit-card"/> }
               ].map(opt => (
                 <label
@@ -90,10 +90,10 @@ export default function CheckoutPaymentPage() {
                   required
                 />
                 <div className="card-logos">
-                  <img src="/images/visa.png" alt="Visa"/>
-                  <img src="/images/mastercard.png" alt="Mastercard"/>
-                  <img src="/images/amex.png" alt="American Express"/>
-                  <img src="/images/discover.png" alt="Discover"/>
+                  <img src="/images/Visa.png" alt="Visa"/>
+                  <img src="/images/MasterCard.png" alt="Mastercard"/>
+                  <img src="/images/Amex.png" alt="American Express"/>
+                  <img src="/images/Discover.png" alt="Discover"/>
                   <span>+3</span>
                 </div>
               </section>
@@ -140,8 +140,9 @@ export default function CheckoutPaymentPage() {
                     checked={sameAsShipping}
                     onChange={e => setSameAsShipping(e.target.checked)}
                   />
-                  Same as shipping address
+                  <span>Same as shipping address</span>
                 </label>
+
                 {sameAsShipping ? (
                   <div className="address-block">
                     <p>{checkoutData.shipping.firstName} {checkoutData.shipping.lastName}</p>
