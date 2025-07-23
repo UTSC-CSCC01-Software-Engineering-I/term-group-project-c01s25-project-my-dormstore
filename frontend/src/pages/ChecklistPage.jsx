@@ -22,7 +22,6 @@ export default function ChecklistPage() {
   const [checklistLoaded, setChecklistLoaded] = useState(false);
   const location = useLocation();
 
-
   const toggleCheck = (id) => {
     setItems((prev) =>
       prev.map((item) =>
@@ -123,14 +122,20 @@ export default function ChecklistPage() {
     const dormChecklist = DormChecklistItems[selectedDorm] || DormChecklistItems["default"];
   
     const synced = dormChecklist.map((item) => {
-      const isInCart = cartItems.some((cartItem) =>
-        cartItem.name.toLowerCase().includes(item.label.toLowerCase())
-      );
+      const itemLabelLower = item.label.toLowerCase();
+  
+      const isInCart = cartItems.some((cartItem) => {
+        const nameMatch = cartItem.name.toLowerCase().includes(itemLabelLower);
+        const sizeMatch = itemLabelLower.includes("twin sheet") && cartItem.selectedSize?.toLowerCase() === "twin";
+        return nameMatch || sizeMatch;
+      });
+  
       return { ...item, checked: isInCart };
     });
   
     setItems(synced);
   }, [cartItems, cartReady, checklistLoaded, location.pathname, selectedDorm]);
+  
   
   
 
