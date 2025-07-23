@@ -47,16 +47,19 @@ const saveCartToStorage = (cartItems: CartItem[]) => {
 
 const loadCartFromStorage = (): CartItem[] => {
   const saved = localStorage.getItem('guestCart');
-  if (!saved) return [];
-  
+  if (!saved) {
+    return [];
+  }
   const cartItems = JSON.parse(saved);
   // Ensure all items have cartItemId for backward compatibility
-  return cartItems.map((item: any) => {
+  const mapped = cartItems.map((item: any) => {
     if (!item.cartItemId) {
       item.cartItemId = `local_${item.id}_${item.selectedSize || 'nosize'}_${item.selectedColor || 'nocolor'}_${Date.now()}_${Math.random()}`;
     }
     return item;
   });
+  
+  return mapped;
 };
 
 
@@ -216,13 +219,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
               ? { ...item, quantity: item.quantity + quantity }
               : item
           );
+          console.log('[CartContext] Guest addToCart: Increased quantity for existing item', newItems);
         } else {
           // new item - create unique cartItemId for localStorage
           const cartItemId = `local_${product.id}_${selectedSize || 'nosize'}_${selectedColor || 'nocolor'}_${Date.now()}`;
           newItems = [...currentItems, { ...product, quantity, selectedSize, selectedColor, cartItemId }];
+          console.log('[CartContext] Guest addToCart: Added new item', newItems);
         }
         // Save to localStorage
         saveCartToStorage(newItems);
+        console.log('[CartContext] Guest cart after add:', newItems);
         return newItems;
       });
     }
@@ -259,9 +265,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } else {
       // Not logged in: use local state and save to localStorage
       setItems(currentItems => {
-        // For localStorage, filter by cartItemId
         const newItems = currentItems.filter(item => item.cartItemId !== cartItemId);
-        // Save to localStorage
         saveCartToStorage(newItems);
         return newItems;
       });
@@ -354,37 +358,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
           setItems(cartItems.filter(Boolean));
         })
         .catch(() => {
-          setItems([]);
+          // fallback
         });
     } else {
-      setItems([]);
-      // Clear from localStorage too
-      saveCartToStorage([]);
+      // Not logged in: use local state and save to localStorage
+      setItems(() => {
+        saveCartToStorage([]);
+        return [];
+      });
     }
   };
 
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        totalItems,
-        totalPrice,
-        clearCart,
-        cartReady
-      }}
-    >
+    <CartContext.Provider value={{
+      items,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      totalItems,
+      totalPrice,
+      clearCart,
+      cartReady
+    }}>
       {children}
     </CartContext.Provider>
   );
 }
 
-export function useCart() {
+export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-}
+};
