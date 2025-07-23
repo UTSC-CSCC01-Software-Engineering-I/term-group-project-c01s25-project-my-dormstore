@@ -87,6 +87,16 @@
   gap: 24px;
 }
 
+.cart-item-link, .cart-item-name-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.cart-item-name-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .cart-item-image {
   width: 120px;
   height: 90px;
