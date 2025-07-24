@@ -1,14 +1,21 @@
-
 .ambassador-page {
   display: flex;
-  height: 100vh;
   font-family: "Inter", sans-serif;
   background-color: #f9fbff;
+  flex-wrap: wrap; /* optional for mobile */
 }
 
 .ambassador-left {
   flex: 1;
+  min-height: 400px;
   overflow: hidden;
+}
+
+.ambassador-right {
+  flex: 2;
+  padding: 50px 70px;
+  background-color: #ffffff;
+  position: relative;
 }
 
 .ambassador-left img {
@@ -17,83 +24,80 @@
   object-fit: cover;
 }
 
-.ambassador-right {
-  flex: 2;
-  padding: 40px 60px;
-  position: relative;
-  overflow-y: auto;
-  background-color: #f9fbff;
-}
 
 .login-button {
   position: absolute;
-  top: 30px;
-  right: 30px;
-  background: white;
-  border: 1px solid #1a73e8;
+  top: 24px;
+  right: 24px;
+  background: transparent;
+  border: 2px solid #1a73e8;
   color: #1a73e8;
   padding: 8px 20px;
-  border-radius: 20px;
+  border-radius: 30px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #e8f0fe;
 }
 
 .ambassador-logo {
   display: block;
-  margin: 40px auto 20px;
-  width: 100px;
+  margin: 0 auto 20px;
+  width: 90px;
 }
 
 .ambassador-heading {
   text-align: center;
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
-  color: #0a0a0a;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
+  color: #111827;
 }
 
 .ambassador-benefits {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 32px;
+  background: #f4f9ff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 28px;
   margin-bottom: 40px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .ambassador-benefits h2 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   margin-bottom: 24px;
-  color: #1a1a1a;
+  color: #0f172a;
 }
 
 .benefit-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  padding: 8px 0;
 }
 
 .benefit-label {
+  font-size: 16px;
+  color: #334155;
   font-weight: 500;
-  font-size: 18px;
-  color: #1a1a1a;
-  flex: 0 0 200px;
-  padding: 10px;
 }
 
 .benefit-value {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  color: #1a1a1a;
+  font-size: 16px;
+  color: #1e293b;
 }
 
 .tick-mark {
-  color: #2e7d32;
+  color: #22c55e;
   font-size: 16px;
-  margin-left: 80px;
+  margin-right: 8px;
 }
 
 .ambassador-form {
@@ -103,38 +107,68 @@
 
 .ambassador-form label {
   margin-top: 16px;
-  margin-bottom: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: #334155;
 }
 
 .ambassador-form input {
   padding: 12px;
-  border: 1px solid #ccc;
+  margin-top: 6px;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   font-size: 14px;
+  background-color: #f8fafc;
+  transition: border-color 0.2s ease;
 }
 
-.required-asterisk {
-  color: red;
-  margin-left: 2px;
+.ambassador-form input:focus {
+  border-color: #1d4ed8;
+  outline: none;
 }
 
-
-.submit-button {
-  background-color: #e0f0ff;
-  font-size: large;
-  color: #333;
-  font-weight: 600;
+.submit-button-a {
+  background-color: #4f9bff;
+  color: white;
   border: none;
+  font-size: 16px;
+  font-weight: 600;
   padding: 14px;
   border-radius: 8px;
-  margin-top: 24px;
+  margin-top: 30px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
-.submit-button:hover {
-  background-color: #cce7fd;
+.submit-button-a:hover {
+  background-color: #1669d2;
+}
+
+.form-message {
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #14b8a6;
+  text-align: center;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .ambassador-page {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .ambassador-left {
+    height: 200px;
+  }
+
+  .ambassador-right {
+    padding: 30px 20px;
+  }
+
+  .login-button {
+    top: 20px;
+    right: 20px;
+  }
 }
