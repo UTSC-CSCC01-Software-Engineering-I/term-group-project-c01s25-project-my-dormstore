@@ -133,9 +133,22 @@
   background-color: #bee3f8;
   color: #2a4365;
   border: 1px solid #3182ce;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.add-to-cart-button:hover {
+  background-color: #90cdf4;
+  box-shadow: 0 4px 10px rgba(0, 112, 243, 0.2);
+  transform: translateY(-1px);
+}
+
+.add-to-cart-button:active {
+  background-color: #63b3ed;
+  transform: translateY(1px);
 }
 
 .product-details-list {
