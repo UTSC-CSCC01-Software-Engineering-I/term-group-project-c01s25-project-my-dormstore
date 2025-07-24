@@ -207,7 +207,7 @@ export default function ProductDetail()  {
 
       {isPackage && packageDetails?.included_products && packageDetails.included_products.length > 0 && (
         <div className="package-included-products">
-          <h2 className="section-title">What's Included in This Package</h2>
+          <h2 className="section-title-p">What's Included in This Package</h2>
           <div className="included-products-grid">
             {packageDetails.included_products.map((includedProduct: any) => {
               // show as non-clickable card w
@@ -247,7 +247,7 @@ export default function ProductDetail()  {
 
       {/* Product/Package Details */}
       <div className="product-details-list">
-        <h2 className="section-title">{isPackage ? 'Package' : 'Product'} Details</h2>
+        <h2 className="section-title-p">{isPackage ? 'Package' : 'Product'} Details</h2>
         <p className="section-text">{product.description}</p>
         
         {/* Show includes for products only (packages show detailed products above) */}
@@ -263,7 +263,7 @@ export default function ProductDetail()  {
         )}
 
         <div className="delivery-section">
-          <p className="section-subtitle">Delivery</p>
+          <p className="section-subtitle-p">Delivery</p>
           <p>
             My Dorm Store offers delivery across Canada and the United States.
             We are partnering with select university and college residences to
