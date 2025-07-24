@@ -123,13 +123,19 @@ export default function ChecklistPage() {
   
     const synced = dormChecklist.map((item) => {
       const itemLabelLower = item.label.toLowerCase();
-  
+    
       const isInCart = cartItems.some((cartItem) => {
-        const nameMatch = cartItem.name.toLowerCase().includes(itemLabelLower);
-        const sizeMatch = itemLabelLower.includes("twin sheet") && cartItem.selectedSize?.toLowerCase() === "twin";
-        return nameMatch || sizeMatch;
+        const cartNameLower = cartItem.name.toLowerCase();
+        const selectedSize = cartItem.selectedSize?.toLowerCase();
+    
+        if (cartNameLower.includes(itemLabelLower)) return true;
+    
+        // Match size-specific items like "Queen Sheet", "Twin XL Sheet"
+        const sizeSheetMatch = itemLabelLower.includes("sheet") && selectedSize && itemLabelLower.includes(selectedSize);
+    
+        return sizeSheetMatch;
       });
-  
+    
       return { ...item, checked: isInCart };
     });
   
