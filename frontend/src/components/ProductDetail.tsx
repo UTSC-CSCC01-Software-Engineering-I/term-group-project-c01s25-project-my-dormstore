@@ -142,7 +142,7 @@ export default function ProductDetail()  {
           </span>
         </div>
 
-        <p className="product-price">
+        <p className="product-price-p">
           ${product.price.toFixed(2)} CAD
         </p>
 
