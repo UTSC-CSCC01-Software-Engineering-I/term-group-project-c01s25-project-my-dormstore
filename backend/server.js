@@ -36,6 +36,7 @@ async function connectToPG() {
 }
 connectToPG();
 
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; 
@@ -1101,38 +1102,31 @@ app.delete('/api/admin/ambassadors/:id', authenticateToken, async (req, res) => 
   }
 });
 
-export async function autoUpdatePackageStock(packageId) {
-  const itemsResult = await pool.query(
-    `SELECT product_id, quantity FROM package_items WHERE package_id = $1`,
-    [packageId]
-  );
-  if (!itemsResult.rows || itemsResult.rows.length === 0) return;
+async function autoUpdatePackageStock(packageId, clientArg) {
+  const client = clientArg || (await pool.connect());
+  let releaseClient = false;
+  if (!clientArg) releaseClient = true;
 
-  const productIds = itemsResult.rows.map(row => row.product_id);
-  const stockResult = await pool.query(
-    `SELECT id, stock FROM products WHERE id = ANY($1)`,
-    [productIds]
-  );
-  const stockMap = {};
-  for (const row of stockResult.rows) stockMap[row.id] = Number(row.stock);
+  try {
+    const { rows } = await client.query(`
+      SELECT p.stock, pi.quantity
+      FROM package_items pi
+      JOIN products p ON pi.product_id = p.id
+      WHERE pi.package_id = $1
+    `, [packageId]);
 
-  let maxPossible = Infinity;
-  for (const item of itemsResult.rows) {
-    const pStock = stockMap[item.product_id];
-    if (pStock === undefined) return;
-    const need = Number(item.quantity);
-    if (!need) return;
-    const canMake = Math.floor(pStock / need);
-    if (canMake < maxPossible) maxPossible = canMake;
+    if (rows.length === 0) {
+      return;
+    }
+
+    const minStock = Math.min(...rows.map(r => Math.floor(r.stock / r.quantity)));
+    await client.query(`UPDATE packages SET stock = $1 WHERE id = $2`, [minStock, packageId]);
+  } catch (err) {
+    console.error("autoUpdatePackageStock error:", err);
+  } finally {
+    if (releaseClient) client.release();
   }
-
-  await pool.query(
-    `UPDATE packages SET stock = $1 WHERE id = $2`,
-    [maxPossible, packageId]
-  );
 }
-
-
 
 // Get all products
 app.get("/api/admin/products", authenticateToken, async (req, res) => {
@@ -1311,34 +1305,70 @@ app.get("/api/admin/dashboard/summary", authenticateToken, async (req, res) => {
   }
 });
 
-// Update a product by ID
+async function updateAllRelatedPackageStocks(productId) {
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query(
+      `SELECT DISTINCT package_id FROM package_items WHERE product_id = $1`,
+      [productId]
+    );
+
+    for (const row of rows) {
+      await autoUpdatePackageStock(row.package_id);
+    }
+  } catch (err) {
+    console.error("updateAllRelatedPackageStocks error:", err);
+  } finally {
+    client.release();
+  }
+}
+
+// PUT route
 app.put("/api/admin/products/:id", authenticateToken, async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const { name, price, category, description, image_url, size, color, stock, active } = req.body;
+  const {
+    name,
+    price,
+    category,
+    description,
+    image_url,
+    size,
+    color,
+    stock,
+    active
+  } = req.body;
+
   try {
     const result = await pool.query(
       `UPDATE products
-         SET name = $1, price = $2, category = $3, description = $4, image_url = $5,
-             size = $6, color = $7, stock = $8, active = $9
+         SET name = $1,
+             price = $2,
+             category = $3,
+             description = $4,
+             image_url = $5,
+             size = $6,
+             color = $7,
+             stock = $8,
+             active = $9
        WHERE id = $10
-       RETURNING id, name, price, category, description, rating, image_url AS "imageUrl", size, color, stock, active`,
+       RETURNING id, name, price, category, description, rating,
+                 image_url AS "imageUrl", size, color, stock, active`,
       [name, price, category, description, image_url, size, color, stock ?? 0, active ?? true, id]
     );
+
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Product not found" });
     }
-    const pkgIdsResult = await pool.query(
-      `SELECT DISTINCT package_id FROM package_items WHERE product_id = $1`, [id]
-    );
-    for (const row of pkgIdsResult.rows) {
-      await autoUpdatePackageStock(row.package_id);
-    }
+
+    await updateAllRelatedPackageStocks(id);
+
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("PUT /api/products/:id error:", err);
+    console.error("PUT /api/admin/products/:id error:", err);
     res.status(500).json({ error: "Failed to update product" });
   }
 });
+
 
 // Get all packages
 app.get("/api/admin/packages", authenticateToken, async (req, res) => {
@@ -1366,29 +1396,70 @@ app.get("/api/admin/packages", authenticateToken, async (req, res) => {
   }
 });
 
-// Add a new package with package_items
 app.post("/api/admin/packages", authenticateToken, async (req, res) => {
-  const { name, price, category, description, image_url, rating, size, color, stock, active, items } = req.body;
+  const {
+    name, price, category, description, image_url,
+    rating, size, color, stock, active, items
+  } = req.body;
+
+  const cleanedItems = Array.isArray(items)
+    ? items
+        .filter(x => x && x.product_id && x.quantity > 0)
+        .map(x => ({
+          product_id: Number(x.product_id),
+          quantity: Number(x.quantity)
+        }))
+    : [];
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const useAutoStock = cleanedItems.length > 0;
     const pkgResult = await client.query(
-      `INSERT INTO packages (name, price, category, description, image_url, rating, size, color, stock, active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id, name, price, category, description, rating, image_url AS "imageUrl", size, color, stock, active`,
-      [name, price, category, description, image_url, rating || 0, size, color, stock ?? 0, active ?? true]
+      `INSERT INTO packages
+         (name, price, category, description, image_url, rating, size, color, stock, active)
+       VALUES
+         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING
+         id, name, price, category, description, rating,
+         image_url AS "imageUrl", size, color, stock, active`,
+      [
+        name,
+        price,
+        category,
+        description,
+        image_url,
+        rating || 0,
+        size,
+        color,
+        useAutoStock ? 0 : stock ?? 0, 
+        active ?? true
+      ]
     );
+
     const packageId = pkgResult.rows[0].id;
-    if (Array.isArray(items) && items.length > 0) {
-      for (const item of items) {
+    if (useAutoStock) {
+      for (const item of cleanedItems) {
         await client.query(
-          `INSERT INTO package_items (package_id, product_id, quantity) VALUES ($1, $2, $3)`,
+          `INSERT INTO package_items (package_id, product_id, quantity)
+           VALUES ($1, $2, $3)`,
           [packageId, item.product_id, item.quantity]
         );
       }
+
+      await autoUpdatePackageStock(packageId, client);
     }
+
     await client.query("COMMIT");
-    res.status(201).json(pkgResult.rows[0]);
+    const finalResult = await pool.query(
+      `SELECT id, name, price, category, description, rating,
+              image_url AS "imageUrl", size, color, stock, active
+         FROM packages WHERE id = $1`,
+      [packageId]
+    );
+
+    res.status(201).json(finalResult.rows[0]);
+
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("POST /api/packages error:", err);
@@ -1397,6 +1468,7 @@ app.post("/api/admin/packages", authenticateToken, async (req, res) => {
     client.release();
   }
 });
+
 
 // Get all products in a package
 app.get("/api/admin/packages/:id/items", authenticateToken, async (req, res) => {
