@@ -560,35 +560,13 @@ export default function ProductManagement() {
                 </td>
                 <td>{Number(item.rating || 0).toFixed(1)}</td>
                 <td className="description-cell">
-                  {descViewId === item.id ? (
-                    <>
-                      <div className="desc-box">{item.description}</div>
-                      <button
-                        className="desc-toggle"
-                        onClick={() => setDescViewId(null)}
-                      >
-                        Hide
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="desc-box">
-                        {item.description.length > 60
-                          ? item.description.slice(0, 60) + "..."
-                          : item.description}
-                      </div>
-                      {item.description.length > 60 && (
-                        <button
-                          className="desc-toggle"
-                          onClick={() => setDescViewId(item.id)}
-                        >
-                          View
-                        </button>
-                      )}
-                    </>
-                  )}
+                  <textarea
+                    name="description"
+                    value={editData.description}
+                    onChange={handleEditChange}
+                    style={{ width: "100%", minHeight: "60px" }}
+                  />
                 </td>
-
                 {categoryType === "package" && (
                   <td>
                     {(editData.items || []).map((it, i) => (
@@ -669,34 +647,9 @@ export default function ProductManagement() {
                 <td>{item.active ? "Yes" : "No"}</td>
                 <td>{Number(item.rating || 0).toFixed(1)}</td>
                 <td className="description-cell">
-                  {descViewId === item.id ? (
-                    <>
-                      <div className="desc-box">{item.description}</div>
-                      <button
-                        className="desc-toggle"
-                        onClick={() => setDescViewId(null)}
-                      >
-                        Hide
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="desc-box">
-                        {item.description.length > 60
-                          ? item.description.slice(0, 60) + "..."
-                          : item.description}
-                      </div>
-                      {item.description.length > 60 && (
-                        <button
-                          className="desc-toggle"
-                          onClick={() => setDescViewId(item.id)}
-                        >
-                          View
-                        </button>
-                      )}
-                    </>
-                  )}
+                  <div className="desc-box">{item.description}</div>
                 </td>
+
 
                 {categoryType === "package" && (
                   <td className="package-items-cell">
