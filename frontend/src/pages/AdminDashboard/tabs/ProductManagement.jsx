@@ -159,6 +159,35 @@ export default function ProductManagement() {
     }
   };
 
+  const refreshPackages = async () => {
+    try {
+      const res = await fetch(`${API}/api/admin/packages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch packages");
+      const data = await res.json();
+      const packageList = Array.isArray(data) ? data : data.packages || [];
+      setPackages(packageList);
+
+      // fetch package_items
+      const m = {};
+      for (const pkg of packageList) {
+        try {
+          const res = await fetch(`${API}/api/admin/packages/${pkg.id}/items`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            m[pkg.id] = await res.json();
+          }
+        } catch {}
+      }
+      setPackageItemsMap(m);
+    } catch (e) {
+      console.error("Failed to refresh packages:", e);
+      setError(e.toString());
+    }
+  };
+
   const onEditClick = (item) => {
     const items = packageItemsMap[item.id] || [];
     setEditingId(item.id);
@@ -256,6 +285,7 @@ export default function ProductManagement() {
         setProducts((ps) => ps.map((x) => (x.id === id ? updated : x)));
       else
         setPackages((pk) => pk.map((x) => (x.id === id ? updated : x)));
+      await refreshPackages();
       setEditingId(null);
     } catch (e) {
       setError(e.toString());
