@@ -24,7 +24,6 @@ afterAll(async () => {
   await pool.end();
 });
 
-// ========== GET /me TESTS ========== //
 describe('GET /me', () => {
   test('returns user info with valid token', async () => {
     const res = await request(app)
@@ -58,7 +57,6 @@ describe('GET /me', () => {
   });
 });
 
-// ========== PUT /api/user/update TESTS ========== //
 describe('PUT /api/user/update', () => {
   test('updates user profile with valid token and fields', async () => {
     const res = await request(app)

@@ -287,14 +287,15 @@ app.delete("/cart", authenticateToken, async (req, res) => {
   app.put("/api/user/update", authenticateToken, async (req, res) => {
     const { email, password, currentPassword, dorm, first_name, last_name, school, phone, address, city, province, postal_code } = req.body;
     const userId = req.user.userId;
-    
+
     if (
-      !email && !password && !currentPassword && !dorm &&
+      !email && !password && !dorm &&
       !first_name && !last_name && !school &&
       !phone && !address && !city && !province && !postal_code
     ) {
       return res.status(400).json({ error: "No fields provided" });
     }
+  
     try {
       if (password && currentPassword) {
         const userResult = await pool.query("SELECT password FROM users WHERE id = $1", [userId]);
@@ -1033,7 +1034,7 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
       FROM users
       ORDER BY id
     `);
-    res.json({ users: result.rows });
+    res.json(result.rows);
   } catch (err) {
     console.error('GET /api/users error:', err);
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -1605,7 +1606,7 @@ app.get('/api/admin/orders', async (req, res) => {
     query += ' ORDER BY o.created_at DESC';
 
     const result = await pool.query(query, params);
-    res.json({ orders: result.rows });
+    res.json(result.rows);
   } catch (err) {
     console.error("Error fetching orders:", err);
     res.status(500).json({ error: "Failed to fetch orders" });
