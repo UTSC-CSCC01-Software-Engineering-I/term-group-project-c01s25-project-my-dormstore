@@ -41,12 +41,8 @@ export default function ReviewPage() {
 
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        // Handle guest checkout or redirect to login
-        navigate("/login");
-        return;
-      }
-
+      
+      // Prepare order data
       const orderData = {
         email: checkoutData.email,
         firstName: checkoutData.shipping.firstName,
@@ -68,12 +64,32 @@ export default function ReviewPage() {
         billingAddress: checkoutData.payment.sameAsShipping ? null : checkoutData.payment.billingAddress
       };
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/orders`, {
+      // Add cart items for guest checkout
+      if (!token) {
+        // Guest checkout - include cart items in request body
+        orderData.cartItems = items.map(item => ({
+          item_type: item.isPackage ? 'package' : 'product',
+          [item.isPackage ? 'package_id' : 'product_id']: item.id,
+          quantity: item.quantity,
+          [item.isPackage ? 'package_name' : 'product_name']: item.name,
+          [item.isPackage ? 'package_price' : 'product_price']: item.price
+        }));
+        console.log('Guest checkout with cart items:', orderData.cartItems);
+      }
+
+      // Prepare headers
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      
+      // Add authorization header only if user is authenticated
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/orders`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: headers,
         body: JSON.stringify(orderData)
       });
 
@@ -85,17 +101,21 @@ export default function ReviewPage() {
         clearCart();
         
         // Navigate to success page with order number
-        navigate("/checkout/success", { 
-          state: { 
-            orderNumber: result.order.orderNumber,
-            balance: result.balance
-          }
-        });
+        const successState = {
+          orderNumber: result.order.orderNumber
+        };
+        
+        // Add balance info only for authenticated users
+        if (token && result.balance) {
+          successState.balance = result.balance;
+        }
+        
+        navigate("/checkout/success", { state: successState });
       } else {
         const errorData = await response.json();
         console.error("Failed to create order:", errorData);
         
-        if (errorData.error === "Insufficient funds") {
+        if (errorData.error === "Insufficient funds" && token) {
           setError(`Insufficient funds. You need $${errorData.shortfall.toFixed(2)} more. Current balance: $${errorData.currentBalance.toFixed(2)}`);
         } else {
           setError("Failed to place order. Please try again.");

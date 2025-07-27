@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS products (
     size TEXT,
     color TEXT,
     image_url TEXT,
+    inventory INTEGER DEFAULT 100, -- Add inventory field with default 100
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

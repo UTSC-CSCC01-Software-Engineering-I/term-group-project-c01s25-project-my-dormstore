@@ -141,7 +141,7 @@ export default function CartScreen() {
           </div>
           <div className="summary-row">
             <span>Shipping</span>
-            <span>Free</span>
+            <span>Calculated at checkout</span>
           </div>
           <div className="summary-row">
             <span>Tax</span>
