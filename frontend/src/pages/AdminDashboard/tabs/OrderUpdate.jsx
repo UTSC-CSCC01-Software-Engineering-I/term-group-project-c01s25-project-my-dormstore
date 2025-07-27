@@ -11,7 +11,7 @@ const OrderUpdate = () => {
       try {
         const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/all-order-updates`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`, 
+            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
           },
         });
   
@@ -49,7 +49,7 @@ const OrderUpdate = () => {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
       },
       body: JSON.stringify({ id, status: newStatus }),
     }).catch((err) => console.error("Failed to update status:", err));

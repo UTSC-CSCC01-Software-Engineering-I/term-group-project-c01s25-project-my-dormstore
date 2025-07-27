@@ -39,20 +39,40 @@ connectToPG();
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; 
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
     return res.status(401).json({ error: 'Missing token' });
   }
 
-  jwt.verify(token, "secret-key", (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid token' });
+  jwt.verify(token, "secret-key", (err, decoded) => {
+    if (err || decoded.role !== 'user') {
+      return res.status(403).json({ error: 'Invalid or unauthorized token' });
     }
-    req.user = user;
+    req.user = decoded; 
     next();
   });
 }
+
+function authenticateAdminToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Missing token' });
+  }
+
+  jwt.verify(token, "secret-key", (err, decoded) => {
+    if (err || decoded.role !== 'admin') {
+      return res.status(403).json({ error: 'Invalid or unauthorized token' });
+    }
+    req.admin = decoded; 
+    next();
+  });
+}
+
+
+
 
 // Start server
 app.listen(PORT, () => {
@@ -101,7 +121,7 @@ app.post("/loginUser", async (req, res) => {
       const user = result.rows[0];
   
       if (user && (await bcrypt.compare(password, user.password))) {
-        const token = jwt.sign({ userId: user.id }, "secret-key", { expiresIn: "24h" });
+        const token = jwt.sign({ userId: user.id, role: "user" }, "secret-key", { expiresIn: "24h" });
   
         res.json({ response: "User logged in succesfully.", token: token }); 
       } else {
@@ -194,91 +214,118 @@ app.get("/cart", authenticateToken, async (req, res) => {
 app.post("/cart", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { product_id, quantity = 1, selected_size, selected_color } = req.body;
+    const { product_id, package_id, quantity = 1, selected_size, selected_color } = req.body;
 
-    if (!product_id) {
-      return res.status(400).json({ error: "Product ID is required" });
+    if (!product_id && !package_id) {
+      return res.status(400).json({ error: "Either product_id or package_id is required" });
     }
+
+    // Validate quantity
     if (quantity < 1) {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
 
-    // Get product stock
-    const productResult = await pool.query(
-      "SELECT stock FROM products WHERE id = $1",
-      [product_id]
-    );
-    
-    if (productResult.rows.length === 0) {
-      return res.status(404).json({ error: "Product not found" });
-    }
-    
-    const availableStock = productResult.rows[0].stock;
-
-    // Check for existing item with same product_id, size, and color
-    let existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2";
-    let queryParams = [userId, product_id];
-    
-    if (selected_size) {
-      existingItemQuery += " AND selected_size = $3";
-      queryParams.push(selected_size);
-      
-      if (selected_color) {
-        existingItemQuery += " AND selected_color = $4";
-        queryParams.push(selected_color);
-      } else {
-        existingItemQuery += " AND selected_color IS NULL";
-      }
-    } else if (selected_color) {
-      existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
-      queryParams.push(selected_color);
-    } else {
-      existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
-    }
-
-    const existingItem = await pool.query(existingItemQuery, queryParams);
-    
-    let totalRequestedQuantity = quantity;
-    if (existingItem.rows.length > 0) {
-      totalRequestedQuantity += existingItem.rows[0].quantity;
-    }
-
-    // Check if requested quantity exceeds available stock
-    if (totalRequestedQuantity > availableStock) {
-      const maxCanAdd = Math.max(0, availableStock - (existingItem.rows.length > 0 ? existingItem.rows[0].quantity : 0));
-      return res.status(400).json({ 
-        error: "Insufficient stock", 
-        availableStock: availableStock,
-        requestedQuantity: totalRequestedQuantity,
-        maxCanAdd: maxCanAdd
-      });
-    }
-    
-    if (existingItem.rows.length > 0) {
-      // update existing item quantity
-      const newQuantity = existingItem.rows[0].quantity + quantity;
-      const result = await pool.query(
-        "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
-        [newQuantity, existingItem.rows[0].id]
+    // Handle product logic
+    if (product_id) {
+      const productResult = await pool.query(
+        "SELECT stock FROM products WHERE id = $1",
+        [product_id]
       );
-      
-      res.json({ 
-        message: "Cart item updated", 
-        cartItem: result.rows[0] 
-      });
-    } else {
-      const result = await pool.query(
-        "INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+
+      if (productResult.rows.length === 0) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      const availableStock = productResult.rows[0].stock;
+
+      // check for existing
+      const existingResult = await pool.query(
+        `SELECT id, quantity FROM cart_items 
+         WHERE user_id = $1 AND product_id = $2 
+         AND selected_size IS NOT DISTINCT FROM $3 
+         AND selected_color IS NOT DISTINCT FROM $4`,
+        [userId, product_id, selected_size, selected_color]
+      );
+
+      let totalRequested = quantity;
+      if (existingResult.rows.length > 0) {
+        totalRequested += existingResult.rows[0].quantity;
+      }
+
+      if (totalRequested > availableStock) {
+        return res.status(400).json({
+          error: "Insufficient stock",
+          availableStock,
+          requestedQuantity: totalRequested
+        });
+      }
+
+      if (existingResult.rows.length > 0) {
+        const updated = await pool.query(
+          `UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+          [totalRequested, existingResult.rows[0].id]
+        );
+        return res.json({ message: "Cart item updated", cartItem: updated.rows[0] });
+      }
+
+      const inserted = await pool.query(
+        `INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
         [userId, product_id, quantity, selected_size || null, selected_color || null]
       );
-      
-      res.status(201).json({ 
-        message: "Item added to cart", 
-        cartItem: result.rows[0] 
-      });
+      return res.status(201).json({ message: "Product added to cart", cartItem: inserted.rows[0] });
     }
-  } catch (error) {
-    console.error(error);
+
+    // Handle package logic
+    if (package_id) {
+      const pkgResult = await pool.query(
+        "SELECT stock FROM packages WHERE id = $1",
+        [package_id]
+      );
+
+      if (pkgResult.rows.length === 0) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+
+      const availableStock = pkgResult.rows[0].stock;
+
+      const existingResult = await pool.query(
+        `SELECT id, quantity FROM cart_items 
+         WHERE user_id = $1 AND package_id = $2`,
+        [userId, package_id]
+      );
+
+      let totalRequested = quantity;
+      if (existingResult.rows.length > 0) {
+        totalRequested += existingResult.rows[0].quantity;
+      }
+
+      if (totalRequested > availableStock) {
+        return res.status(400).json({
+          error: "Insufficient stock",
+          availableStock,
+          requestedQuantity: totalRequested
+        });
+      }
+
+      if (existingResult.rows.length > 0) {
+        const updated = await pool.query(
+          `UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+          [totalRequested, existingResult.rows[0].id]
+        );
+        return res.json({ message: "Cart package updated", cartItem: updated.rows[0] });
+      }
+
+      const inserted = await pool.query(
+        `INSERT INTO cart_items (user_id, package_id, quantity)
+         VALUES ($1, $2, $3) RETURNING *`,
+        [userId, package_id, quantity]
+      );
+      return res.status(201).json({ message: "Package added to cart", cartItem: inserted.rows[0] });
+    }
+
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to add item to cart" });
   }
 });
@@ -457,7 +504,7 @@ app.delete("/cart", authenticateToken, async (req, res) => {
   });
   
   //change it to admin orderupdates
-  app.post("/api/admin/order-updates", async (req, res) => {
+  app.post("/api/admin/order-updates", authenticateAdminToken, async (req, res) => {
     const { orderNumber, email, update } = req.body;
   
     if (!orderNumber || !email || !update) {
@@ -496,7 +543,7 @@ app.delete("/cart", authenticateToken, async (req, res) => {
     }
   });
 
-  app.get("/api/admin/all-order-updates", async (req, res) => {
+  app.get("/api/admin/all-order-updates", authenticateAdminToken, async (req, res) => {
     try {
       const result = await pool.query(
         `SELECT 
@@ -517,7 +564,7 @@ app.delete("/cart", authenticateToken, async (req, res) => {
     }
   });
   
-  app.patch("/api/admin/update-status", async (req, res) => {
+  app.patch("/api/admin/update-status", authenticateAdminToken, async (req, res) => {
     const { id, status } = req.body;
     if (!id || !status) {
       return res.status(400).json({ error: "Missing id or status" });
@@ -1046,7 +1093,7 @@ app.post("/api/admin/login", async (req, res) => {
       return res.status(401).json({ error: "Incorrect password." });
     }
     // Generate JWT token for admin
-    const token = jwt.sign({ adminId: admin.id }, "secret-key", { expiresIn: "2h" });
+    const token = jwt.sign({ adminId: admin.id, role: "admin" }, "secret-key", { expiresIn: "2h" });
 
     res.json({ message: "Admin login successful", token });
   } catch (err) {
@@ -1125,7 +1172,7 @@ app.get("/api/order-history", authenticateToken, async (req, res) => {
 });
 
 // GET all users for admin dashboard
-app.get('/api/admin/users', authenticateToken, async (req, res) => {
+app.get('/api/admin/users', authenticateAdminToken, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -1145,7 +1192,7 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
   }
 });
 
-app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
+app.delete('/api/admin/users/:id', authenticateAdminToken, async (req, res) => {
   const id = +req.params.id;
   try {
     await pool.query('BEGIN');
@@ -1169,7 +1216,7 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
 
 
 //GET all ambassadors for admin dashboard
-app.get('/api/admin/ambassadors', authenticateToken, async (req, res) => {
+app.get('/api/admin/ambassadors', authenticateAdminToken, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -1188,7 +1235,7 @@ app.get('/api/admin/ambassadors', authenticateToken, async (req, res) => {
 });
 
 // DELETE an ambassador by ID - admin dashboard
-app.delete('/api/admin/ambassadors/:id', authenticateToken, async (req, res) => {
+app.delete('/api/admin/ambassadors/:id', authenticateAdminToken, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   try {
     const result = await pool.query(
@@ -1232,7 +1279,7 @@ async function autoUpdatePackageStock(packageId, clientArg) {
 }
 
 // Get all products
-app.get("/api/admin/products", authenticateToken, async (req, res) => {
+app.get("/api/admin/products", authenticateAdminToken, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -1258,7 +1305,7 @@ app.get("/api/admin/products", authenticateToken, async (req, res) => {
 });
 
 // Add a new product
-app.post("/api/admin/products", authenticateToken, async (req, res) => {
+app.post("/api/admin/products", authenticateAdminToken, async (req, res) => {
   const { name, price, category, description, image_url, size, color, stock, active } = req.body;
   const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
   try {
@@ -1289,7 +1336,7 @@ app.post("/api/admin/products", authenticateToken, async (req, res) => {
 // Admin Dashboard Home Page Endpoints
 
 // Get revenue data for admin dashboard
-app.get("/api/admin/revenue", authenticateToken, async (req, res) => {
+app.get("/api/admin/revenue", authenticateAdminToken, async (req, res) => {
   const { range } = req.query;
   
   try {
@@ -1332,7 +1379,7 @@ app.get("/api/admin/revenue", authenticateToken, async (req, res) => {
 });
 
 // Get active orders for admin dashboard - matches admin orders page exactly
-app.get("/api/admin/orders/active", authenticateToken, async (req, res) => {
+app.get("/api/admin/orders/active", authenticateAdminToken, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT 
@@ -1364,7 +1411,7 @@ app.get("/api/admin/orders/active", authenticateToken, async (req, res) => {
 });
 
 // Get dashboard summary data
-app.get("/api/admin/dashboard/summary", authenticateToken, async (req, res) => {
+app.get("/api/admin/dashboard/summary", authenticateAdminToken, async (req, res) => {
   try {
     // Get today's revenue
     const todayRevenue = await pool.query(
@@ -1427,7 +1474,7 @@ async function updateAllRelatedPackageStocks(productId) {
 }
 
 // PUT route
-app.put("/api/admin/products/:id", authenticateToken, async (req, res) => {
+app.put("/api/admin/products/:id", authenticateAdminToken, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const {
     name,
@@ -1474,7 +1521,7 @@ app.put("/api/admin/products/:id", authenticateToken, async (req, res) => {
 
 
 // Get all packages
-app.get("/api/admin/packages", authenticateToken, async (req, res) => {
+app.get("/api/admin/packages", authenticateAdminToken, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -1499,7 +1546,7 @@ app.get("/api/admin/packages", authenticateToken, async (req, res) => {
   }
 });
 
-app.post("/api/admin/packages", authenticateToken, async (req, res) => {
+app.post("/api/admin/packages", authenticateAdminToken, async (req, res) => {
   const {
     name, price, category, description, image_url,
     rating, size, color, stock, active, items
@@ -1574,7 +1621,7 @@ app.post("/api/admin/packages", authenticateToken, async (req, res) => {
 
 
 // Get all products in a package
-app.get("/api/admin/packages/:id/items", authenticateToken, async (req, res) => {
+app.get("/api/admin/packages/:id/items", authenticateAdminToken, async (req, res) => {
   const packageId = parseInt(req.params.id, 10);
   try {
     const result = await pool.query(
@@ -1591,7 +1638,7 @@ app.get("/api/admin/packages/:id/items", authenticateToken, async (req, res) => 
   }
 });
 
-app.put("/api/admin/packages/:id", authenticateToken, async (req, res) => {
+app.put("/api/admin/packages/:id", authenticateAdminToken, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   let {
     name, price, category, description, image_url,
@@ -1653,7 +1700,7 @@ app.put("/api/admin/packages/:id", authenticateToken, async (req, res) => {
 
 
 // Delete a package by ID
-app.delete("/api/admin/packages/:id", authenticateToken, async (req, res) => {
+app.delete("/api/admin/packages/:id", authenticateAdminToken, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   try {
     await pool.query("DELETE FROM package_items WHERE package_id = $1", [id]);
@@ -1671,7 +1718,7 @@ app.delete("/api/admin/packages/:id", authenticateToken, async (req, res) => {
   }
 });
 
-app.put("/api/admin/packages/:id/stock", authenticateToken, async (req, res) => {
+app.put("/api/admin/packages/:id/stock", authenticateAdminToken, async (req, res) => {
   const packageId = parseInt(req.params.id, 10);
 
   const itemsResult = await pool.query(
@@ -1719,7 +1766,7 @@ app.put("/api/admin/packages/:id/stock", authenticateToken, async (req, res) => 
 });
 
 // Delete a product by ID
-app.delete("/api/admin/products/:id", authenticateToken, async (req, res) => {
+app.delete("/api/admin/products/:id", authenticateAdminToken, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   try {
     const pkgIdsResult = await pool.query(
@@ -1743,7 +1790,7 @@ app.delete("/api/admin/products/:id", authenticateToken, async (req, res) => {
 
 
 // GET /api/orders
-app.get('/api/admin/orders', async (req, res) => {
+app.get('/api/admin/orders', authenticateAdminToken, async (req, res) => {
   try {
     const { status, search } = req.query;
     let query = `

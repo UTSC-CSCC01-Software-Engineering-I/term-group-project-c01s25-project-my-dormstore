@@ -40,7 +40,7 @@ export default function ReviewPage() {
     setError(null);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("userToken");
       if (!token) {
         // Handle guest checkout or redirect to login
         navigate("/login");

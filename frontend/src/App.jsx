@@ -76,8 +76,14 @@ function AppContent() {
 
   useEffect(() => {
     async function checkAuth() {
+      const token = localStorage.getItem("userToken");
+      const adminToken = localStorage.getItem("adminToken");
+
+      if (!token || adminToken) {
+        setIsLoggedIn(false);
+        return;
+      }
       try {
-        const token = localStorage.getItem("token");
         const res = await fetch(`${process.env.REACT_APP_API_URL}/me`, {
           headers: {
             "Content-Type": "application/json",
@@ -197,10 +203,10 @@ function AppContent() {
               )}
             </div>
 
-            <span onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}>
+            <span onClick={() => navigate(localStorage.getItem("userToken") ? "/profile" : "/login")}>
               <img src="/user.png" alt="User" />
             </span>
-            <span onClick={() => navigate(isLoggedIn ? "/checklist" : "/login")}>
+            <span onClick={() => navigate(localStorage.getItem("userToken") ? "/checklist" : "/login")}>
               <img src="/check_box.png" alt="Checklist" />
             </span>
             <span onClick={() => navigate("/cart")} style={{ position: "relative" }}>

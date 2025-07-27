@@ -100,7 +100,7 @@ export default function CartScreen() {
                 <Link to={`/products/${item.id}`} className="cart-item-link">
                   <img
                     className="cart-item-image"
-                    src={item.image}
+                    src={item.imageUrl}
                     alt={item.name}
                   />
                 </Link>

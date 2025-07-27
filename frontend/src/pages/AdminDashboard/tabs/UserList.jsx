@@ -4,7 +4,7 @@ import './UserList.css';
 const UserList = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("adminToken");
 
   useEffect(() => {
     const fetchUsers = async () => {

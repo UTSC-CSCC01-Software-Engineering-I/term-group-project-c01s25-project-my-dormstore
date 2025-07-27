@@ -4,7 +4,7 @@ import "./AmbassadorList.css";
 const AmbassadorList = () => {
   const [ambassadors, setAmbassadors] = useState([]);
   const [error, setError] = useState("");
-  const token = localStorage.getItem("token"); 
+  const token = localStorage.getItem("adminToken");
 
   useEffect(() => {
     const fetchAmbassadors = async () => {

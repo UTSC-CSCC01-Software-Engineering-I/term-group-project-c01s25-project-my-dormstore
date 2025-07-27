@@ -33,7 +33,7 @@ export default function UserForm({ userInfo, onClose, onProfileUpdated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("userToken");
     if (!token) return;
   
     const userData = {

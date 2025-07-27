@@ -30,12 +30,12 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 // user is logged in
 const isUserLoggedIn = (): boolean => {
-  return !!localStorage.getItem("token");
+  return !!localStorage.getItem("userToken");
 };
 
 // auth headers
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("userToken");
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
@@ -79,17 +79,36 @@ const cartAPI = {
 
   
   // add item to backend cart
-  async addItem(product_id: number, quantity: number = 1, selected_size?: string, selected_color?: string) {
+  async addItem(
+    product_id?: number,
+    quantity: number = 1,
+    selected_size?: string,
+    selected_color?: string,
+    package_id?: number
+  ) {
+    const payload: any = { quantity };
+  
+    if (product_id) {
+      payload.product_id = product_id;
+      if (selected_size) payload.selected_size = selected_size;
+      if (selected_color) payload.selected_color = selected_color;
+    } else if (package_id) {
+      payload.package_id = package_id;
+    } else {
+      throw new Error("Either product_id or package_id must be provided.");
+    }
+  
     const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
-
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ product_id, quantity, selected_size, selected_color })
+      body: JSON.stringify(payload)
     });
+  
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(JSON.stringify(errorData));
     }
+  
     return response.json();
   },
 
@@ -166,6 +185,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               if (product) {
                 return {
                   ...product,
+                  imageUrl: product.image_url,
                   quantity: item.quantity,
                   backendId: item.id,
                   selectedSize: item.selected_size,
@@ -260,6 +280,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               if (prod) {
                 return {
                   ...prod,
+                  imageUrl: prod.image_url,
                   quantity: item.quantity,
                   backendId: item.id,
                   selectedSize: item.selected_size,
@@ -355,6 +376,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               if (prod) {
                 return {
                   ...prod,
+                  imageUrl: prod.image_url,
                   quantity: item.quantity,
                   backendId: item.id,
                   selectedSize: item.selected_size,
@@ -399,6 +421,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               if (prod) {
                 return {
                   ...prod,
+                  imageUrl: prod.image_url,
                   quantity: item.quantity,
                   backendId: item.id,
                   selectedSize: item.selected_size,
@@ -472,6 +495,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               if (prod) {
                 return {
                   ...prod,
+                  imageUrl: prod.image_url,                  
                   quantity: item.quantity,
                   backendId: item.id,
                   selectedSize: item.selected_size,

@@ -31,10 +31,10 @@ export default function ChecklistPage() {
   };
 
   const handleDormSelect = async (dorm) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("userToken");
   
     try {
-              await fetch(`${process.env.REACT_APP_API_URL}/api/user/update`, {
+        await fetch(`${process.env.REACT_APP_API_URL}/api/user/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -63,7 +63,7 @@ export default function ChecklistPage() {
   };
 
   const fetchUser = async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("userToken");
     if (!token) return;
   
     try {

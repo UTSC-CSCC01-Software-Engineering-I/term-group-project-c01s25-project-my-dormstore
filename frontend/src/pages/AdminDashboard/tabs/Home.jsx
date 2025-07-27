@@ -14,7 +14,7 @@ const Home = () => {
 
   const fetchRevenueData = async (timeRange) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("adminToken");
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/revenue?range=${timeRange}`, {
         headers: {
           "Authorization": `Bearer ${token}`,

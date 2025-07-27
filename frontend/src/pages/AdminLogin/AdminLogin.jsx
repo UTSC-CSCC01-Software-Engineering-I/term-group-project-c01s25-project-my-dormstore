@@ -31,7 +31,7 @@ const AdminLogin = () => {
 
       if (res.ok) {
         localStorage.setItem("isAdmin", "true");
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("adminToken", data.token);
         navigate("/admin/home");
       } else {
         // API returns { error: "..."} on failure

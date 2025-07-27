@@ -28,7 +28,7 @@ export default function Profile() {
 }
 
   const fetchUserInfo = async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("userToken");
     if (!token) {
       return;
     }
@@ -63,13 +63,13 @@ export default function Profile() {
   }, [showForm]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("userToken");
     localStorage.removeItem("userEmail");
     window.location.href = "/";
   };
 
   const handleUpdateEmail = async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("userToken");
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/user/update`, {
         method: "PUT",
@@ -92,7 +92,7 @@ export default function Profile() {
   };
 
   const handleUpdatePassword = async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("userToken");
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/user/update`, {
         method: "PUT",
@@ -122,7 +122,7 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("userToken");
   
     fetch(`${process.env.REACT_APP_API_URL}/api/order-history`, {
       headers: {

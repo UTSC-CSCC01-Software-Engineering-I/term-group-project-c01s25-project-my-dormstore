@@ -44,7 +44,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("userToken");
         if (!token) {
           setLoading(false);
           return;

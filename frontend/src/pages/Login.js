@@ -21,13 +21,12 @@ export default function Login() {
                 headers: {
                 "Content-Type": "application/json",
             },
-                credentials: "include",
                 body: JSON.stringify({ email, password }),
             });
 
             const data = await response.json();
             if (response.ok) {
-                localStorage.setItem("token", data.token);
+                localStorage.setItem("userToken", data.token);
                 localStorage.setItem("userEmail", email);  
 
                 alert("Login successful");

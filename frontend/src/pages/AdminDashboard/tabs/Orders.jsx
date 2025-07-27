@@ -20,7 +20,11 @@ const Orders = () => {
   const [loadingItems, setLoadingItems] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/api/admin/orders`)
+    fetch(`${API}/api/admin/orders`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+      },
+    })
       .then(res => res.json())
       .then(data => setOrders(data))
       .catch(() => setOrders([]));
@@ -36,7 +40,10 @@ const Orders = () => {
     );
     fetch(`${API}/api/admin/orders/${orderId}/status`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+      },
       body: JSON.stringify({ order_status: newStatus }),
     })
       .then(res => res.json())
@@ -47,7 +54,11 @@ const Orders = () => {
 
   const fetchOrderItems = (orderId) => {
     setLoadingItems(orderId);
-    fetch(`${API}/api/admin/order_items?order_id=${orderId}`)
+    fetch(`${API}/api/admin/order_items?order_id=${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+      },
+    })
       .then(res => res.json())
       .then(data => {
         setOrderItems(prev => ({ ...prev, [orderId]: data }));

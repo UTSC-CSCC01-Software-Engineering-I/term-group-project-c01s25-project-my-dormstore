@@ -35,7 +35,7 @@ export default function ProductManagement() {
   const [error, setError] = useState("");
   const [descViewId, setDescViewId] = useState(null);
   const [packageItemsMap, setPackageItemsMap] = useState({});
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("adminToken");
 
   useEffect(() => {
     fetch(`${API}/api/admin/products`, {
