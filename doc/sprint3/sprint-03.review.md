@@ -68,21 +68,34 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 ![orderdetail](./images/orderdetail.png)
 
-- **add more**
+- **cart/checklist notification and warning**
 
-![ambassador](./images/o.png)
+![ambassador](./images/requirement.png)
 
-![ambassador-db](./images/o-db.png)
+![ambassador-db](./images/recommended.png)
 
-- **add more**
+![ambassador-db](./images/cartnotifi.png)
 
-![contactus](./images/p-us.png)
 
-![contactus](./images/9-db.png)
+- **checkout progress and shipping service**
 
-- **add more**
+![contactus](./images/checkoutprogress.png)
 
-![contactus](./images/0.png)
+![contactus](./images/shippingservice.png)
+
+- **admin dashboard**
+
+![contactus](./images/adminhome.png)
+
+![contactus](./images/adminorders.png)
+
+![contactus](./images/adminorderupdate.png)
+
+![contactus](./images/adminproduct.png)
+
+![contactus](./images/adminambass.png)
+
+![contactus](./images/adminuser.png)
 
 
 

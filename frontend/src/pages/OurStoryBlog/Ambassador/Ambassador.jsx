@@ -140,7 +140,7 @@ const Ambassador = () => {
             required
           />
 
-          <button type="submit" className="submit-button" disabled={loading}>
+          <button type="submit" className="submit-button-a" disabled={loading}>
             {loading ? "Submitting..." : "JOIN"}
           </button>
 

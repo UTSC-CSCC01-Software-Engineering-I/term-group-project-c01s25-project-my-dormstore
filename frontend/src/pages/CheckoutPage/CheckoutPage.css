@@ -11,6 +11,10 @@
     color: #333;
   }
 
+.checkout-section p {
+  margin-bottom: 10px;
+}
+
 .checkout-content {
     display: flex;
     flex-wrap: wrap;
@@ -19,6 +23,7 @@
   .checkout-left {
     flex: 1 1 600px;
     padding: 40px 30px;
+    background-color: #fafafa;
   }
   .checkout-left h2 {
     font-size: 28px;
@@ -30,13 +35,13 @@
   .checkout-right {
     flex: 0 0 380px;
     background: #fafafa;
-    padding: 40px 30px;
+    padding: 35px 30px;
     border-left: 1px solid #e6e6e6;
   }
   .checkout-right h3 {
-    font-size: 22px;
+    font-size: 25px;
     font-weight: 600;
-    margin-bottom: 24px;
+    margin-bottom: 35px;
     text-align: center;
   }
   
@@ -60,19 +65,34 @@
     line-height: 1;
     color: #1f1f1f;
   }
+  .react-datepicker {
+    font-size: 1.2rem;
+    width: auto !important;              
+    max-width: none;                    
+    box-sizing: border-box;
+  }
   
   .react-datepicker__month-container {
-    box-shadow: none;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    width: auto;                         
   }
-  .react-datepicker__day--outside-month {
-    color: #bbb;
-    opacity: 0.6;
-    pointer-events: none;
+  
+  .react-datepicker__month {
+    width: 100%;
   }
-  .react-datepicker__day:hover:not(.react-datepicker__day--outside-month) {
-    background-color: rgba(135,206,235,0.2);
+  
+  .react-datepicker__header {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    box-sizing: border-box;
+  }
+  
+  .react-datepicker__day,
+  .react-datepicker__day-name {
+    width: 3rem;
+    height: 3rem;
+    line-height: 3rem;
+    font-size: 1rem;
+    box-sizing: border-box;
   }
   
   .checkout-section input[type="email"],
@@ -204,7 +224,7 @@
   }
 
 .balance-display {
-  background: #f8f9fa;
+  background: #eaeaea;
   border: 1px solid #e9ecef;
   border-radius: 8px;
   padding: 20px;

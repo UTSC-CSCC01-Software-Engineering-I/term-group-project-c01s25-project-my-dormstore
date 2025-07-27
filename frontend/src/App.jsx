@@ -203,7 +203,7 @@ function AppContent() {
             <span onClick={() => navigate(isLoggedIn ? "/checklist" : "/login")}>
               <img src="/check_box.png" alt="Checklist" />
             </span>
-            <span onClick={() => setShowCart(true)} style={{ position: "relative" }}>
+            <span onClick={() => navigate("/cart")} style={{ position: "relative" }}>
               <img src="/shopping.png" alt="Cart" />
               {totalItems > 0 && <span style={{ marginLeft: "5px", fontSize: "14px" }}>({totalItems})</span>}
             </span>
@@ -213,9 +213,6 @@ function AppContent() {
 
       {!hidelayout && <NavBar isLoggedIn={isLoggedIn} />}
 
-      {showCart ? (
-        <CartScreen />
-      ) : (
         <Routes>
           {/* Customer Routes */}
           <Route path="/" element={<HomePage />} />
@@ -249,6 +246,7 @@ function AppContent() {
           <Route path="/checkout/success" element={<SuccessPage />} />
           <Route path="/order-status/:orderId" element={<OrderStatusPage />} />
           <Route path="/order-details/:orderId" element={<OrderDetailPage />} />
+          <Route path="/cart" element={<CartScreen />} />
 
           {/* Admin Routes */}
           <Route
@@ -270,7 +268,7 @@ function AppContent() {
 
           <Route path="/admin-login" element={<AdminLogin />} />
         </Routes>
-      )}
+
 
       {!hidelayout && <Footer />}
     </div>

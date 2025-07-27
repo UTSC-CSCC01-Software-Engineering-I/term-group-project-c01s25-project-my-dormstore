@@ -4,6 +4,7 @@ import "./CartScreen.css";
 import { useCart } from "../contexts/CartContext.tsx";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUserBedSize } from "../utils/bedSizeHelper";
+import { Link } from "react-router-dom";
 
 // Simple compatibility warning
 const CartCompatibilityWarning = ({ cartItems }) => {
@@ -72,13 +73,17 @@ export default function CartScreen() {
           ) : (
             items.map((item) => (
               <div className="cart-item-row" key={item.id}>
-                <img
-                  className="cart-item-image"
-                  src={item.image}
-                  alt={item.name}
-                />
+                <Link to={`/products/${item.id}`} className="cart-item-link">
+                  <img
+                    className="cart-item-image"
+                    src={item.image}
+                    alt={item.name}
+                  />
+                </Link>
                 <div className="cart-item-info">
-                  <div className="cart-item-name">{item.name}</div>
+                  <Link to={`/products/${item.id}`} className="cart-item-name-link">
+                    <div className="cart-item-name">{item.name}</div>
+                  </Link>
                   
                   {/* Size and Color Options */}
                   {(item.selectedSize || item.selectedColor) && (

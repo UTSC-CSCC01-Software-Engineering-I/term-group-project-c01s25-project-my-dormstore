@@ -159,6 +159,35 @@ export default function ProductManagement() {
     }
   };
 
+  const refreshPackages = async () => {
+    try {
+      const res = await fetch(`${API}/api/admin/packages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch packages");
+      const data = await res.json();
+      const packageList = Array.isArray(data) ? data : data.packages || [];
+      setPackages(packageList);
+
+      // fetch package_items
+      const m = {};
+      for (const pkg of packageList) {
+        try {
+          const res = await fetch(`${API}/api/admin/packages/${pkg.id}/items`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            m[pkg.id] = await res.json();
+          }
+        } catch {}
+      }
+      setPackageItemsMap(m);
+    } catch (e) {
+      console.error("Failed to refresh packages:", e);
+      setError(e.toString());
+    }
+  };
+
   const onEditClick = (item) => {
     const items = packageItemsMap[item.id] || [];
     setEditingId(item.id);
@@ -256,6 +285,7 @@ export default function ProductManagement() {
         setProducts((ps) => ps.map((x) => (x.id === id ? updated : x)));
       else
         setPackages((pk) => pk.map((x) => (x.id === id ? updated : x)));
+      await refreshPackages();
       setEditingId(null);
     } catch (e) {
       setError(e.toString());
@@ -560,35 +590,13 @@ export default function ProductManagement() {
                 </td>
                 <td>{Number(item.rating || 0).toFixed(1)}</td>
                 <td className="description-cell">
-                  {descViewId === item.id ? (
-                    <>
-                      <div className="desc-box">{item.description}</div>
-                      <button
-                        className="desc-toggle"
-                        onClick={() => setDescViewId(null)}
-                      >
-                        Hide
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="desc-box">
-                        {item.description.length > 60
-                          ? item.description.slice(0, 60) + "..."
-                          : item.description}
-                      </div>
-                      {item.description.length > 60 && (
-                        <button
-                          className="desc-toggle"
-                          onClick={() => setDescViewId(item.id)}
-                        >
-                          View
-                        </button>
-                      )}
-                    </>
-                  )}
+                  <textarea
+                    name="description"
+                    value={editData.description}
+                    onChange={handleEditChange}
+                    style={{ width: "100%", minHeight: "60px" }}
+                  />
                 </td>
-
                 {categoryType === "package" && (
                   <td>
                     {(editData.items || []).map((it, i) => (
@@ -669,34 +677,9 @@ export default function ProductManagement() {
                 <td>{item.active ? "Yes" : "No"}</td>
                 <td>{Number(item.rating || 0).toFixed(1)}</td>
                 <td className="description-cell">
-                  {descViewId === item.id ? (
-                    <>
-                      <div className="desc-box">{item.description}</div>
-                      <button
-                        className="desc-toggle"
-                        onClick={() => setDescViewId(null)}
-                      >
-                        Hide
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="desc-box">
-                        {item.description.length > 60
-                          ? item.description.slice(0, 60) + "..."
-                          : item.description}
-                      </div>
-                      {item.description.length > 60 && (
-                        <button
-                          className="desc-toggle"
-                          onClick={() => setDescViewId(item.id)}
-                        >
-                          View
-                        </button>
-                      )}
-                    </>
-                  )}
+                  <div className="desc-box">{item.description}</div>
                 </td>
+
 
                 {categoryType === "package" && (
                   <td className="package-items-cell">

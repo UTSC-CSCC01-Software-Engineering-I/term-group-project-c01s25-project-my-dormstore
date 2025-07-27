@@ -15,6 +15,7 @@ Sprint 3 aims to elevate the overall dorm shopping experience by expanding upon 
 - Enable users to track their order using order number and email
 - Improve cart functionality with backend sync for better accuracy
 - Lay groundwork for unit testing on key backend and frontend logic
+- Enable admin to manage the website
 
 ### Metrics for Measurements
 
@@ -39,25 +40,20 @@ Sprint 3 aims to elevate the overall dorm shopping experience by expanding upon 
 - **Track Order by Email and Order ID**
   - Streamlined order tracking UI accessible without login
   - Order progress visually displayed
+- **Admin Dashboard**
+  - Administrators can manage the orders,products,user and ambassadors from this page.
+  - Display general revneu and orders management.
 
 ### Excluded Features
 
-- **Payment processing integration**
-  - Deferred due to security concerns and scope limitations.
-  - Will be considered in future sprints after user authentication is fully stable.
 - **Mobile responsiveness**
   - Current layout is optimized for desktop use only.
   - Mobile support will be addressed in a future UI/UX sprint.
-- **Admin dashboard for tracking user submissions**
-  - Out of scope for Sprint 2 due to time constraints.
-  - Future plans include a dashboard to review form responses and order data.
   
 ---
 
 ## Bug Fixes
 - Cart images not rendering correctly in some contexts
-- Dorm dropdown reactivity issue in user form
-- Order number parsing bug in order-status page URL
 
 ---
 

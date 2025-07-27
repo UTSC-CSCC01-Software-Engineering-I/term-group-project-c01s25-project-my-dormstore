@@ -25,6 +25,8 @@ async function addPackagesTables() {
         description TEXT,
         image_url   TEXT,
         rating DECIMAL(2,1) DEFAULT 0,
+        size TEXT,
+        color TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
