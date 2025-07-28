@@ -108,11 +108,13 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix = "/products" }: 
         <div className="product-footer">
           <div className="product-price-info">
             <span className="product-price">${product.price}</span>
-            {product.stock !== undefined && (
-              <span className="product-inventory">
-                {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-              </span>
-            )}
+
+                  {product.stock !== undefined && (
+        <span className="product-inventory">
+          {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+        </span>
+      )}
+
           </div>
           <button 
             className="cart-icon-btn"

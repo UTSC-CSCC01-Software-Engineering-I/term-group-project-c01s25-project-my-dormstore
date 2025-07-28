@@ -159,6 +159,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     const packageData = await packageResponse.json();
                     return {
                       ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
                       quantity: item.quantity,
                       backendId: item.id,
                       cartItemId: `backend_${item.id}`,
@@ -224,6 +225,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     const packageData = await packageResponse.json();
                     return {
                       ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
                       cartItemId: `backend_${cartItem.id}`,
@@ -268,8 +270,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     if (packageResponse.ok) {
                       const packageData = await packageResponse.json();
                       return {
-                        ...packageData,
-                        quantity: cartItem.quantity,
+                      ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
+                      quantity: cartItem.quantity,
                         backendId: cartItem.id,
                         cartItemId: `backend_${cartItem.id}`,
                         isPackage: true
@@ -337,17 +340,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .then(() => cartAPI.getCart())
         .then(async data => {
           const cartItems = await Promise.all(
-            data.cartItems.map(async (item: any) => {
-              const prod = await getProductById(item.product_id);
-              if (prod) {
-                return {
-                  ...prod,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}`
-                };
+            data.cartItems.map(async (cartItem: any) => {
+              if (cartItem.item_type === 'package') {
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
+                      quantity: cartItem.quantity,
+                      backendId: cartItem.id,
+                      cartItemId: `backend_${cartItem.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                const prod = await getProductById(cartItem.product_id);
+                if (prod) {
+                  return {
+                    ...prod,
+                    quantity: cartItem.quantity,
+                    backendId: cartItem.id,
+                    selectedSize: cartItem.selected_size,
+                    selectedColor: cartItem.selected_color,
+                    cartItemId: `backend_${cartItem.id}`
+                  };
+                }
               }
               return null;
             })
@@ -381,17 +404,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .then(() => cartAPI.getCart())
         .then(async data => {
           const cartItems = await Promise.all(
-            data.cartItems.map(async (item: any) => {
-              const prod = await getProductById(item.product_id);
-              if (prod) {
-                return {
-                  ...prod,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}`
-                };
+            data.cartItems.map(async (cartItem: any) => {
+              if (cartItem.item_type === 'package') {
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
+                      quantity: cartItem.quantity,
+                      backendId: cartItem.id,
+                      cartItemId: `backend_${cartItem.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                const prod = await getProductById(cartItem.product_id);
+                if (prod) {
+                  return {
+                    ...prod,
+                    quantity: cartItem.quantity,
+                    backendId: cartItem.id,
+                    selectedSize: cartItem.selected_size,
+                    selectedColor: cartItem.selected_color,
+                    cartItemId: `backend_${cartItem.id}`
+                  };
+                }
               }
               return null;
             })
@@ -437,17 +480,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .then(() => cartAPI.getCart())
         .then(async data => {
           const cartItems = await Promise.all(
-            data.cartItems.map(async (item: any) => {
-              const prod = await getProductById(item.product_id);
-              if (prod) {
-                return {
-                  ...prod,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}`
-                };
+            data.cartItems.map(async (cartItem: any) => {
+              if (cartItem.item_type === 'package') {
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
+                      quantity: cartItem.quantity,
+                      backendId: cartItem.id,
+                      cartItemId: `backend_${cartItem.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                const prod = await getProductById(cartItem.product_id);
+                if (prod) {
+                  return {
+                    ...prod,
+                    quantity: cartItem.quantity,
+                    backendId: cartItem.id,
+                    selectedSize: cartItem.selected_size,
+                    selectedColor: cartItem.selected_color,
+                    cartItemId: `backend_${cartItem.id}`
+                  };
+                }
               }
               return null;
             })
