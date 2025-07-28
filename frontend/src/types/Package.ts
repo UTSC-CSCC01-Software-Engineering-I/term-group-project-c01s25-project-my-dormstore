@@ -15,7 +15,7 @@ export interface Package {
   image_url?: string;
   size?: string; // Available sizes (comma-separated)
   color?: string; // Available colors (comma-separated)
-  inventory?: number; // Available stock quantity
+  stock?: number; // Available stock quantity
 }
 
 export interface Variant {

@@ -38,11 +38,19 @@ export const PackageCard = ({ package: pkg, onAddToCart, linkPrefix = "/packages
         <div className="product-footer">
           <div className="product-price-info">
             <span className="product-price">${pkg.price}</span>
-            {pkg.inventory !== undefined && (
+<<<<<<< HEAD
+                  {pkg.stock !== undefined && (
+        <span className="product-inventory">
+          {pkg.stock > 0 ? `${pkg.stock} in stock` : 'Out of stock'}
+        </span>
+      )}
+=======
+            {pkg.stock !== undefined && (
               <span className="product-inventory">
-                {pkg.inventory > 0 ? `${pkg.inventory} in stock` : 'Out of stock'}
+                {pkg.stock > 0 ? `${pkg.stock} in stock` : 'Out of stock'}
               </span>
             )}
+>>>>>>> c39b07a692a26c821f5883b6c0d944ca1ca89dde
           </div>
           <button 
             className="cart-icon-btn"

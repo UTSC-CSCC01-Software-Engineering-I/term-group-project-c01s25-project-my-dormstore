@@ -16,7 +16,7 @@ export const packageService = {
         ...pkg,
         price: parseFloat(pkg.price),
         rating: parseFloat(pkg.rating),
-        image: pkg.image
+        image: pkg.image_url
       }));
     } catch (error) {
       console.error('Error fetching packages:', error);
@@ -37,10 +37,10 @@ export const packageService = {
       
       // Transform API data to match frontend expectations
       const pkg = {
-        ...data.package,
-        price: parseFloat(data.package.price),
-        rating: parseFloat(data.package.rating),
-        image: data.package.image 
+        ...data,
+        price: parseFloat(data.price),
+        rating: parseFloat(data.rating),
+        image: data.image_url 
       };
       
       return pkg;
@@ -67,7 +67,7 @@ export const packageService = {
         ...pkg,
         price: parseFloat(pkg.price),
         rating: parseFloat(pkg.rating),
-        image: pkg.image
+        image: pkg.image_url
       }));
     } catch (error) {
       console.error('Error fetching packages by category:', error);
@@ -90,7 +90,7 @@ export const packageService = {
         ...data.package,
         price: parseFloat(data.package.price),
         rating: parseFloat(data.package.rating),
-        image: data.package.image 
+        image: data.package.image_url 
       };
     } catch (error) {
       console.error('Error fetching package details:', error);
