@@ -1987,21 +1987,39 @@ app.get("/api/admin/orders/:id", async (req, res) => {
     }
     const order = orderResult.rows[0];
 
+    // Get order_items (products)
     const itemsResult = await pool.query(
       `SELECT product_id, product_name, product_price, quantity, subtotal
-         FROM order_items WHERE order_id = $1 ORDER BY id ASC`,
+       FROM order_items WHERE order_id = $1 ORDER BY id ASC`,
+      [orderId]
+    );
+
+    // Get order_packages (packages)
+    const packagesResult = await pool.query(
+      `SELECT
+         op.package_id,
+         p.name AS package_name,
+         p.price AS package_price,
+         op.quantity,
+         (p.price * op.quantity) AS subtotal
+       FROM order_packages op
+       JOIN packages p ON op.package_id = p.id
+       WHERE op.order_id = $1
+       ORDER BY op.id ASC`,
       [orderId]
     );
 
     res.json({
       ...order,
-      items: itemsResult.rows
+      items: itemsResult.rows,
+      packages: packagesResult.rows
     });
   } catch (err) {
     console.error("Error fetching order:", err);
     res.status(500).json({ error: "Failed to fetch order" });
   }
 });
+
 
 // GET /api/admin/order_items?order_id=1
 app.get('/api/admin/order_items', async (req, res) => {
