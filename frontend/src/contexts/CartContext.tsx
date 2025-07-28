@@ -83,10 +83,7 @@ const cartAPI = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ product_id, quantity, selected_size, selected_color })
     });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(JSON.stringify(errorData));
-    }
+    if (!response.ok) throw new Error('Failed to add item');
     return response.json();
   },
 
@@ -97,10 +94,7 @@ const cartAPI = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ quantity })
     });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(JSON.stringify(errorData));
-    }
+    if (!response.ok) throw new Error('Failed to update item');
     return response.json();
   },
 
@@ -201,29 +195,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
           );
           setItems(cartItems.filter(Boolean));
         })
-        .catch((error) => {
-          // Handle inventory validation errors
-          if (error.message && error.message.includes('Insufficient stock')) {
-            try {
-              const errorData = JSON.parse(error.message);
-              if (errorData.maxCanAdd > 0) {
-                alert(`Sorry, only ${errorData.maxCanAdd} more of this item can be added to your cart. Available stock: ${errorData.availableStock}`);
-              } else {
-                alert(`Sorry, this item is out of stock. Available stock: ${errorData.availableStock}`);
-              }
-            } catch {
-              alert('Sorry, insufficient stock available for this item.');
-            }
-          } else {
-            // fallback
-            alert('Failed to add item to cart. Please try again.');
-          }
+        .catch(() => {
+          // fallback
+          alert('Failed to add item to cart. Please try again.');
         });
     } else {
-      // Not logged in: use local state with inventory check
-      // For guest users, we'll use a default stock of 10 (since we can't check real inventory)
-      const defaultStock = 10;
-      
+      // Not logged in: use local state
       setItems(currentItems => {
         // For localStorage, we need to check if the same product with same size/color already exists
         const existingItem = currentItems.find(item => 
@@ -231,22 +208,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
           item.selectedSize === selectedSize && 
           item.selectedColor === selectedColor
         );
-        
-        let totalRequestedQuantity = quantity;
-        if (existingItem) {
-          totalRequestedQuantity += existingItem.quantity;
-        }
-        
-        // Check if requested quantity exceeds available stock
-        if (totalRequestedQuantity > defaultStock) {
-          const maxCanAdd = Math.max(0, defaultStock - (existingItem ? existingItem.quantity : 0));
-          if (maxCanAdd > 0) {
-            alert(`Sorry, only ${maxCanAdd} more of this item can be added to your cart. Available stock: ${defaultStock}`);
-          } else {
-            alert(`Sorry, this item is out of stock. Available stock: ${defaultStock}`);
-          }
-          return currentItems; // Don't update cart
-        }
         
         let newItems;
         if (existingItem) {
@@ -342,30 +303,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
           );
           setItems(cartItems.filter(Boolean));
         })
-        .catch((error) => {
-          // Handle inventory validation errors
-          if (error.message && error.message.includes('Insufficient stock')) {
-            try {
-              const errorData = JSON.parse(error.message);
-              alert(`Sorry, only ${errorData.maxCanAdd} of this item are available. Available stock: ${errorData.availableStock}`);
-            } catch {
-              alert('Sorry, insufficient stock available for this item.');
-            }
-          }
+        .catch(() => {
+          // fallback
         });
     } else {
       if (quantity < 1) {
         removeFromCart(cartItemId);
         return;
       }
-      
-      // For guest users, check against default stock
-      const defaultStock = 10;
-      if (quantity > defaultStock) {
-        alert(`Sorry, only ${defaultStock} of this item are available. Available stock: ${defaultStock}`);
-        return;
-      }
-      
       setItems(currentItems => {
         const newItems = currentItems.map(item =>
           item.cartItemId === cartItemId

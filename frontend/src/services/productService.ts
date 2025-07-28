@@ -16,8 +16,7 @@ export const productService = {
         ...product,
         price: parseFloat(product.price),
         rating: parseFloat(product.rating),
-        image: product.image,
-        stock: product.stock || 0
+        image: product.image
       }));
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -35,8 +34,7 @@ export const productService = {
           ...data.product,
           price: parseFloat(data.product.price),
           rating: parseFloat(data.product.rating),
-          image: data.product.image || data.product.image_url,
-          stock: data.product.stock || 0
+          image: data.product.image || data.product.image_url 
         };
       }
     } catch (err) {
@@ -52,8 +50,7 @@ export const productService = {
           ...pkg,
           price: parseFloat(pkg.price),
           rating: parseFloat(pkg.rating),
-          image: pkg.image || pkg.image_url,
-          stock: pkg.stock || 0
+          image: pkg.image || pkg.image_url
         };
       }
     } catch (err) {
@@ -77,8 +74,7 @@ export const productService = {
         ...product,
         price: parseFloat(product.price),
         rating: parseFloat(product.rating),
-        image: product.image,
-        stock: product.stock || 0
+        image: product.image
       }));
     } catch (error) {
       console.error('Error fetching products by category:', error);
