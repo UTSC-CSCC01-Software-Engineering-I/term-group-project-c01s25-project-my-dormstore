@@ -175,6 +175,7 @@ app.get("/cart", async (req, res) => {
 app.post("/cart", authenticateToken, async (req, res) => {
   const userId = req.user.userId; // ✅ verified by middleware
   const { product_id, package_id, quantity = 1, selected_size, selected_color } = req.body;
+  console.log("Add to cart body:", req.body);
 
   try {
     if (!product_id && !package_id) {
@@ -986,6 +987,7 @@ app.post("/api/orders", async (req, res) => {
       // Authenticated user - get from database
       const cartResult = await client.query(
         `SELECT ci.*, 
+                ci.item_type,
                 p.name as product_name, p.price as product_price,
                 pk.name as package_name, pk.price as package_price
          FROM cart_items ci 

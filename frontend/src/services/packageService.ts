@@ -16,7 +16,8 @@ export const packageService = {
         ...pkg,
         price: parseFloat(pkg.price),
         rating: parseFloat(pkg.rating),
-        image: pkg.image_url
+        image: pkg.image_url,
+        isPackage: true
       }));
     } catch (error) {
       console.error('Error fetching packages:', error);
@@ -40,7 +41,8 @@ export const packageService = {
         ...data,
         price: parseFloat(data.price),
         rating: parseFloat(data.rating),
-        image: data.image_url 
+        image: data.image_url,
+        isPackage: true 
       };
       
       return pkg;
@@ -67,7 +69,8 @@ export const packageService = {
         ...pkg,
         price: parseFloat(pkg.price),
         rating: parseFloat(pkg.rating),
-        image: pkg.image_url
+        image: pkg.image_url,
+        isPackage: true
       }));
     } catch (error) {
       console.error('Error fetching packages by category:', error);
@@ -90,7 +93,8 @@ export const packageService = {
         ...data.package,
         price: parseFloat(data.package.price),
         rating: parseFloat(data.package.rating),
-        image: data.package.image_url 
+        image: data.package.image_url,
+        isPackage: true 
       };
     } catch (error) {
       console.error('Error fetching package details:', error);

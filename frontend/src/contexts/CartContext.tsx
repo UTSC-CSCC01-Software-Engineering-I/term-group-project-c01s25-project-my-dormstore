@@ -163,7 +163,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       quantity: item.quantity,
                       backendId: item.id,
                       cartItemId: `backend_${item.id}`,
-                      isPackage: true
+                      isPackage: true,
+                      image: packageData.image_url
                     };
                   }
                 } catch (error) {
@@ -205,8 +206,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = (item: Product | any, quantity: number = 1, selectedSize?: string, selectedColor?: string) => {
     if (isUserLoggedIn()) {
       // Determine if it's a package or product
-      const isPackage = item.isPackage || item.category === 'package';
-      
+      const isPackage = item.isPackage || ['package', 'living', 'caring'].includes(item.category);
+
+
+        console.log("🛒 ADDING TO CART:", {
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          isPackage,
+        });
+
       if (isPackage) {
         // Handle package - send package_id instead of product_id
         fetch(`${process.env.REACT_APP_API_URL}/cart`, {
@@ -229,7 +238,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
                       cartItemId: `backend_${cartItem.id}`,
-                      isPackage: true
+                      isPackage: true,
+                      image: packageData.image_url
                     };
                   }
                 } catch (error) {
@@ -275,7 +285,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       quantity: cartItem.quantity,
                         backendId: cartItem.id,
                         cartItemId: `backend_${cartItem.id}`,
-                        isPackage: true
+                        isPackage: true,
+                        image: packageData.image_url
                       };
                     }
                   } catch (error) {
@@ -352,7 +363,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
                       cartItemId: `backend_${cartItem.id}`,
-                      isPackage: true
+                      isPackage: true,
+                      image: packageData.image_url
                     };
                   }
                 } catch (error) {
@@ -416,7 +428,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
                       cartItemId: `backend_${cartItem.id}`,
-                      isPackage: true
+                      isPackage: true,
+                      image: packageData.image_url
                     };
                   }
                 } catch (error) {
@@ -492,7 +505,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
                       cartItemId: `backend_${cartItem.id}`,
-                      isPackage: true
+                      isPackage: true,
+                      image: packageData.image_url
                     };
                   }
                 } catch (error) {
