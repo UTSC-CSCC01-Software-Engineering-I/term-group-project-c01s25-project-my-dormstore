@@ -17,7 +17,7 @@ export interface Product {
   suggestedWithPurchase?: boolean;
   shippingInfo?: string;
   image_url?: string;
-  stock?: number; // Available stock quantity
+  stock?: number; // Available inventory
 } 
 
 export interface Variant {

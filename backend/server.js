@@ -132,95 +132,84 @@ app.post("/loginUser", async (req, res) => {
   });
 
 // Get user's cart items
-app.get("/cart", async (req, res) => {
+app.get("/cart", authenticateToken, async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    
-    if (token) {
-      // Authenticated user
-      try {
-        const user = jwt.verify(token, "secret-key");
-        const userId = user.userId;
-        
-        // Get all cart items (both products and packages)
-        const cartResult = await pool.query(
-          "SELECT id, product_id, package_id, quantity, selected_size, selected_color, item_type, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
-          [userId]
-        );
-        
-        res.json({ 
-          cartItems: cartResult.rows
-        });
-      } catch (jwtError) {
-        // Invalid token, treat as guest
-        res.json({ 
-          cartItems: []
-        });
-      }
-    } else {
-      // Guest user - return empty cart
-      res.json({ 
-        cartItems: []
-      });
-    }
+    const userId = req.user.userId;
+    const result = await pool.query(
+      "SELECT id, product_id, quantity, selected_size, selected_color, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
+      [userId]
+    );
+    res.json({ cartItems: result.rows });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to retrieve cart items" });
   }
 });
 
-
-// Add item to cart - supports both products and packages
+// Add item to cart
 app.post("/cart", authenticateToken, async (req, res) => {
-  const userId = req.user.userId; // ✅ verified by middleware
-  const { product_id, package_id, quantity = 1, selected_size, selected_color } = req.body;
-
   try {
-    if (!product_id && !package_id) {
-      return res.status(400).json({ error: "Product ID or Package ID is required" });
+    const userId = req.user.userId;
+    const { product_id, quantity = 1, selected_size, selected_color } = req.body;
+
+    if (!product_id) {
+      return res.status(400).json({ error: "Product ID is required" });
     }
     if (quantity < 1) {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
 
-    let existingItemQuery, queryParams, insertQuery, insertParams;
+    // Get product stock
+    const productResult = await pool.query(
+      "SELECT stock FROM products WHERE id = $1",
+      [product_id]
+    );
+    
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    
+    const availableStock = productResult.rows[0].stock;
 
-    if (package_id) {
-      // Handle package
-      existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND package_id = $2 AND item_type = 'package'";
-      queryParams = [userId, package_id];
-
-      insertQuery = "INSERT INTO cart_items (user_id, package_id, quantity, item_type) VALUES ($1, $2, $3, 'package') RETURNING *";
-      insertParams = [userId, package_id, quantity];
-    } else {
-      // Handle product
-      existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2 AND item_type = 'product'";
-      queryParams = [userId, product_id];
-
-      if (selected_size) {
-        existingItemQuery += " AND selected_size = $3";
-        queryParams.push(selected_size);
-
-        if (selected_color) {
-          existingItemQuery += " AND selected_color = $4";
-          queryParams.push(selected_color);
-        } else {
-          existingItemQuery += " AND selected_color IS NULL";
-        }
-      } else if (selected_color) {
-        existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
+    // Check for existing item with same product_id, size, and color
+    let existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2";
+    let queryParams = [userId, product_id];
+    
+    if (selected_size) {
+      existingItemQuery += " AND selected_size = $3";
+      queryParams.push(selected_size);
+      
+      if (selected_color) {
+        existingItemQuery += " AND selected_color = $4";
         queryParams.push(selected_color);
       } else {
-        existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
+        existingItemQuery += " AND selected_color IS NULL";
       }
-
-      insertQuery = "INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color, item_type) VALUES ($1, $2, $3, $4, $5, 'product') RETURNING *";
-      insertParams = [userId, product_id, quantity, selected_size || null, selected_color || null];
+    } else if (selected_color) {
+      existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
+      queryParams.push(selected_color);
+    } else {
+      existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
     }
 
     const existingItem = await pool.query(existingItemQuery, queryParams);
+    
+    let totalRequestedQuantity = quantity;
+    if (existingItem.rows.length > 0) {
+      totalRequestedQuantity += existingItem.rows[0].quantity;
+    }
 
+    // Check if requested quantity exceeds available stock
+    if (totalRequestedQuantity > availableStock) {
+      const maxCanAdd = Math.max(0, availableStock - (existingItem.rows.length > 0 ? existingItem.rows[0].quantity : 0));
+      return res.status(400).json({ 
+        error: "Insufficient stock", 
+        availableStock: availableStock,
+        requestedQuantity: totalRequestedQuantity,
+        maxCanAdd: maxCanAdd
+      });
+    }
+    
     if (existingItem.rows.length > 0) {
       // update existing item quantity
       const newQuantity = existingItem.rows[0].quantity + quantity;
@@ -228,25 +217,27 @@ app.post("/cart", authenticateToken, async (req, res) => {
         "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
         [newQuantity, existingItem.rows[0].id]
       );
-
-      return res.json({ 
+      
+      res.json({ 
         message: "Cart item updated", 
         cartItem: result.rows[0] 
       });
     } else {
-      const result = await pool.query(insertQuery, insertParams);
-      return res.status(201).json({ 
+      const result = await pool.query(
+        "INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [userId, product_id, quantity, selected_size || null, selected_color || null]
+      );
+      
+      res.status(201).json({ 
         message: "Item added to cart", 
         cartItem: result.rows[0] 
       });
     }
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to add item to cart" });
   }
 });
-
 
 // update cart item quantity
 app.put("/cart/:itemId", authenticateToken, async (req, res) => {
@@ -260,13 +251,44 @@ app.put("/cart/:itemId", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
 
+    // Get cart item to check product_id
+    const cartItemResult = await pool.query(
+      "SELECT product_id FROM cart_items WHERE id = $1 AND user_id = $2",
+      [itemId, userId]
+    );
+    
+    if (cartItemResult.rows.length === 0) {
+      return res.status(404).json({ error: "Cart item not found or not authorized" });
+    }
+
+    const productId = cartItemResult.rows[0].product_id;
+
+    // Get product stock
+    const productResult = await pool.query(
+      "SELECT stock FROM products WHERE id = $1",
+      [productId]
+    );
+    
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    
+    const availableStock = productResult.rows[0].stock;
+
+    // Check if requested quantity exceeds available stock
+    if (quantity > availableStock) {
+      return res.status(400).json({ 
+        error: "Insufficient stock", 
+        availableStock: availableStock,
+        requestedQuantity: quantity,
+        maxCanAdd: availableStock
+      });
+    }
+
     const result = await pool.query(
       "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3 RETURNING *",
       [quantity, itemId, userId]
     );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Cart item not found or not authorized" });
-    }
 
     res.json({ 
       message: "Cart item quantity updated", 
@@ -318,149 +340,6 @@ app.delete("/cart", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to clear cart" });
-  }
-});
-
-// Package cart endpoints - supports both authenticated and guest users
-app.post("/package-cart", async (req, res) => {
-  try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    const { package_id, quantity = 1 } = req.body;
-
-    if (!package_id) {
-      return res.status(400).json({ error: "Package ID is required" });
-    }
-    if (quantity < 1) {
-      return res.status(400).json({ error: "Quantity must be at least 1" });
-    }
-
-    if (token) {
-      // Authenticated user
-      try {
-        const user = jwt.verify(token, "secret-key");
-        const userId = user.userId;
-
-        // Check for existing package in cart
-        const existingItem = await pool.query(
-          "SELECT id, quantity FROM package_cart_items WHERE user_id = $1 AND package_id = $2",
-          [userId, package_id]
-        );
-        
-        if (existingItem.rows.length > 0) {
-          // update existing item quantity
-          const newQuantity = existingItem.rows[0].quantity + quantity;
-          const result = await pool.query(
-            "UPDATE package_cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
-            [newQuantity, existingItem.rows[0].id]
-          );
-          
-          res.json({ 
-            message: "Package cart item updated", 
-            cartItem: result.rows[0] 
-          });
-        } else {
-          const result = await pool.query(
-            "INSERT INTO package_cart_items (user_id, package_id, quantity) VALUES ($1, $2, $3) RETURNING *",
-            [userId, package_id, quantity]
-          );
-          
-          res.status(201).json({ 
-            message: "Package added to cart", 
-            cartItem: result.rows[0] 
-          });
-        }
-      } catch (jwtError) {
-        // Invalid token, treat as guest
-        res.status(401).json({ error: "Invalid token" });
-      }
-    } else {
-      // Guest user - return success but don't store in database
-      res.status(201).json({ 
-        message: "Package added to guest cart", 
-        cartItem: {
-          id: `guest_package_${Date.now()}`,
-          package_id: package_id,
-          quantity: quantity
-        }
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to add package to cart" });
-  }
-});
-
-// Update package cart item quantity
-app.put("/package-cart/:itemId", authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const itemId = parseInt(req.params.itemId);
-    const { quantity } = req.body;
-
-    if (!quantity || quantity < 1) {
-      return res.status(400).json({ error: "Quantity must be at least 1" });
-    }
-
-    const result = await pool.query(
-      "UPDATE package_cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3 RETURNING *",
-      [quantity, itemId, userId]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Package cart item not found or not authorized" });
-    }
-
-    res.json({ 
-      message: "Package cart item quantity updated", 
-      cartItem: result.rows[0] 
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to update package cart item" });
-  }
-});
-
-// Remove package from cart
-app.delete("/package-cart/:itemId", authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const itemId = parseInt(req.params.itemId);
-
-    const result = await pool.query(
-      "DELETE FROM package_cart_items WHERE id = $1 AND user_id = $2 RETURNING *",
-      [itemId, userId]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Package cart item not found or not authorized" });
-    }
-    res.json({ 
-      message: "Package removed from cart", 
-      removedItem: result.rows[0] 
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to remove package from cart" });
-  }
-});
-
-// Clear package cart
-app.delete("/package-cart", authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-
-    const result = await pool.query(
-      "DELETE FROM package_cart_items WHERE user_id = $1 RETURNING *",
-      [userId]
-    );
-
-    res.json({ 
-      message: "Package cart cleared successfully", 
-      removedItems: result.rows,
-      itemsRemoved: result.rows.length
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to clear package cart" });
   }
 });
 
@@ -684,7 +563,7 @@ app.get("/api/products/:id", async (req, res) => {
 app.get("/api/packages", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages ORDER BY category, name"
+      "SELECT id, name, price, category, description, rating, image_url, size, color, created_at, updated_at FROM packages ORDER BY category, name"
     );
     res.json({ packages: result.rows });
   } catch (error) {
@@ -698,7 +577,7 @@ app.get("/api/packages/:id", async (req, res) => {
   try {
     const packageId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     
@@ -720,7 +599,7 @@ app.get("/api/packages/:id/details", async (req, res) => {
     
     // Get package info
     const packageResult = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     
@@ -862,33 +741,14 @@ app.post("/api/user/balance/add", authenticateToken, async (req, res) => {
   }
 });
 
-// Order creation endpoint with balance deduction (supports both authenticated and guest users)
-app.post("/api/orders", async (req, res) => {
+// Order creation endpoint with balance deduction
+app.post("/api/orders", authenticateToken, async (req, res) => {
   const client = await pool.connect();
   
   try {
     await client.query('BEGIN');
     
-    // Check if user is authenticated or guest
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    let userId = null;
-    
-    if (token) {
-      try {
-        const user = jwt.verify(token, "secret-key");
-        userId = user.userId;
-      } catch (jwtError) {
-        // Invalid token, treat as guest
-        userId = null;
-      }
-    }
-    
-    // For guest users, we'll create a temporary user or handle differently
-    if (!userId) {
-      // Guest checkout - create a temporary user or handle without user_id
-      console.log('Processing guest checkout...');
-    }
+    const userId = req.user.userId;
     const {
       email,
       firstName,
@@ -914,38 +774,33 @@ app.post("/api/orders", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check user balance (only for authenticated users)
-    if (userId) {
-      let balanceResult = await client.query(
+    // Check user balance
+    let balanceResult = await client.query(
+      "SELECT * FROM user_balance WHERE user_id = $1",
+      [userId]
+    );
+    
+    if (balanceResult.rows.length === 0) {
+      // Create initial balance for new user
+      await client.query(
+        "INSERT INTO user_balance (user_id, balance, total_spent) VALUES ($1, $2, $3)",
+        [userId, 1000.00, 0.00]
+      );
+      balanceResult = await client.query(
         "SELECT * FROM user_balance WHERE user_id = $1",
         [userId]
       );
-      
-      if (balanceResult.rows.length === 0) {
-        // Create initial balance for new user
-        await client.query(
-          "INSERT INTO user_balance (user_id, balance, total_spent) VALUES ($1, $2, $3)",
-          [userId, 1000.00, 0.00]
-        );
-        balanceResult = await client.query(
-          "SELECT * FROM user_balance WHERE user_id = $1",
-          [userId]
-        );
-      }
-      
-      const currentBalance = parseFloat(balanceResult.rows[0].balance);
-      
-      if (currentBalance < total) {
-        return res.status(400).json({ 
-          error: "Insufficient funds", 
-          currentBalance: currentBalance,
-          requiredAmount: total,
-          shortfall: total - currentBalance
-        });
-      }
-    } else {
-      // Guest checkout - skip balance check
-      console.log('Guest checkout - skipping balance check');
+    }
+    
+    const currentBalance = parseFloat(balanceResult.rows[0].balance);
+    
+    if (currentBalance < total) {
+      return res.status(400).json({ 
+        error: "Insufficient funds", 
+        currentBalance: currentBalance,
+        requiredAmount: total,
+        shortfall: total - currentBalance
+      });
     }
 
     // Generate unique order number
@@ -977,117 +832,47 @@ app.post("/api/orders", async (req, res) => {
     const orderId = orderResult.rows[0].id;
     const orderNumberGenerated = orderResult.rows[0].order_number;
 
-    // Get cart items (for authenticated users from database, for guests from request body)
-    let cartItems = [];
-    
-    if (userId) {
-      // Authenticated user - get from database
-      const cartResult = await client.query(
-        `SELECT ci.*, 
-                p.name as product_name, p.price as product_price,
-                pk.name as package_name, pk.price as package_price
-         FROM cart_items ci 
-         LEFT JOIN products p ON ci.product_id = p.id 
-         LEFT JOIN packages pk ON ci.package_id = pk.id 
-         WHERE ci.user_id = $1`,
-        [userId]
-      );
-      cartItems = cartResult.rows;
-    } else {
-      // Guest user - get from request body
-      cartItems = req.body.cartItems || [];
-      console.log('Guest checkout - using cart items from request body:', cartItems.length, 'items');
-    }
+    // Get cart items for this user
+    const cartResult = await client.query(
+      "SELECT ci.*, p.name as product_name, p.price as price FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.user_id = $1",
+      [userId]
+    );
 
-    
-    // Create order items and reduce inventory
-    for (const item of cartItems) {
-      if (item.item_type === 'product') {
-        const productRes = await client.query("SELECT name, price FROM products WHERE id = $1", [item.product_id]);
-
-        if (productRes.rows.length === 0) {
-          throw new Error(`Product with ID ${item.product_id} not found`);
-        }
-
-        const { name: product_name, price: product_price } = productRes.rows[0];
-        
-        // Handle product
-        await client.query(
-          `INSERT INTO order_items (
-            order_id, product_id, product_name, product_price, quantity, subtotal
-          ) VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            orderId, item.product_id, item.product_name, item.product_price,
-            item.quantity, item.product_price * item.quantity
-          ]
-        );
-        
-        // Reduce product inventory
-        await client.query(
-          `UPDATE products 
-           SET stock = stock - $1, 
-               updated_at = CURRENT_TIMESTAMP 
-           WHERE id = $2`,
-          [item.quantity, item.product_id]
-        );
-      } else if (item.item_type === 'package') {
-        const packageRes = await client.query("SELECT name, price FROM packages WHERE id = $1", [item.package_id]);
-
-        if (packageRes.rows.length === 0) {
-          throw new Error(`Package with ID ${item.package_id} not found`);
-        }
-
-        const { name: package_name, price: package_price } = packageRes.rows[0];
-      
-        // Handle package
-        await client.query(
-          `INSERT INTO order_packages (
-            order_id, package_id, quantity
-          ) VALUES ($1, $2, $3)`,
-          [orderId, item.package_id, item.quantity]
-        );
-        console.log("Package cart item:", item);
-        console.log("Fetched package from DB:", packageRes.rows[0]);
-        // Package inventory will be reduced automatically by the trigger
-      }
-    }
-
-    // Handle additional packages if they exist in the order data
-    if (req.body.packages && req.body.packages.length > 0) {
-      for (const packageItem of req.body.packages) {
-        // Create order package entry
-        await client.query(
-          `INSERT INTO order_packages (
-            order_id, package_id, quantity
-          ) VALUES ($1, $2, $3)`,
-          [orderId, packageItem.package_id, packageItem.quantity]
-        );
-        
-        // Package inventory will be reduced automatically by the trigger
-      }
-    }
-
-    // Deduct from user balance and update total spent (only for authenticated users)
-    if (userId) {
+    // Create order items
+    for (const item of cartResult.rows) {
       await client.query(
-        `UPDATE user_balance 
-         SET balance = balance - $1, 
-             total_spent = total_spent + $1, 
-             last_updated = CURRENT_TIMESTAMP 
-         WHERE user_id = $2`,
-        [total, userId]
+        `INSERT INTO order_items (
+          order_id, product_id, product_name, product_price, quantity, subtotal
+        ) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          orderId, item.product_id, item.product_name, item.price,
+          item.quantity, item.product_price * item.quantity
+        ]
       );
-
-      // Clear the user's cart (both products and packages)
-      await client.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
-    } else {
-      console.log('Guest checkout - skipping balance deduction and cart clearing');
     }
+
+    // Deduct from user balance and update total spent
+    await client.query(
+      `UPDATE user_balance 
+       SET balance = balance - $1, 
+           total_spent = total_spent + $1, 
+           last_updated = CURRENT_TIMESTAMP 
+       WHERE user_id = $2`,
+      [total, userId]
+    );
+
+    // Clear the user's cart
+    await client.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
 
     await client.query('COMMIT');
 
-    // Prepare response
-    let response = {
+    // Get updated balance
+    const updatedBalanceResult = await client.query(
+      "SELECT balance, total_spent FROM user_balance WHERE user_id = $1",
+      [userId]
+    );
+
+    res.status(201).json({
       message: "Order created successfully",
       order: {
         id: orderId,
@@ -1095,25 +880,12 @@ app.post("/api/orders", async (req, res) => {
         total: total,
         shippingMethod: shippingMethod,
         shippingCost: shippingCost || shipping
-      }
-    };
-
-    // Add balance info for authenticated users
-    if (userId) {
-      const updatedBalanceResult = await client.query(
-        "SELECT balance, total_spent FROM user_balance WHERE user_id = $1",
-        [userId]
-      );
-      
-      response.balance = {
+      },
+      balance: {
         remaining: parseFloat(updatedBalanceResult.rows[0].balance),
         totalSpent: parseFloat(updatedBalanceResult.rows[0].total_spent)
-      };
-    } else {
-      response.message = "Guest order created successfully";
-    }
-
-    res.status(201).json(response);
+      }
+    });
 
   } catch (error) {
     await client.query('ROLLBACK');
