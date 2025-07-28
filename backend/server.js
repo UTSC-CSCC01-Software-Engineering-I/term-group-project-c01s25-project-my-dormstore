@@ -170,13 +170,13 @@ app.get("/cart", async (req, res) => {
   }
 });
 
-// Add item to cart - supports both products and packages
-app.post("/cart", async (req, res) => {
-  try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    const { product_id, package_id, quantity = 1, selected_size, selected_color } = req.body;
 
+// Add item to cart - supports both products and packages
+app.post("/cart", authenticateToken, async (req, res) => {
+  const userId = req.user.userId; // ✅ verified by middleware
+  const { product_id, package_id, quantity = 1, selected_size, selected_color } = req.body;
+
+  try {
     if (!product_id && !package_id) {
       return res.status(400).json({ error: "Product ID or Package ID is required" });
     }
@@ -184,93 +184,69 @@ app.post("/cart", async (req, res) => {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
 
-    if (token) {
-      // Authenticated user
-      try {
-        const user = jwt.verify(token, "secret-key");
-        const userId = user.userId;
+    let existingItemQuery, queryParams, insertQuery, insertParams;
 
-        let existingItemQuery, queryParams, insertQuery, insertParams;
+    if (package_id) {
+      // Handle package
+      existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND package_id = $2 AND item_type = 'package'";
+      queryParams = [userId, package_id];
 
-        if (package_id) {
-          // Handle package
-          existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND package_id = $2 AND item_type = 'package'";
-          queryParams = [userId, package_id];
-          
-          insertQuery = "INSERT INTO cart_items (user_id, package_id, quantity, item_type) VALUES ($1, $2, $3, 'package') RETURNING *";
-          insertParams = [userId, package_id, quantity];
-        } else {
-          // Handle product
-          existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2 AND item_type = 'product'";
-          queryParams = [userId, product_id];
-          
-          if (selected_size) {
-            existingItemQuery += " AND selected_size = $3";
-            queryParams.push(selected_size);
-            
-            if (selected_color) {
-              existingItemQuery += " AND selected_color = $4";
-              queryParams.push(selected_color);
-            } else {
-              existingItemQuery += " AND selected_color IS NULL";
-            }
-          } else if (selected_color) {
-            existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
-            queryParams.push(selected_color);
-          } else {
-            existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
-          }
-          
-          insertQuery = "INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color, item_type) VALUES ($1, $2, $3, $4, $5, 'product') RETURNING *";
-          insertParams = [userId, product_id, quantity, selected_size || null, selected_color || null];
-        }
-
-        const existingItem = await pool.query(existingItemQuery, queryParams);
-        
-        if (existingItem.rows.length > 0) {
-          // update existing item quantity
-          const newQuantity = existingItem.rows[0].quantity + quantity;
-          const result = await pool.query(
-            "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
-            [newQuantity, existingItem.rows[0].id]
-          );
-          
-          res.json({ 
-            message: "Cart item updated", 
-            cartItem: result.rows[0] 
-          });
-        } else {
-          const result = await pool.query(insertQuery, insertParams);
-          
-          res.status(201).json({ 
-            message: "Item added to cart", 
-            cartItem: result.rows[0] 
-          });
-        }
-      } catch (jwtError) {
-        // Invalid token, treat as guest
-        res.status(401).json({ error: "Invalid token" });
-      }
+      insertQuery = "INSERT INTO cart_items (user_id, package_id, quantity, item_type) VALUES ($1, $2, $3, 'package') RETURNING *";
+      insertParams = [userId, package_id, quantity];
     } else {
-      // Guest user - return success but don't store in database
-      res.status(201).json({ 
-        message: "Item added to guest cart", 
-        cartItem: {
-          id: `guest_${Date.now()}`,
-          product_id: product_id,
-          package_id: package_id,
-          quantity: quantity,
-          selected_size: selected_size || null,
-          selected_color: selected_color || null,
-          item_type: package_id ? 'package' : 'product'
+      // Handle product
+      existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2 AND item_type = 'product'";
+      queryParams = [userId, product_id];
+
+      if (selected_size) {
+        existingItemQuery += " AND selected_size = $3";
+        queryParams.push(selected_size);
+
+        if (selected_color) {
+          existingItemQuery += " AND selected_color = $4";
+          queryParams.push(selected_color);
+        } else {
+          existingItemQuery += " AND selected_color IS NULL";
         }
+      } else if (selected_color) {
+        existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
+        queryParams.push(selected_color);
+      } else {
+        existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
+      }
+
+      insertQuery = "INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color, item_type) VALUES ($1, $2, $3, $4, $5, 'product') RETURNING *";
+      insertParams = [userId, product_id, quantity, selected_size || null, selected_color || null];
+    }
+
+    const existingItem = await pool.query(existingItemQuery, queryParams);
+
+    if (existingItem.rows.length > 0) {
+      // update existing item quantity
+      const newQuantity = existingItem.rows[0].quantity + quantity;
+      const result = await pool.query(
+        "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
+        [newQuantity, existingItem.rows[0].id]
+      );
+
+      return res.json({ 
+        message: "Cart item updated", 
+        cartItem: result.rows[0] 
+      });
+    } else {
+      const result = await pool.query(insertQuery, insertParams);
+      return res.status(201).json({ 
+        message: "Item added to cart", 
+        cartItem: result.rows[0] 
       });
     }
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to add item to cart" });
   }
 });
+
 
 // update cart item quantity
 app.put("/cart/:itemId", authenticateToken, async (req, res) => {
@@ -669,10 +645,10 @@ app.get("/api/products", async (req, res) => {
     let query, params;
     
     if (category) {
-      query = "SELECT id, name, price, description, rating, image_url, category, size, color, inventory, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
+      query = "SELECT id, name, price, description, rating, image_url, category, size, color, stock, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
       params = [category];
     } else {
-      query = "SELECT id, name, price, description, rating, image_url, category, size, color, inventory, created_at, updated_at FROM products ORDER BY name";
+      query = "SELECT id, name, price, description, rating, image_url, category, size, color, stock, created_at, updated_at FROM products ORDER BY name";
       params = [];
     }
     
@@ -689,7 +665,7 @@ app.get("/api/products/:id", async (req, res) => {
   try {
     const productId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, description, rating, image_url, category, size, color, inventory, created_at, updated_at FROM products WHERE id = $1",
+      "SELECT id, name, price, description, rating, image_url, category, size, color, stock, created_at, updated_at FROM products WHERE id = $1",
       [productId]
     );
     
@@ -708,7 +684,7 @@ app.get("/api/products/:id", async (req, res) => {
 app.get("/api/packages", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, size, color, inventory, created_at, updated_at FROM packages ORDER BY category, name"
+      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages ORDER BY category, name"
     );
     res.json({ packages: result.rows });
   } catch (error) {
@@ -722,7 +698,7 @@ app.get("/api/packages/:id", async (req, res) => {
   try {
     const packageId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, size, color, inventory, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     
@@ -744,7 +720,7 @@ app.get("/api/packages/:id/details", async (req, res) => {
     
     // Get package info
     const packageResult = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, size, color, inventory, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     
@@ -1023,9 +999,18 @@ app.post("/api/orders", async (req, res) => {
       console.log('Guest checkout - using cart items from request body:', cartItems.length, 'items');
     }
 
+    
     // Create order items and reduce inventory
     for (const item of cartItems) {
       if (item.item_type === 'product') {
+        const productRes = await client.query("SELECT name, price FROM products WHERE id = $1", [item.product_id]);
+
+        if (productRes.rows.length === 0) {
+          throw new Error(`Product with ID ${item.product_id} not found`);
+        }
+
+        const { name: product_name, price: product_price } = productRes.rows[0];
+        
         // Handle product
         await client.query(
           `INSERT INTO order_items (
@@ -1040,12 +1025,20 @@ app.post("/api/orders", async (req, res) => {
         // Reduce product inventory
         await client.query(
           `UPDATE products 
-           SET inventory = inventory - $1, 
+           SET stock = stock - $1, 
                updated_at = CURRENT_TIMESTAMP 
            WHERE id = $2`,
           [item.quantity, item.product_id]
         );
       } else if (item.item_type === 'package') {
+        const packageRes = await client.query("SELECT name, price FROM packages WHERE id = $1", [item.package_id]);
+
+        if (packageRes.rows.length === 0) {
+          throw new Error(`Package with ID ${item.package_id} not found`);
+        }
+
+        const { name: package_name, price: package_price } = packageRes.rows[0];
+      
         // Handle package
         await client.query(
           `INSERT INTO order_packages (
@@ -1053,7 +1046,8 @@ app.post("/api/orders", async (req, res) => {
           ) VALUES ($1, $2, $3)`,
           [orderId, item.package_id, item.quantity]
         );
-        
+        console.log("Package cart item:", item);
+        console.log("Fetched package from DB:", packageRes.rows[0]);
         // Package inventory will be reduced automatically by the trigger
       }
     }

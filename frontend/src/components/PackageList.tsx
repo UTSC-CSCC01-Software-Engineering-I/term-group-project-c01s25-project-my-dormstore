@@ -1,5 +1,5 @@
 import { Package } from '../types/Package';
-import { PackageCard } from './PackageCard'; // Using dedicated package component
+import { ProductCard } from './ProductCard'; 
 import './ProductComponents.css';
 
 interface PackageListProps {
@@ -67,9 +67,9 @@ export const PackageList = ({
 
       <div id="package-grid" className="product-grid">
         {packages.map((pkg) => (
-          <PackageCard
+          <ProductCard
             key={pkg.id}
-            package={pkg}
+            product={pkg}
             onAddToCart={onAddToCart}
             linkPrefix={linkPrefix}
           />
@@ -78,4 +78,3 @@ export const PackageList = ({
     </div>
   );
 };
-
