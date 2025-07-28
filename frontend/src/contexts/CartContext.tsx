@@ -21,8 +21,6 @@ interface CartContextType {
   totalPrice: number;
   clearCart: () => void;
   cartReady: boolean;
-  removedItems: Array<{name: string, reason: string}>;
-  clearRemovedItems: () => void;
 }
 
 //? create the context with undefined as initial value
@@ -73,8 +71,7 @@ const cartAPI = {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to get cart');
-    const data = await response.json();
-    return data;
+    return response.json();
   },
 
   
@@ -133,7 +130,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Initialize with empty cart no matter what
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartReady, setCartReady] = useState(false);
-  const [removedItems, setRemovedItems] = useState<Array<{name: string, reason: string}>>([]);
 
   // Helper function to get product by ID
   const getProductById = async (productId: number): Promise<Product | null> => {
@@ -150,16 +146,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (isUserLoggedIn()) {
         try {
           const data = await cartAPI.getCart();
-          
-          // handle removed items notifications
-          if (data.removedItems && data.removedItems.length > 0) {
-            setRemovedItems(data.removedItems);
-            // show notification for removed items
-            data.removedItems.forEach((removedItem: any) => {
-              alert(`${removedItem.name} has been removed from your cart: ${removedItem.reason}`);
-            });
-          }
-          
           const cartItems = await Promise.all(
             data.cartItems.map(async (item: any) => {
               const product = await getProductById(item.product_id);
@@ -184,64 +170,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       } else {
         const savedCart = loadCartFromStorage();
-        
-                // For guest users, fetch real stock data for each product
-        const validCartItems = [];
-        const guestRemovedItems = [];
-        
-        for (const item of savedCart) {
-          try {
-            // Fetch current stock for this product
-            const product = await getProductById(item.id);
-            
-            if (!product) {
-              // Product doesn't exist, remove from cart
-              guestRemovedItems.push({ 
-                name: item.name, 
-                reason: "Product no longer available" 
-              });
-              continue;
-            }
-            
-            const currentStock = product.stock || 0;
-            
-            if (currentStock === 0) {
-              // Product is out of stock, remove from cart
-              guestRemovedItems.push({ 
-                name: item.name, 
-                reason: "Out of stock" 
-              });
-              continue;
-            }
-            
-            if (item.quantity > currentStock) {
-              // Adjust quantity to available stock
-              item.quantity = currentStock;
-              guestRemovedItems.push({ 
-                name: item.name, 
-                reason: `Quantity adjusted to ${currentStock} (available stock)` 
-              });
-            }
-            
-            validCartItems.push(item);
-          } catch (error) {
-            console.error(`Error checking stock for ${item.name}:`, error);
-            // If we can't check stock, keep the item as is
-            validCartItems.push(item);
-          }
-        }
-        
-        if (guestRemovedItems.length > 0) {
-          setRemovedItems(guestRemovedItems);
-          // Show notification for removed items
-          guestRemovedItems.forEach((removedItem) => {
-            alert(`${removedItem.name} has been adjusted in your cart: ${removedItem.reason}`);
-          });
-          // Save updated cart
-          saveCartToStorage(validCartItems);
-        }
-        
-        setItems(validCartItems);
+        setItems(savedCart);
         setCartReady(true); // ✅ local cart is ready
       }
     }
@@ -291,7 +220,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
           }
         });
     } else {
-      // Not logged in: use local state with real inventory check
+      // Not logged in: use local state with inventory check
+      // For guest users, we'll use a default stock of 10 (since we can't check real inventory)
+      const defaultStock = 10;
+      
       setItems(currentItems => {
         // For localStorage, we need to check if the same product with same size/color already exists
         const existingItem = currentItems.find(item => 
@@ -306,13 +238,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
         
         // Check if requested quantity exceeds available stock
-        const currentStock = product.stock || 0;
-        if (totalRequestedQuantity > currentStock) {
-          const maxCanAdd = Math.max(0, currentStock - (existingItem ? existingItem.quantity : 0));
+        if (totalRequestedQuantity > defaultStock) {
+          const maxCanAdd = Math.max(0, defaultStock - (existingItem ? existingItem.quantity : 0));
           if (maxCanAdd > 0) {
-            alert(`Sorry, only ${maxCanAdd} more of this item can be added to your cart. Available stock: ${currentStock}`);
+            alert(`Sorry, only ${maxCanAdd} more of this item can be added to your cart. Available stock: ${defaultStock}`);
           } else {
-            alert(`Sorry, this item is out of stock. Available stock: ${currentStock}`);
+            alert(`Sorry, this item is out of stock. Available stock: ${defaultStock}`);
           }
           return currentItems; // Don't update cart
         }
@@ -428,14 +359,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      // For guest users, check against real stock
-      const item = items.find(i => i.cartItemId === cartItemId);
-      if (item) {
-        const currentStock = item.stock || 0;
-        if (quantity > currentStock) {
-          alert(`Sorry, only ${currentStock} of this item are available. Available stock: ${currentStock}`);
-          return;
-        }
+      // For guest users, check against default stock
+      const defaultStock = 10;
+      if (quantity > defaultStock) {
+        alert(`Sorry, only ${defaultStock} of this item are available. Available stock: ${defaultStock}`);
+        return;
       }
       
       setItems(currentItems => {
@@ -496,11 +424,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Clear removed items notifications
-  const clearRemovedItems = () => {
-    setRemovedItems([]);
-  };
-
   return (
     <CartContext.Provider value={{
       items,
@@ -510,9 +433,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       totalItems,
       totalPrice,
       clearCart,
-      cartReady,
-      removedItems,
-      clearRemovedItems
+      cartReady
     }}>
       {children}
     </CartContext.Provider>

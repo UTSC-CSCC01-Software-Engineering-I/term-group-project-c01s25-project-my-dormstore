@@ -139,51 +139,7 @@ app.get("/cart", authenticateToken, async (req, res) => {
       "SELECT id, product_id, quantity, selected_size, selected_color, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
       [userId]
     );
-    
-    //check stock for each cart item and remove items with 0 stock
-    const cartItems = [];
-    const removedItems = [];
-    
-    for (const item of result.rows) {
-      const productResult = await pool.query(
-        "SELECT name, stock FROM products WHERE id = $1",
-        [item.product_id]
-      );
-      
-      if (productResult.rows.length === 0) {
-        // if product doesn't exist, remove from cart
-        await pool.query("DELETE FROM cart_items WHERE id = $1", [item.id]);
-        removedItems.push({ name: "Unknown Product", reason: "Product no longer available" });
-      } else {
-        const product = productResult.rows[0];
-        
-        if (product.stock === 0) {
-          // product is out of stock remove from cart
-          await pool.query("DELETE FROM cart_items WHERE id = $1", [item.id]);
-          removedItems.push({ name: product.name, reason: "Out of stock" });
-        } 
-        else if (item.quantity > product.stock) {
-          // quantity exceeds available stock, adjust quantity
-          await pool.query(
-            "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
-            [product.stock, item.id]
-          );
-          item.quantity = product.stock;
-          removedItems.push({ 
-            name: product.name, 
-            reason: `Quantity adjusted to ${product.stock} (available stock)` 
-          });
-        }
-          if (product.stock > 0) {
-          cartItems.push(item);
-        }
-      }
-    }
-    
-    res.json({ 
-      cartItems: cartItems,
-      removedItems: removedItems
-    });
+    res.json({ cartItems: result.rows });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to retrieve cart items" });
