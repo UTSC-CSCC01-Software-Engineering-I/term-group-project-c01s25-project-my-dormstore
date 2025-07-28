@@ -52,7 +52,7 @@ const CartCompatibilityWarning = ({ cartItems }) => {
 };
 
 export default function CartScreen() {
-  const { items, removeFromCart, updateQuantity, totalPrice, removedItems, clearRemovedItems } = useCart();
+  const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
@@ -64,30 +64,6 @@ export default function CartScreen() {
     <div className="cart-screen-container">
       <div className="cart-main">
         <h2 className="cart-title">My Cart</h2>
-        
-        {/* Display removed items notifications */}
-        {removedItems && removedItems.length > 0 && (
-          <div className="removed-items-notification">
-            <div className="notification-header">
-              <h3>Items Updated in Your Cart</h3>
-              <button 
-                className="dismiss-notification" 
-                onClick={clearRemovedItems}
-                title="Dismiss notification"
-              >
-                ×
-              </button>
-            </div>
-            <ul>
-              {removedItems.map((item, index) => (
-                <li key={index} className="removed-item">
-                  <span className="item-name">{item.name}</span>
-                  <span className="item-reason">{item.reason}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
         
         <CartCompatibilityWarning cartItems={items} />
         
