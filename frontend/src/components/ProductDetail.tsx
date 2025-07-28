@@ -33,7 +33,12 @@ export default function ProductDetail()  {
         if (isPackage) {
           // Fetch package details with included products
           const packageData = await packageService.getPackageDetails(Number(id))
-          setProduct(packageData)
+          // Ensure package is properly marked
+          setProduct({
+            ...packageData,
+            isPackage: true,
+            category: 'package'
+          })
           setPackageDetails(packageData)
         } else {
           const fetchedItem = await productService.getProductById(Number(id))

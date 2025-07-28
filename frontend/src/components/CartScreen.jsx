@@ -5,6 +5,7 @@ import { useCart } from "../contexts/CartContext.tsx";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUserBedSize } from "../utils/bedSizeHelper";
 import { Link } from "react-router-dom";
+import { RemovedItemsNotification } from "./RemovedItemsNotification";
 
 // Simple compatibility warning
 const CartCompatibilityWarning = ({ cartItems }) => {
@@ -52,7 +53,7 @@ const CartCompatibilityWarning = ({ cartItems }) => {
 };
 
 export default function CartScreen() {
-  const { items, removeFromCart, updateQuantity, totalPrice, removedItems, clearRemovedItems } = useCart();
+  const { items, removedItems, removeFromCart, updateQuantity, totalPrice, clearRemovedItems } = useCart();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
@@ -65,29 +66,10 @@ export default function CartScreen() {
       <div className="cart-main">
         <h2 className="cart-title">My Cart</h2>
         
-        {/* Display removed items notifications */}
-        {removedItems && removedItems.length > 0 && (
-          <div className="removed-items-notification">
-            <div className="notification-header">
-              <h3>Items Updated in Your Cart</h3>
-              <button 
-                className="dismiss-notification" 
-                onClick={clearRemovedItems}
-                title="Dismiss notification"
-              >
-                ×
-              </button>
-            </div>
-            <ul>
-              {removedItems.map((item, index) => (
-                <li key={index} className="removed-item">
-                  <span className="item-name">{item.name}</span>
-                  <span className="item-reason">{item.reason}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <RemovedItemsNotification 
+          removedItems={removedItems} 
+          onClose={clearRemovedItems} 
+        />
         
         <CartCompatibilityWarning cartItems={items} />
         
@@ -165,7 +147,7 @@ export default function CartScreen() {
           </div>
           <div className="summary-row">
             <span>Shipping</span>
-            <span>Free</span>
+            <span>Calculated at checkout</span>
           </div>
           <div className="summary-row">
             <span>Tax</span>

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from '../types/Product';
 import { productService } from '../services/productService';
+import { StockLimitPopup } from '../components/StockLimitPopup';
 
 // extend product type to include quantity for cart items
 interface CartItem extends Product {
@@ -9,19 +10,28 @@ interface CartItem extends Product {
   selectedSize?: string;
   selectedColor?: string;
   cartItemId?: string; // Unique identifier for cart operations
+  isPackage?: boolean; // Flag to distinguish packages from products
+}
+
+// Package cart item interface
+interface PackageCartItem {
+  id: number;
+  package_id: number;
+  quantity: number;
+  cartItemId?: string;
 }
 
 //? what our cart context will provide
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number, selectedSize?: string, selectedColor?: string) => void;
+  removedItems: Array<{ name: string; reason: string }>;
+  addToCart: (item: Product | any, quantity?: number, selectedSize?: string, selectedColor?: string) => void;
   removeFromCart: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   totalItems: number;
   totalPrice: number;
   clearCart: () => void;
   cartReady: boolean;
-  removedItems: Array<{name: string, reason: string}>;
   clearRemovedItems: () => void;
 }
 
@@ -73,8 +83,7 @@ const cartAPI = {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to get cart');
-    const data = await response.json();
-    return data;
+    return response.json();
   },
 
   
@@ -90,8 +99,7 @@ const cartAPI = {
       console.error('cartAPI.addItem error:', errorData);
       throw new Error(JSON.stringify(errorData));
     }
-    const data = await response.json();
-    return data;
+    return response.json();
   },
 
   // update quantity of a cart item
@@ -103,7 +111,9 @@ const cartAPI = {
     });
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(JSON.stringify(errorData));
+      const error = new Error(errorData.error || 'Failed to update item');
+      (error as any).errorData = errorData; // Attach error data for better handling
+      throw error;
     }
     return response.json();
   },
@@ -134,7 +144,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Initialize with empty cart no matter what
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartReady, setCartReady] = useState(false);
-  const [removedItems, setRemovedItems] = useState<Array<{name: string, reason: string}>>([]);
+  
+  // Stock limit popup state
+  const [stockPopup, setStockPopup] = useState({
+    isOpen: false,
+    message: '',
+    availableStock: undefined as number | undefined,
+    requestedQuantity: undefined as number | undefined
+  });
+
+  // Removed items state
+  const [removedItems, setRemovedItems] = useState<Array<{ name: string; reason: string }>>([]);
 
   // Helper function to get product by ID
   const getProductById = async (productId: number): Promise<Product | null> => {
@@ -161,27 +181,47 @@ export function CartProvider({ children }: { children: ReactNode }) {
         try {
           const data = await cartAPI.getCart();
           
-          // handle removed items notifications
+          // Handle removed items if any
           if (data.removedItems && data.removedItems.length > 0) {
             setRemovedItems(data.removedItems);
-            // show notification for removed items
-            data.removedItems.forEach((removedItem: any) => {
-              alert(`${removedItem.name} has been removed from your cart: ${removedItem.reason}`);
-            });
           }
           
           const cartItems = await Promise.all(
             data.cartItems.map(async (item: any) => {
-              const product = await getProductById(item.product_id);
-              if (product) {
-                return {
-                  ...product,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}` // Unique identifier for cart operations
-                };
+              if (item.item_type === 'package') {
+                // Handle package - fetch package data
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${item.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
+                      quantity: item.quantity,
+                      backendId: item.id,
+                      selectedSize: item.selected_size,
+                      selectedColor: item.selected_color,
+                      cartItemId: `backend_${item.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                // Handle product
+                const product = await getProductById(item.product_id);
+                if (product) {
+                  return {
+                    ...product,
+                    quantity: item.quantity,
+                    backendId: item.id,
+                    selectedSize: item.selected_size,
+                    selectedColor: item.selected_color,
+                    cartItemId: `backend_${item.id}` // Unique identifier for cart operations
+                  };
+                }
               }
               return null;
             })
@@ -194,158 +234,130 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       } else {
         const savedCart = loadCartFromStorage();
-        
-                // For guest users, fetch real stock data for each product
-        const validCartItems = [];
-        const guestRemovedItems = [];
-        
-        for (const item of savedCart) {
-          try {
-            // Fetch current stock for this product
-            const product = await getProductById(item.id);
-            
-            if (!product) {
-              // Product doesn't exist, remove from cart
-              guestRemovedItems.push({ 
-                name: item.name, 
-                reason: "Product no longer available" 
-              });
-              continue;
-            }
-            
-            const currentStock = product.stock || 0;
-            
-            if (currentStock === 0) {
-              // Product is out of stock, remove from cart
-              guestRemovedItems.push({ 
-                name: item.name, 
-                reason: "Out of stock" 
-              });
-              continue;
-            }
-            
-            if (item.quantity > currentStock) {
-              // Adjust quantity to available stock
-              item.quantity = currentStock;
-              guestRemovedItems.push({ 
-                name: item.name, 
-                reason: `Quantity adjusted to ${currentStock} (available stock)` 
-              });
-            }
-            
-            validCartItems.push(item);
-          } catch (error) {
-            console.error(`Error checking stock for ${item.name}:`, error);
-            // If we can't check stock, keep the item as is
-            validCartItems.push(item);
-          }
-        }
-        
-        if (guestRemovedItems.length > 0) {
-          setRemovedItems(guestRemovedItems);
-          // Show notification for removed items
-          guestRemovedItems.forEach((removedItem) => {
-            alert(`${removedItem.name} has been adjusted in your cart: ${removedItem.reason}`);
-          });
-          // Save updated cart
-          saveCartToStorage(validCartItems);
-        }
-        
-        setItems(validCartItems);
+        setItems(savedCart);
         setCartReady(true); // ✅ local cart is ready
       }
     }
     loadCart();
   }, []);
 
-  const addToCart = (product: Product, quantity: number = 1, selectedSize?: string, selectedColor?: string) => {
+  const addToCart = (item: Product | any, quantity: number = 1, selectedSize?: string, selectedColor?: string) => {
     if (isUserLoggedIn()) {
-      // use backend with size/color
-      cartAPI.addItem(product.id, quantity, selectedSize, selectedColor)
-        .then(() => cartAPI.getCart())
-        .then(async data => {
+      // Determine if it's a package or product
+      const isPackage = item.isPackage || item.category === 'package';
+      
+      // Use consistent error handling for both products and packages
+      const addItemToCart = async () => {
+        try {
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(
+              isPackage 
+                ? { package_id: item.id, quantity, selected_size: selectedSize, selected_color: selectedColor }
+                : { product_id: item.id, quantity, selected_size: selectedSize, selected_color: selectedColor }
+            )
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            const error = new Error(errorData.error || 'Failed to add item to cart');
+            (error as any).errorData = errorData; // Attach error data for better handling
+            throw error;
+          }
+
+          // Refresh cart after successful addition
+          const data = await cartAPI.getCart();
+          
+          // Handle removed items if any
+          if (data.removedItems && data.removedItems.length > 0) {
+            setRemovedItems(data.removedItems);
+          }
+          
           const cartItems = await Promise.all(
-            data.cartItems.map(async (item: any) => {
-              const prod = await getProductById(item.product_id);
-              if (prod) {
-                return {
-                  ...prod,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}`
-                };
+            data.cartItems.map(async (cartItem: any) => {
+              if (cartItem.item_type === 'package') {
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      price: parseFloat(packageData.price),
+                      quantity: cartItem.quantity,
+                      backendId: cartItem.id,
+                      selectedSize: cartItem.selected_size,
+                      selectedColor: cartItem.selected_color,
+                      cartItemId: `backend_${cartItem.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                const prod = await getProductById(cartItem.product_id);
+                if (prod) {
+                  return {
+                    ...prod,
+                    quantity: cartItem.quantity,
+                    backendId: cartItem.id,
+                    selectedSize: cartItem.selected_size,
+                    selectedColor: cartItem.selected_color,
+                    cartItemId: `backend_${cartItem.id}`
+                  };
+                }
               }
               return null;
             })
           );
           setItems(cartItems.filter(Boolean));
-        })
-        .catch((error) => {
-          // Handle inventory validation errors
-          if (error.message && error.message.includes('Insufficient stock')) {
-            try {
-              const errorData = JSON.parse(error.message);
-              if (errorData.maxCanAdd > 0) {
-                alert(`Sorry, only ${errorData.maxCanAdd} more of this item can be added to your cart. Available stock: ${errorData.availableStock}`);
-              } else {
-                alert(`Sorry, this item is out of stock. Available stock: ${errorData.availableStock}`);
-              }
-            } catch {
-              alert('Sorry, insufficient stock available for this item.');
-            }
+          alert('Item added to cart successfully!');
+        } catch (error: any) {
+          console.error('Error adding item to cart:', error);
+          
+          // Check if it's a stock limit error
+          if (error.message.includes('Insufficient stock') || error.message.includes('stock')) {
+            setStockPopup({
+              isOpen: true,
+              message: `Sorry, there's not enough stock available for this item.`,
+              availableStock: error.errorData?.availableStock,
+              requestedQuantity: error.errorData?.requestedQuantity
+            });
           } else {
-            // fallback
-            alert('Failed to add item to cart. Please try again.');
+            alert(error.message || 'Failed to add item to cart. Please try again.');
           }
-        });
+        }
+      };
+
+      addItemToCart();
     } else {
-      // Not logged in: use local state with real inventory check
+      // Not logged in: use local state
       setItems(currentItems => {
-        // For localStorage, we need to check if the same product with same size/color already exists
-        const existingItem = currentItems.find(item => 
-          item.id === product.id && 
-          item.selectedSize === selectedSize && 
-          item.selectedColor === selectedColor
+        const isPackage = item.isPackage || item.category === 'package';
+        const existingItem = currentItems.find(cartItem => 
+          cartItem.id === item.id && 
+          cartItem.selectedSize === selectedSize && 
+          cartItem.selectedColor === selectedColor &&
+          cartItem.isPackage === isPackage
         );
-        
-        let totalRequestedQuantity = quantity;
-        if (existingItem) {
-          totalRequestedQuantity += existingItem.quantity;
-        }
-        
-        // Check if requested quantity exceeds available stock
-        const currentStock = product.stock || 0;
-        if (totalRequestedQuantity > currentStock) {
-          const maxCanAdd = Math.max(0, currentStock - (existingItem ? existingItem.quantity : 0));
-          if (maxCanAdd > 0) {
-            alert(`Sorry, only ${maxCanAdd} more of this item can be added to your cart. Available stock: ${currentStock}`);
-          } else {
-            alert(`Sorry, this item is out of stock. Available stock: ${currentStock}`);
-          }
-          return currentItems; // Don't update cart
-        }
         
         let newItems;
         if (existingItem) {
-          // if exists increase quantity by the specified amount
-          newItems = currentItems.map(item =>
-            (item.id === product.id && 
-             item.selectedSize === selectedSize && 
-             item.selectedColor === selectedColor)
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
+          newItems = currentItems.map(cartItem =>
+            cartItem.cartItemId === existingItem.cartItemId
+              ? { ...cartItem, quantity: cartItem.quantity + quantity }
+              : cartItem
           );
         } else {
-          // new item - create unique cartItemId for localStorage
-          const cartItemId = `local_${product.id}_${selectedSize || 'nosize'}_${selectedColor || 'nocolor'}_${Date.now()}`;
-          newItems = [...currentItems, { ...product, quantity, selectedSize, selectedColor, cartItemId }];
+          const cartItemId = `local_${item.id}_${selectedSize || 'nosize'}_${selectedColor || 'nocolor'}_${Date.now()}`;
+          newItems = [...currentItems, { ...item, quantity, selectedSize, selectedColor, isPackage, cartItemId }];
         }
-        // Save to localStorage
         saveCartToStorage(newItems);
         return newItems;
       });
+      alert('Item added to cart successfully!');
     }
   };
 
@@ -356,18 +368,45 @@ export function CartProvider({ children }: { children: ReactNode }) {
       cartAPI.removeItem(backendId)
         .then(() => cartAPI.getCart())
         .then(async data => {
+          // Handle removed items if any
+          if (data.removedItems && data.removedItems.length > 0) {
+            setRemovedItems(data.removedItems);
+          }
+          
           const cartItems = await Promise.all(
-            data.cartItems.map(async (item: any) => {
-              const prod = await getProductById(item.product_id);
-              if (prod) {
-                return {
-                  ...prod,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}`
-                };
+            data.cartItems.map(async (cartItem: any) => {
+              if (cartItem.item_type === 'package') {
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
+                      quantity: cartItem.quantity,
+                      backendId: cartItem.id,
+                      selectedSize: cartItem.selected_size,
+                      selectedColor: cartItem.selected_color,
+                      cartItemId: `backend_${cartItem.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                const prod = await getProductById(cartItem.product_id);
+                if (prod) {
+                  return {
+                    ...prod,
+                    quantity: cartItem.quantity,
+                    backendId: cartItem.id,
+                    selectedSize: cartItem.selected_size,
+                    selectedColor: cartItem.selected_color,
+                    cartItemId: `backend_${cartItem.id}`
+                  };
+                }
               }
               return null;
             })
@@ -393,25 +432,50 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // find the backend cart item id for this cartItemId
       const item = items.find(i => i.cartItemId === cartItemId);
       if (!item || !item.backendId) return;
-      if (quantity < 1) {
-        removeFromCart(cartItemId);
-        return;
-      }
+      
+      // Let backend handle quantity = 0 (auto-delete)
       cartAPI.updateItem(item.backendId, quantity)
         .then(() => cartAPI.getCart())
         .then(async data => {
+          // Handle removed items if any
+          if (data.removedItems && data.removedItems.length > 0) {
+            setRemovedItems(data.removedItems);
+          }
+          
           const cartItems = await Promise.all(
-            data.cartItems.map(async (item: any) => {
-              const prod = await getProductById(item.product_id);
-              if (prod) {
-                return {
-                  ...prod,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}`
-                };
+            data.cartItems.map(async (cartItem: any) => {
+              if (cartItem.item_type === 'package') {
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
+                      quantity: cartItem.quantity,
+                      backendId: cartItem.id,
+                      selectedSize: cartItem.selected_size,
+                      selectedColor: cartItem.selected_color,
+                      cartItemId: `backend_${cartItem.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                const prod = await getProductById(cartItem.product_id);
+                if (prod) {
+                  return {
+                    ...prod,
+                    quantity: cartItem.quantity,
+                    backendId: cartItem.id,
+                    selectedSize: cartItem.selected_size,
+                    selectedColor: cartItem.selected_color,
+                    cartItemId: `backend_${cartItem.id}`
+                  };
+                }
               }
               return null;
             })
@@ -419,14 +483,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
           setItems(cartItems.filter(Boolean));
         })
         .catch((error) => {
-          // Handle inventory validation errors
-          if (error.message && error.message.includes('Insufficient stock')) {
-            try {
-              const errorData = JSON.parse(error.message);
-              alert(`Sorry, only ${errorData.maxCanAdd} of this item are available. Available stock: ${errorData.availableStock}`);
-            } catch {
-              alert('Sorry, insufficient stock available for this item.');
-            }
+          console.error('Error updating quantity:', error);
+          
+          // Check if it's a stock limit error
+          if (error.message && (error.message.includes('Insufficient stock') || error.message.includes('stock'))) {
+            setStockPopup({
+              isOpen: true,
+              message: `Sorry, there's not enough stock available to update the quantity.`,
+              availableStock: error.errorData?.availableStock,
+              requestedQuantity: quantity
+            });
           }
         });
     } else {
@@ -434,17 +500,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeFromCart(cartItemId);
         return;
       }
-      
-      // For guest users, check against real stock
-      const item = items.find(i => i.cartItemId === cartItemId);
-      if (item) {
-        const currentStock = item.stock || 0;
-        if (quantity > currentStock) {
-          alert(`Sorry, only ${currentStock} of this item are available. Available stock: ${currentStock}`);
-          return;
-        }
-      }
-      
       setItems(currentItems => {
         const newItems = currentItems.map(item =>
           item.cartItemId === cartItemId
@@ -467,6 +522,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     0
   );
 
+
+
   //clear cart
   const clearCart = () => {
     if (isUserLoggedIn()) {
@@ -474,17 +531,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .then(() => cartAPI.getCart())
         .then(async data => {
           const cartItems = await Promise.all(
-            data.cartItems.map(async (item: any) => {
-              const prod = await getProductById(item.product_id);
-              if (prod) {
-                return {
-                  ...prod,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}`
-                };
+            data.cartItems.map(async (cartItem: any) => {
+              if (cartItem.item_type === 'package') {
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      price: parseFloat(packageData.price), // Convert string price to number
+                      quantity: cartItem.quantity,
+                      backendId: cartItem.id,
+                      selectedSize: cartItem.selected_size,
+                      selectedColor: cartItem.selected_color,
+                      cartItemId: `backend_${cartItem.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                const prod = await getProductById(cartItem.product_id);
+                if (prod) {
+                  return {
+                    ...prod,
+                    quantity: cartItem.quantity,
+                    backendId: cartItem.id,
+                    selectedSize: cartItem.selected_size,
+                    selectedColor: cartItem.selected_color,
+                    cartItemId: `backend_${cartItem.id}`
+                  };
+                }
               }
               return null;
             })
@@ -501,6 +580,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return [];
       });
     }
+
   };
 
   // Clear removed items notifications
@@ -511,6 +591,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   return (
     <CartContext.Provider value={{
       items,
+      removedItems,
       addToCart,
       removeFromCart,
       updateQuantity,
@@ -518,10 +599,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       totalPrice,
       clearCart,
       cartReady,
-      removedItems,
       clearRemovedItems
     }}>
       {children}
+      <StockLimitPopup
+        isOpen={stockPopup.isOpen}
+        onClose={() => setStockPopup({ ...stockPopup, isOpen: false })}
+        message={stockPopup.message}
+        availableStock={stockPopup.availableStock}
+        requestedQuantity={stockPopup.requestedQuantity}
+      />
     </CartContext.Provider>
   );
 }
