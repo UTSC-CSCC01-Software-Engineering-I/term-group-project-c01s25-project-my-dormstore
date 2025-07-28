@@ -9,12 +9,21 @@ interface CartItem extends Product {
   selectedSize?: string;
   selectedColor?: string;
   cartItemId?: string; // Unique identifier for cart operations
+  isPackage?: boolean; // Flag to distinguish packages from products
+}
+
+// Package cart item interface
+interface PackageCartItem {
+  id: number;
+  package_id: number;
+  quantity: number;
+  cartItemId?: string;
 }
 
 //? what our cart context will provide
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number, selectedSize?: string, selectedColor?: string) => void;
+  addToCart: (item: Product | any, quantity?: number, selectedSize?: string, selectedColor?: string) => void;
   removeFromCart: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   totalItems: number;
@@ -142,16 +151,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const data = await cartAPI.getCart();
           const cartItems = await Promise.all(
             data.cartItems.map(async (item: any) => {
-              const product = await getProductById(item.product_id);
-              if (product) {
-                return {
-                  ...product,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}` // Unique identifier for cart operations
-                };
+              if (item.item_type === 'package') {
+                // Handle package - fetch package data
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${item.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      quantity: item.quantity,
+                      backendId: item.id,
+                      cartItemId: `backend_${item.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                // Handle product
+                const product = await getProductById(item.product_id);
+                if (product) {
+                  return {
+                    ...product,
+                    quantity: item.quantity,
+                    backendId: item.id,
+                    selectedSize: item.selected_size,
+                    selectedColor: item.selected_color,
+                    cartItemId: `backend_${item.id}` // Unique identifier for cart operations
+                  };
+                }
               }
               return null;
             })
@@ -171,24 +201,51 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loadCart();
   }, []);
 
-  const addToCart = (product: Product, quantity: number = 1, selectedSize?: string, selectedColor?: string) => {
+  const addToCart = (item: Product | any, quantity: number = 1, selectedSize?: string, selectedColor?: string) => {
     if (isUserLoggedIn()) {
-      // use backend with size/color
-      cartAPI.addItem(product.id, quantity, selectedSize, selectedColor)
+      // Determine if it's a package or product
+      const isPackage = item.isPackage || item.category === 'package';
+      
+      if (isPackage) {
+        // Handle package - send package_id instead of product_id
+        fetch(`${process.env.REACT_APP_API_URL}/cart`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ package_id: item.id, quantity })
+        })
         .then(() => cartAPI.getCart())
         .then(async data => {
           const cartItems = await Promise.all(
-            data.cartItems.map(async (item: any) => {
-              const prod = await getProductById(item.product_id);
-              if (prod) {
-                return {
-                  ...prod,
-                  quantity: item.quantity,
-                  backendId: item.id,
-                  selectedSize: item.selected_size,
-                  selectedColor: item.selected_color,
-                  cartItemId: `backend_${item.id}`
-                };
+            data.cartItems.map(async (cartItem: any) => {
+              if (cartItem.item_type === 'package') {
+                try {
+                  const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
+                  if (packageResponse.ok) {
+                    const packageData = await packageResponse.json();
+                    return {
+                      ...packageData,
+                      quantity: cartItem.quantity,
+                      backendId: cartItem.id,
+                      cartItemId: `backend_${cartItem.id}`,
+                      isPackage: true
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching package:', error);
+                }
+                return null;
+              } else {
+                const prod = await getProductById(cartItem.product_id);
+                if (prod) {
+                  return {
+                    ...prod,
+                    quantity: cartItem.quantity,
+                    backendId: cartItem.id,
+                    selectedSize: cartItem.selected_size,
+                    selectedColor: cartItem.selected_color,
+                    cartItemId: `backend_${cartItem.id}`
+                  };
+                }
               }
               return null;
             })
@@ -196,39 +253,77 @@ export function CartProvider({ children }: { children: ReactNode }) {
           setItems(cartItems.filter(Boolean));
         })
         .catch(() => {
-          // fallback
-          alert('Failed to add item to cart. Please try again.');
+          alert('Failed to add package to cart. Please try again.');
         });
+      } else {
+        // Handle product - use existing logic
+        cartAPI.addItem(item.id, quantity, selectedSize, selectedColor)
+          .then(() => cartAPI.getCart())
+          .then(async data => {
+            const cartItems = await Promise.all(
+              data.cartItems.map(async (cartItem: any) => {
+                if (cartItem.item_type === 'package') {
+                  try {
+                    const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
+                    if (packageResponse.ok) {
+                      const packageData = await packageResponse.json();
+                      return {
+                        ...packageData,
+                        quantity: cartItem.quantity,
+                        backendId: cartItem.id,
+                        cartItemId: `backend_${cartItem.id}`,
+                        isPackage: true
+                      };
+                    }
+                  } catch (error) {
+                    console.error('Error fetching package:', error);
+                  }
+                  return null;
+                } else {
+                  const prod = await getProductById(cartItem.product_id);
+                  if (prod) {
+                    return {
+                      ...prod,
+                      quantity: cartItem.quantity,
+                      backendId: cartItem.id,
+                      selectedSize: cartItem.selected_size,
+                      selectedColor: cartItem.selected_color,
+                      cartItemId: `backend_${cartItem.id}`
+                    };
+                  }
+                }
+                return null;
+              })
+            );
+            setItems(cartItems.filter(Boolean));
+          })
+          .catch(() => {
+            alert('Failed to add item to cart. Please try again.');
+          });
+      }
     } else {
       // Not logged in: use local state
       setItems(currentItems => {
-        // For localStorage, we need to check if the same product with same size/color already exists
-        const existingItem = currentItems.find(item => 
-          item.id === product.id && 
-          item.selectedSize === selectedSize && 
-          item.selectedColor === selectedColor
+        const isPackage = item.isPackage || item.category === 'package';
+        const existingItem = currentItems.find(cartItem => 
+          cartItem.id === item.id && 
+          cartItem.selectedSize === selectedSize && 
+          cartItem.selectedColor === selectedColor &&
+          cartItem.isPackage === isPackage
         );
         
         let newItems;
         if (existingItem) {
-          // if exists increase quantity by the specified amount
-          newItems = currentItems.map(item =>
-            (item.id === product.id && 
-             item.selectedSize === selectedSize && 
-             item.selectedColor === selectedColor)
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
+          newItems = currentItems.map(cartItem =>
+            cartItem.cartItemId === existingItem.cartItemId
+              ? { ...cartItem, quantity: cartItem.quantity + quantity }
+              : cartItem
           );
-          console.log('[CartContext] Guest addToCart: Increased quantity for existing item', newItems);
         } else {
-          // new item - create unique cartItemId for localStorage
-          const cartItemId = `local_${product.id}_${selectedSize || 'nosize'}_${selectedColor || 'nocolor'}_${Date.now()}`;
-          newItems = [...currentItems, { ...product, quantity, selectedSize, selectedColor, cartItemId }];
-          console.log('[CartContext] Guest addToCart: Added new item', newItems);
+          const cartItemId = `local_${item.id}_${selectedSize || 'nosize'}_${selectedColor || 'nocolor'}_${Date.now()}`;
+          newItems = [...currentItems, { ...item, quantity, selectedSize, selectedColor, isPackage, cartItemId }];
         }
-        // Save to localStorage
         saveCartToStorage(newItems);
-        console.log('[CartContext] Guest cart after add:', newItems);
         return newItems;
       });
     }
@@ -333,6 +428,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     0
   );
 
+
+
   //clear cart
   const clearCart = () => {
     if (isUserLoggedIn()) {
@@ -367,6 +464,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return [];
       });
     }
+
   };
 
   return (

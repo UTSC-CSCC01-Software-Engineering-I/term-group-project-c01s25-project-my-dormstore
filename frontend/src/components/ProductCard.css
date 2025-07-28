@@ -97,6 +97,19 @@
   margin-top: auto;
 }
 
+.product-price-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.product-inventory {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 400;
+}
+
 .cart-icon-btn {
   background: none;
   border: none;

@@ -1,5 +1,5 @@
 import { Package } from '../types/Package';
-import { ProductCard } from './ProductCard'; // Reusing component
+import { PackageCard } from './PackageCard'; // Using dedicated package component
 import './ProductComponents.css';
 
 interface PackageListProps {
@@ -67,9 +67,9 @@ export const PackageList = ({
 
       <div id="package-grid" className="product-grid">
         {packages.map((pkg) => (
-          <ProductCard
+          <PackageCard
             key={pkg.id}
-            product={pkg}
+            package={pkg}
             onAddToCart={onAddToCart}
             linkPrefix={linkPrefix}
           />
