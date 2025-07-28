@@ -1051,6 +1051,13 @@ app.post("/api/orders", async (req, res) => {
           [orderId, item.package_id, item.quantity]
         );
 
+        await client.query(
+          `UPDATE packages 
+           SET stock = stock - $1, 
+               updated_at = CURRENT_TIMESTAMP 
+           WHERE id = $2`,
+          [item.quantity, item.package_id]
+        );
       }
     }
 
