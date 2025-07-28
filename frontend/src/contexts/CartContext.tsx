@@ -203,15 +203,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (item: Product | any, quantity: number = 1, selectedSize?: string, selectedColor?: string) => {
     if (isUserLoggedIn()) {
+      console.log("🧪 item passed to addToCart:", item);
       // Determine if it's a package or product
-      const isPackage = item.isPackage || item.category === 'package';
+      const isPackage = true;
       
       if (isPackage) {
         // Handle package - send package_id instead of product_id
         fetch(`${process.env.REACT_APP_API_URL}/cart`, {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: JSON.stringify({ package_id: item.id, quantity })
+          body: JSON.stringify({ package_id: item.id, quantity, item_type: 'package' })
         })
         .then(() => cartAPI.getCart())
         .then(async data => {
@@ -227,7 +228,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
                       cartItemId: `backend_${cartItem.id}`,
-                      isPackage: true
+                      isPackage: true,
+                      item_type: 'package'
                     };
                   }
                 } catch (error) {
@@ -243,7 +245,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     backendId: cartItem.id,
                     selectedSize: cartItem.selected_size,
                     selectedColor: cartItem.selected_color,
-                    cartItemId: `backend_${cartItem.id}`
+                    cartItemId: `backend_${cartItem.id}`,
+                    item_type: 'product' 
                   };
                 }
               }
@@ -272,7 +275,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                         quantity: cartItem.quantity,
                         backendId: cartItem.id,
                         cartItemId: `backend_${cartItem.id}`,
-                        isPackage: true
+                        isPackage: true,
+                        item_type: 'package'
                       };
                     }
                   } catch (error) {
@@ -288,7 +292,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       backendId: cartItem.id,
                       selectedSize: cartItem.selected_size,
                       selectedColor: cartItem.selected_color,
-                      cartItemId: `backend_${cartItem.id}`
+                      cartItemId: `backend_${cartItem.id}`,
+                      item_type: 'product'
                     };
                   }
                 }

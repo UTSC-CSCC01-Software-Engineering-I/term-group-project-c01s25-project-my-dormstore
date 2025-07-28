@@ -999,7 +999,7 @@ app.post("/api/orders", async (req, res) => {
       console.log('Guest checkout - using cart items from request body:', cartItems.length, 'items');
     }
 
-    
+    console.log("Cart items received:", cartItems);
     // Create order items and reduce inventory
     for (const item of cartItems) {
       if (item.item_type === 'product') {
@@ -1119,7 +1119,7 @@ app.post("/api/orders", async (req, res) => {
     await client.query('ROLLBACK');
     console.error("Order creation error:", error);
     console.error("Request body:", req.body);
-    res.status(500).json({ error: "Failed to create order" });
+    res.status(500).json({ error: error.message, stack: error.stack });
   } finally {
     client.release();
   }
