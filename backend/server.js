@@ -648,11 +648,9 @@ app.get("/api/products", async (req, res) => {
       query = "SELECT id, name, price, description, rating, image_url, category, size, color, stock, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
       params = [category];
     } else {
-<<<<<<< HEAD
-              query = "SELECT id, name, price, description, rating, image_url, category, size, color, stock, created_at, updated_at FROM products ORDER BY name";
-=======
+
       query = "SELECT id, name, price, description, rating, image_url, category, size, color, stock, created_at, updated_at FROM products ORDER BY name";
->>>>>>> c39b07a692a26c821f5883b6c0d944ca1ca89dde
+
       params = [];
     }
     
@@ -1050,14 +1048,7 @@ app.post("/api/orders", async (req, res) => {
           ) VALUES ($1, $2, $3)`,
           [orderId, item.package_id, item.quantity]
         );
-<<<<<<< HEAD
-        
-        // Package stock will be reduced automatically by the trigger
-=======
-        console.log("Package cart item:", item);
-        console.log("Fetched package from DB:", packageRes.rows[0]);
-        // Package inventory will be reduced automatically by the trigger
->>>>>>> c39b07a692a26c821f5883b6c0d944ca1ca89dde
+
       }
     }
 

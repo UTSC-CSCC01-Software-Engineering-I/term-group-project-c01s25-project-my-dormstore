@@ -9,11 +9,7 @@ CREATE TABLE IF NOT EXISTS products (
     size TEXT,
     color TEXT,
     image_url TEXT,
-<<<<<<< HEAD
     stock INTEGER DEFAULT 100, -- Add stock field with default 100
-=======
-    stock INTEGER DEFAULT 100, -- Add inventory field with default 100
->>>>>>> c39b07a692a26c821f5883b6c0d944ca1ca89dde
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
