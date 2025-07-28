@@ -11,12 +11,20 @@ export const packageService = {
       }
       const data = await response.json();
       
-      // Transform API data to match frontend expectations
       return data.packages.map((pkg: any) => ({
-        ...pkg,
+        id: pkg.id,
+        name: pkg.name,
         price: parseFloat(pkg.price),
+        category: pkg.category,
+        description: pkg.description,
         rating: parseFloat(pkg.rating),
         image: pkg.image_url,
+        image_url: pkg.image_url,
+        size: pkg.size,
+        color: pkg.color,
+        stock: pkg.stock || 0,
+        created_at: pkg.created_at,
+        updated_at: pkg.updated_at,
         isPackage: true
       }));
     } catch (error) {
@@ -38,11 +46,20 @@ export const packageService = {
       
       // Transform API data to match frontend expectations
       const pkg = {
-        ...data,
+        id: data.id,
+        name: data.name,
         price: parseFloat(data.price),
+        category: data.category,
+        description: data.description,
         rating: parseFloat(data.rating),
         image: data.image_url,
-        isPackage: true 
+        image_url: data.image_url,
+        size: data.size,
+        color: data.color,
+        stock: data.stock || 0,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        isPackage: true
       };
       
       return pkg;
@@ -66,10 +83,19 @@ export const packageService = {
       );
       
       return filteredPackages.map((pkg: any) => ({
-        ...pkg,
+        id: pkg.id,
+        name: pkg.name,
         price: parseFloat(pkg.price),
+        category: pkg.category,
+        description: pkg.description,
         rating: parseFloat(pkg.rating),
         image: pkg.image_url,
+        image_url: pkg.image_url,
+        size: pkg.size,
+        color: pkg.color,
+        stock: pkg.stock || 0,
+        created_at: pkg.created_at,
+        updated_at: pkg.updated_at,
         isPackage: true
       }));
     } catch (error) {
@@ -82,20 +108,10 @@ export const packageService = {
     try {
       const response = await fetch(`${API_BASE_URL}/api/packages/${id}/details`);
       if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
         throw new Error('Failed to fetch package details');
       }
       const data = await response.json();
-      
-      return {
-        ...data.package,
-        price: parseFloat(data.package.price),
-        rating: parseFloat(data.package.rating),
-        image: data.package.image_url,
-        isPackage: true 
-      };
+      return data;
     } catch (error) {
       console.error('Error fetching package details:', error);
       throw error;

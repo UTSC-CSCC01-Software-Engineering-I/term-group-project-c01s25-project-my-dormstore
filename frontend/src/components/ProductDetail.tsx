@@ -33,7 +33,24 @@ export default function ProductDetail()  {
         if (isPackage) {
           // Fetch package details with included products
           const packageData = await packageService.getPackageDetails(Number(id))
-          setProduct(packageData)
+          // Transform package data to match Product interface
+          const transformedPackage = {
+            id: packageData.package.id,
+            name: packageData.package.name,
+            price: parseFloat(packageData.package.price),
+            category: 'package',
+            description: packageData.package.description,
+            rating: parseFloat(packageData.package.rating),
+            image: packageData.package.image_url,
+            image_url: packageData.package.image_url,
+            size: packageData.package.size,
+            color: packageData.package.color,
+            stock: packageData.package.stock || 0,
+            created_at: packageData.package.created_at,
+            updated_at: packageData.package.updated_at,
+            isPackage: true
+          }
+          setProduct(transformedPackage)
           setPackageDetails(packageData)
         } else {
           const fetchedItem = await productService.getProductById(Number(id))
@@ -76,6 +93,10 @@ export default function ProductDetail()  {
   const hasColors = !!product.color && product.color.split(',').length > 0 && product.color.split(',')[0].trim() !== '';
 
   const handleAddToCart = () => {
+    console.log('handleAddToCart clicked');
+    console.log('Product:', product);
+    console.log('Is Package:', isPackage);
+    
     if (product) {
       // Check if size/color selection is required
       const availableSizes = product.size ? product.size.split(',') : [];
@@ -91,7 +112,10 @@ export default function ProductDetail()  {
       // Determine final size and color
       const finalSize = selectedSize || (availableSizes.length === 1 ? availableSizes[0] : undefined);
       const finalColor = selectedColor || (availableColors.length === 1 ? availableColors[0] : undefined);
+      console.log('Calling addToCart with:', { product, quantity, finalSize, finalColor });
       addToCart(product, quantity, finalSize, finalColor);
+    } else {
+      console.log('Product is null');
     }
   }
 
@@ -143,7 +167,7 @@ export default function ProductDetail()  {
         </div>
 
         <p className="product-price-p">
-          ${product.price.toFixed(2)} CAD
+          ${(product.price || 0).toFixed(2)} CAD
         </p>
 
         {product.shippingInfo && (
@@ -198,8 +222,13 @@ export default function ProductDetail()  {
             <span>{quantity}</span>
             <button onClick={() => setQuantity(q => q + 1)}>+</button>
           </div>
-          <button onClick={handleAddToCart}
-          className="add-to-cart-button">
+          <button 
+            onClick={() => {
+              console.log('Add to Cart button clicked');
+              handleAddToCart();
+            }}
+            className="add-to-cart-button"
+          >
             Add To Cart
           </button>
         </div>
@@ -233,7 +262,7 @@ export default function ProductDetail()  {
                 >
                   <div className="included-product-info">
                     <h3 className="included-product-name">{includedProduct.name}</h3>
-                    <p className="included-product-price">${parseFloat(includedProduct.price).toFixed(2)} CAD</p>
+                    <p className="included-product-price">${(parseFloat(includedProduct.price) || 0).toFixed(2)} CAD</p>
                     <p className="included-product-quantity">Quantity: {includedProduct.quantity}</p>
                     <p className="included-product-description">{includedProduct.description}</p>
                   </div>

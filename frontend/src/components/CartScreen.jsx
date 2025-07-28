@@ -5,6 +5,7 @@ import { useCart } from "../contexts/CartContext.tsx";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUserBedSize } from "../utils/bedSizeHelper";
 import { Link } from "react-router-dom";
+import { RemovedItemsNotification } from "./RemovedItemsNotification";
 
 // Simple compatibility warning
 const CartCompatibilityWarning = ({ cartItems }) => {
@@ -52,7 +53,7 @@ const CartCompatibilityWarning = ({ cartItems }) => {
 };
 
 export default function CartScreen() {
-  const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { items, removedItems, removeFromCart, updateQuantity, totalPrice, clearRemovedItems } = useCart();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
@@ -64,6 +65,11 @@ export default function CartScreen() {
     <div className="cart-screen-container">
       <div className="cart-main">
         <h2 className="cart-title">My Cart</h2>
+        
+        <RemovedItemsNotification 
+          removedItems={removedItems} 
+          onClose={clearRemovedItems} 
+        />
         
         <CartCompatibilityWarning cartItems={items} />
         

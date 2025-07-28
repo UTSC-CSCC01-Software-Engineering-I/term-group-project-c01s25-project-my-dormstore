@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from '../types/Product';
 import { productService } from '../services/productService';
+import { StockLimitPopup } from '../components/StockLimitPopup';
 
 // extend product type to include quantity for cart items
 interface CartItem extends Product {
@@ -23,6 +24,7 @@ interface PackageCartItem {
 //? what our cart context will provide
 interface CartContextType {
   items: CartItem[];
+  removedItems: Array<{ name: string; reason: string }>;
   addToCart: (item: Product | any, quantity?: number, selectedSize?: string, selectedColor?: string) => void;
   removeFromCart: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
@@ -30,6 +32,7 @@ interface CartContextType {
   totalPrice: number;
   clearCart: () => void;
   cartReady: boolean;
+  clearRemovedItems: () => void;
 }
 
 //? create the context with undefined as initial value
@@ -87,12 +90,15 @@ const cartAPI = {
   // add item to backend cart
   async addItem(product_id: number, quantity: number = 1, selected_size?: string, selected_color?: string) {
     const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
-
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ product_id, quantity, selected_size, selected_color })
     });
-    if (!response.ok) throw new Error('Failed to add item');
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('cartAPI.addItem error:', errorData);
+      throw new Error(JSON.stringify(errorData));
+    }
     return response.json();
   },
 
@@ -103,7 +109,12 @@ const cartAPI = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ quantity })
     });
-    if (!response.ok) throw new Error('Failed to update item');
+    if (!response.ok) {
+      const errorData = await response.json();
+      const error = new Error(errorData.error || 'Failed to update item');
+      (error as any).errorData = errorData; // Attach error data for better handling
+      throw error;
+    }
     return response.json();
   },
 
@@ -133,13 +144,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Initialize with empty cart no matter what
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartReady, setCartReady] = useState(false);
+  
+  // Stock limit popup state
+  const [stockPopup, setStockPopup] = useState({
+    isOpen: false,
+    message: '',
+    availableStock: undefined as number | undefined,
+    requestedQuantity: undefined as number | undefined
+  });
+
+  // Removed items state
+  const [removedItems, setRemovedItems] = useState<Array<{ name: string; reason: string }>>([]);
 
   // Helper function to get product by ID
   const getProductById = async (productId: number): Promise<Product | null> => {
     try {
-      return await productService.getProductById(productId);
+      // First try products
+      const product = await productService.getProductById(productId);
+      if (product) {
+        return product;
+      }
+      
+      // If not found, try packages
+      const packageService = (await import('../services/packageService')).packageService;
+      const pkg = await packageService.getPackageById(productId);
+      return pkg;
     } catch (error) {
-      console.error('Error fetching product:', error);
+      console.error('Error fetching product/package:', error);
       return null;
     }
   };
@@ -149,6 +180,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (isUserLoggedIn()) {
         try {
           const data = await cartAPI.getCart();
+          
+          // Handle removed items if any
+          if (data.removedItems && data.removedItems.length > 0) {
+            setRemovedItems(data.removedItems);
+          }
+          
           const cartItems = await Promise.all(
             data.cartItems.map(async (item: any) => {
               if (item.item_type === 'package') {
@@ -162,6 +199,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       price: parseFloat(packageData.price), // Convert string price to number
                       quantity: item.quantity,
                       backendId: item.id,
+                      selectedSize: item.selected_size,
+                      selectedColor: item.selected_color,
                       cartItemId: `backend_${item.id}`,
                       isPackage: true,
                       image: packageData.image_url
@@ -206,25 +245,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = (item: Product | any, quantity: number = 1, selectedSize?: string, selectedColor?: string) => {
     if (isUserLoggedIn()) {
       // Determine if it's a package or product
-      const isPackage = item.isPackage || ['package', 'living', 'caring'].includes(item.category);
+      const isPackage = item.isPackage || item.category === 'package';
+      
+      // Use consistent error handling for both products and packages
+      const addItemToCart = async () => {
+        try {
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(
+              isPackage 
+                ? { package_id: item.id, quantity, selected_size: selectedSize, selected_color: selectedColor }
+                : { product_id: item.id, quantity, selected_size: selectedSize, selected_color: selectedColor }
+            )
+          });
 
+          if (!response.ok) {
+            const errorData = await response.json();
+            const error = new Error(errorData.error || 'Failed to add item to cart');
+            (error as any).errorData = errorData; // Attach error data for better handling
+            throw error;
+          }
 
-        console.log("🛒 ADDING TO CART:", {
-          id: item.id,
-          name: item.name,
-          category: item.category,
-          isPackage,
-        });
-
-      if (isPackage) {
-        // Handle package - send package_id instead of product_id
-        fetch(`${process.env.REACT_APP_API_URL}/cart`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ package_id: item.id, quantity })
-        })
-        .then(() => cartAPI.getCart())
-        .then(async data => {
+          // Refresh cart after successful addition
+          const data = await cartAPI.getCart();
+          
+          // Handle removed items if any
+          if (data.removedItems && data.removedItems.length > 0) {
+            setRemovedItems(data.removedItems);
+          }
           const cartItems = await Promise.all(
             data.cartItems.map(async (cartItem: any) => {
               if (cartItem.item_type === 'package') {
@@ -234,9 +283,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     const packageData = await packageResponse.json();
                     return {
                       ...packageData,
-                      price: parseFloat(packageData.price), // Convert string price to number
+                      price: parseFloat(packageData.price),
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
+                      selectedSize: cartItem.selected_size,
+                      selectedColor: cartItem.selected_color,
                       cartItemId: `backend_${cartItem.id}`,
                       isPackage: true,
                       image: packageData.image_url
@@ -263,58 +314,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
             })
           );
           setItems(cartItems.filter(Boolean));
-        })
-        .catch(() => {
-          alert('Failed to add package to cart. Please try again.');
-        });
-      } else {
-        // Handle product - use existing logic
-        cartAPI.addItem(item.id, quantity, selectedSize, selectedColor)
-          .then(() => cartAPI.getCart())
-          .then(async data => {
-            const cartItems = await Promise.all(
-              data.cartItems.map(async (cartItem: any) => {
-                if (cartItem.item_type === 'package') {
-                  try {
-                    const packageResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/packages/${cartItem.package_id}`);
-                    if (packageResponse.ok) {
-                      const packageData = await packageResponse.json();
-                      return {
-                      ...packageData,
-                      price: parseFloat(packageData.price), // Convert string price to number
-                      quantity: cartItem.quantity,
-                        backendId: cartItem.id,
-                        cartItemId: `backend_${cartItem.id}`,
-                        isPackage: true,
-                        image: packageData.image_url
-                      };
-                    }
-                  } catch (error) {
-                    console.error('Error fetching package:', error);
-                  }
-                  return null;
-                } else {
-                  const prod = await getProductById(cartItem.product_id);
-                  if (prod) {
-                    return {
-                      ...prod,
-                      quantity: cartItem.quantity,
-                      backendId: cartItem.id,
-                      selectedSize: cartItem.selected_size,
-                      selectedColor: cartItem.selected_color,
-                      cartItemId: `backend_${cartItem.id}`
-                    };
-                  }
-                }
-                return null;
-              })
-            );
-            setItems(cartItems.filter(Boolean));
-          })
-          .catch(() => {
-            alert('Failed to add item to cart. Please try again.');
-          });
-      }
+          alert('Item added to cart successfully!');
+        } catch (error: any) {
+          console.error('Error adding item to cart:', error);
+          
+          // Check if it's a stock limit error
+          if (error.message.includes('Insufficient stock') || error.message.includes('stock')) {
+            setStockPopup({
+              isOpen: true,
+              message: `Sorry, there's not enough stock available for this item.`,
+              availableStock: error.errorData?.availableStock,
+              requestedQuantity: error.errorData?.requestedQuantity
+            });
+          } else {
+            alert(error.message || 'Failed to add item to cart. Please try again.');
+          }
+        }
+      };
+
+      addItemToCart();
     } else {
       // Not logged in: use local state
       setItems(currentItems => {
@@ -340,6 +358,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         saveCartToStorage(newItems);
         return newItems;
       });
+      alert('Item added to cart successfully!');
     }
   };
 
@@ -350,6 +369,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       cartAPI.removeItem(backendId)
         .then(() => cartAPI.getCart())
         .then(async data => {
+          // Handle removed items if any
+          if (data.removedItems && data.removedItems.length > 0) {
+            setRemovedItems(data.removedItems);
+          }
+          
           const cartItems = await Promise.all(
             data.cartItems.map(async (cartItem: any) => {
               if (cartItem.item_type === 'package') {
@@ -362,6 +386,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       price: parseFloat(packageData.price), // Convert string price to number
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
+                      selectedSize: cartItem.selected_size,
+                      selectedColor: cartItem.selected_color,
                       cartItemId: `backend_${cartItem.id}`,
                       isPackage: true,
                       image: packageData.image_url
@@ -408,13 +434,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // find the backend cart item id for this cartItemId
       const item = items.find(i => i.cartItemId === cartItemId);
       if (!item || !item.backendId) return;
-      if (quantity < 1) {
-        removeFromCart(cartItemId);
-        return;
-      }
+      
+      // Let backend handle quantity = 0 (auto-delete)
       cartAPI.updateItem(item.backendId, quantity)
         .then(() => cartAPI.getCart())
         .then(async data => {
+          // Handle removed items if any
+          if (data.removedItems && data.removedItems.length > 0) {
+            setRemovedItems(data.removedItems);
+          }
+          
           const cartItems = await Promise.all(
             data.cartItems.map(async (cartItem: any) => {
               if (cartItem.item_type === 'package') {
@@ -427,6 +456,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       price: parseFloat(packageData.price), // Convert string price to number
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
+                      selectedSize: cartItem.selected_size,
+                      selectedColor: cartItem.selected_color,
                       cartItemId: `backend_${cartItem.id}`,
                       isPackage: true,
                       image: packageData.image_url
@@ -454,8 +485,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
           );
           setItems(cartItems.filter(Boolean));
         })
-        .catch(() => {
-          // fallback
+        .catch((error) => {
+          console.error('Error updating quantity:', error);
+          
+          // Check if it's a stock limit error
+          if (error.message && (error.message.includes('Insufficient stock') || error.message.includes('stock'))) {
+            setStockPopup({
+              isOpen: true,
+              message: `Sorry, there's not enough stock available to update the quantity.`,
+              availableStock: error.errorData?.availableStock,
+              requestedQuantity: quantity
+            });
+          }
         });
     } else {
       if (quantity < 1) {
@@ -504,6 +545,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                       price: parseFloat(packageData.price), // Convert string price to number
                       quantity: cartItem.quantity,
                       backendId: cartItem.id,
+                      selectedSize: cartItem.selected_size,
+                      selectedColor: cartItem.selected_color,
                       cartItemId: `backend_${cartItem.id}`,
                       isPackage: true,
                       image: packageData.image_url
@@ -544,18 +587,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   };
 
+  // Clear removed items notifications
+  const clearRemovedItems = () => {
+    setRemovedItems([]);
+  };
+
   return (
     <CartContext.Provider value={{
       items,
+      removedItems,
       addToCart,
       removeFromCart,
       updateQuantity,
       totalItems,
       totalPrice,
       clearCart,
-      cartReady
+      cartReady,
+      clearRemovedItems
     }}>
       {children}
+      <StockLimitPopup
+        isOpen={stockPopup.isOpen}
+        onClose={() => setStockPopup({ ...stockPopup, isOpen: false })}
+        message={stockPopup.message}
+        availableStock={stockPopup.availableStock}
+        requestedQuantity={stockPopup.requestedQuantity}
+      />
     </CartContext.Provider>
   );
 }

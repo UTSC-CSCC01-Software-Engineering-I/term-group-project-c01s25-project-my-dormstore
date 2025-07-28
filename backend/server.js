@@ -148,20 +148,80 @@ app.get("/cart", async (req, res) => {
           "SELECT id, product_id, package_id, quantity, selected_size, selected_color, item_type, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
           [userId]
         );
+
+        // Check stock for each cart item and remove/adjust items as needed
+        const cartItems = [];
+        const removedItems = [];
+        
+        for (const item of cartResult.rows) {
+          let productResult, isPackage = false;
+          
+          // Check if it's a package item
+          if (item.item_type === 'package' && item.package_id) {
+            productResult = await pool.query(
+              "SELECT name, stock FROM packages WHERE id = $1",
+              [item.package_id]
+            );
+            isPackage = true;
+          } else if (item.item_type === 'product' && item.product_id) {
+            // Check products table
+            productResult = await pool.query(
+              "SELECT name, stock FROM products WHERE id = $1",
+              [item.product_id]
+            );
+          }
+          
+          // If no results found, the product/package was deleted
+          if (!productResult || productResult.rows.length === 0) {
+            await pool.query("DELETE FROM cart_items WHERE id = $1", [item.id]);
+            removedItems.push({ 
+              name: `${isPackage ? 'Package' : 'Product'} (ID: ${item.package_id || item.product_id})`, 
+              reason: `${isPackage ? 'Package' : 'Product'} no longer available` 
+            });
+            continue;
+          }
+          
+          const product = productResult.rows[0];
+          
+          if (product.stock === 0) {
+            // product/package is out of stock, remove from cart
+            await pool.query("DELETE FROM cart_items WHERE id = $1", [item.id]);
+            removedItems.push({ name: product.name, reason: "Out of stock" });
+          } 
+          else if (item.quantity > product.stock) {
+            // quantity exceeds available stock, adjust quantity
+            await pool.query(
+              "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+              [product.stock, item.id]
+            );
+            item.quantity = product.stock;
+            removedItems.push({ 
+              name: product.name, 
+              reason: `Quantity adjusted to ${product.stock} (available stock)` 
+            });
+            cartItems.push(item);
+          } else {
+            // Add to cart items if stock is sufficient
+            cartItems.push(item);
+          }
+        }
         
         res.json({ 
-          cartItems: cartResult.rows
+          cartItems: cartItems,
+          removedItems: removedItems
         });
       } catch (jwtError) {
         // Invalid token, treat as guest
         res.json({ 
-          cartItems: []
+          cartItems: [],
+          removedItems: []
         });
       }
     } else {
       // Guest user - return empty cart
       res.json({ 
-        cartItems: []
+        cartItems: [],
+        removedItems: []
       });
     }
   } catch (error) {
@@ -185,15 +245,75 @@ app.post("/cart", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
 
+    // Check stock availability
+    if (package_id) {
+      // Check package stock
+      const packageResult = await pool.query(
+        "SELECT stock FROM packages WHERE id = $1",
+        [package_id]
+      );
+      
+      if (packageResult.rows.length === 0) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+      
+      const availableStock = packageResult.rows[0].stock;
+      if (quantity > availableStock) {
+        return res.status(400).json({ 
+          error: "Insufficient package stock", 
+          availableStock: availableStock,
+          requestedQuantity: quantity,
+          maxCanAdd: availableStock
+        });
+      }
+    } else if (product_id) {
+      // Check product stock
+      let productResult = await pool.query(
+        "SELECT stock FROM products WHERE id = $1",
+        [product_id]
+      );
+      
+      if (productResult.rows.length === 0) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      const availableStock = productResult.rows[0].stock;
+      if (quantity > availableStock) {
+        return res.status(400).json({ 
+          error: "Insufficient stock", 
+          availableStock: availableStock,
+          requestedQuantity: quantity,
+          maxCanAdd: availableStock
+        });
+      }
+    }
+
     let existingItemQuery, queryParams, insertQuery, insertParams;
 
     if (package_id) {
-      // Handle package
+      // Handle package - include size and color handling like products
       existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND package_id = $2 AND item_type = 'package'";
       queryParams = [userId, package_id];
 
-      insertQuery = "INSERT INTO cart_items (user_id, package_id, quantity, item_type) VALUES ($1, $2, $3, 'package') RETURNING *";
-      insertParams = [userId, package_id, quantity];
+      if (selected_size) {
+        existingItemQuery += " AND selected_size = $3";
+        queryParams.push(selected_size);
+
+        if (selected_color) {
+          existingItemQuery += " AND selected_color = $4";
+          queryParams.push(selected_color);
+        } else {
+          existingItemQuery += " AND selected_color IS NULL";
+        }
+      } else if (selected_color) {
+        existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
+        queryParams.push(selected_color);
+      } else {
+        existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
+      }
+
+      insertQuery = "INSERT INTO cart_items (user_id, package_id, quantity, selected_size, selected_color, item_type) VALUES ($1, $2, $3, $4, $5, 'package') RETURNING *";
+      insertParams = [userId, package_id, quantity, selected_size || null, selected_color || null];
     } else {
       // Handle product
       existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2 AND item_type = 'product'";
@@ -223,8 +343,37 @@ app.post("/cart", authenticateToken, async (req, res) => {
     const existingItem = await pool.query(existingItemQuery, queryParams);
 
     if (existingItem.rows.length > 0) {
-      // update existing item quantity
+      // update existing item quantity - check total quantity against stock
       const newQuantity = existingItem.rows[0].quantity + quantity;
+      
+      // Get the current available stock for validation
+      let availableStock;
+      if (package_id) {
+        const packageResult = await pool.query(
+          "SELECT stock FROM packages WHERE id = $1",
+          [package_id]
+        );
+        availableStock = packageResult.rows[0].stock;
+      } else {
+        const productResult = await pool.query(
+          "SELECT stock FROM products WHERE id = $1",
+          [product_id]
+        );
+        availableStock = productResult.rows[0].stock;
+      }
+      
+      // Check if total quantity exceeds available stock
+      if (newQuantity > availableStock) {
+        return res.status(400).json({ 
+          error: "Insufficient stock for total quantity", 
+          availableStock: availableStock,
+          currentCartQuantity: existingItem.rows[0].quantity,
+          requestedQuantity: quantity,
+          totalQuantity: newQuantity,
+          maxCanAdd: Math.max(0, availableStock - existingItem.rows[0].quantity)
+        });
+      }
+      
       const result = await pool.query(
         "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
         [newQuantity, existingItem.rows[0].id]
@@ -257,8 +406,67 @@ app.put("/cart/:itemId", authenticateToken, async (req, res) => {
     const { quantity } = req.body;
 
     // validate
-    if (!quantity || quantity < 1) {
-      return res.status(400).json({ error: "Quantity must be at least 1" });
+    if (!quantity || quantity < 0) {
+      return res.status(400).json({ error: "Quantity must be at least 0" });
+    }
+
+    // If quantity is 0, delete the item
+    if (quantity === 0) {
+      await pool.query("DELETE FROM cart_items WHERE id = $1 AND user_id = $2", [itemId, userId]);
+      return res.json({ 
+        message: "Cart item removed", 
+        removed: true 
+      });
+    }
+
+    // Get cart item to check both product_id and package_id
+    const cartItemResult = await pool.query(
+      "SELECT product_id, package_id, item_type FROM cart_items WHERE id = $1 AND user_id = $2",
+      [itemId, userId]
+    );
+    
+    if (cartItemResult.rows.length === 0) {
+      return res.status(404).json({ error: "Cart item not found or not authorized" });
+    }
+
+    const cartItem = cartItemResult.rows[0];
+    let productResult, availableStock;
+
+    // Check stock based on item type
+    if (cartItem.item_type === 'package' && cartItem.package_id) {
+      productResult = await pool.query(
+        "SELECT stock FROM packages WHERE id = $1",
+        [cartItem.package_id]
+      );
+      
+      if (productResult.rows.length === 0) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+      
+      availableStock = productResult.rows[0].stock;
+    } else if (cartItem.item_type === 'product' && cartItem.product_id) {
+      productResult = await pool.query(
+        "SELECT stock FROM products WHERE id = $1",
+        [cartItem.product_id]
+      );
+      
+      if (productResult.rows.length === 0) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      availableStock = productResult.rows[0].stock;
+    } else {
+      return res.status(400).json({ error: "Invalid cart item type" });
+    }
+
+    // Check if requested quantity exceeds available stock
+    if (quantity > availableStock) {
+      return res.status(400).json({ 
+        error: "Insufficient stock", 
+        availableStock: availableStock,
+        requestedQuantity: quantity,
+        maxCanAdd: availableStock
+      });
     }
 
     const result = await pool.query(
