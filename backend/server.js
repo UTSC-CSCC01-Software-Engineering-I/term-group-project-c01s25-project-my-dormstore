@@ -145,38 +145,53 @@ app.get("/cart", authenticateToken, async (req, res) => {
     const removedItems = [];
     
     for (const item of result.rows) {
-      const productResult = await pool.query(
+      // Check both products and packages tables
+      let productResult = await pool.query(
         "SELECT name, stock FROM products WHERE id = $1",
         [item.product_id]
       );
       
+      let isPackage = false;
       if (productResult.rows.length === 0) {
-        // if product doesn't exist, remove from cart
-        await pool.query("DELETE FROM cart_items WHERE id = $1", [item.id]);
-        removedItems.push({ name: "Unknown Product", reason: "Product no longer available" });
-      } else {
-        const product = productResult.rows[0];
+        // If not found in products, check packages table
+        const packageResult = await pool.query(
+          "SELECT name, stock FROM packages WHERE id = $1",
+          [item.product_id]
+        );
         
-        if (product.stock === 0) {
-          // product is out of stock remove from cart
+        if (packageResult.rows.length === 0) {
+          // if neither product nor package exists, remove from cart
           await pool.query("DELETE FROM cart_items WHERE id = $1", [item.id]);
-          removedItems.push({ name: product.name, reason: "Out of stock" });
-        } 
-        else if (item.quantity > product.stock) {
-          // quantity exceeds available stock, adjust quantity
-          await pool.query(
-            "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
-            [product.stock, item.id]
-          );
-          item.quantity = product.stock;
-          removedItems.push({ 
-            name: product.name, 
-            reason: `Quantity adjusted to ${product.stock} (available stock)` 
-          });
+          removedItems.push({ name: "Unknown Product/Package", reason: "Product/Package no longer available" });
+          continue;
         }
-          if (product.stock > 0) {
-          cartItems.push(item);
-        }
+        isPackage = true;
+        productResult = packageResult;
+      }
+      
+      const product = productResult.rows[0];
+      
+      if (product.stock === 0) {
+        // product/package is out of stock, remove from cart
+        await pool.query("DELETE FROM cart_items WHERE id = $1", [item.id]);
+        removedItems.push({ name: product.name, reason: "Out of stock" });
+      } 
+      else if (item.quantity > product.stock) {
+        // quantity exceeds available stock, adjust quantity
+        await pool.query(
+          "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+          [product.stock, item.id]
+        );
+        item.quantity = product.stock;
+        removedItems.push({ 
+          name: product.name, 
+          reason: `Quantity adjusted to ${product.stock} (available stock)` 
+        });
+      }
+      
+      // Add to cart items if still valid
+      if (product.stock > 0) {
+        cartItems.push(item);
       }
     }
     
@@ -203,14 +218,25 @@ app.post("/cart", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
 
-    // Get product stock
-    const productResult = await pool.query(
+    // Check both products and packages tables for stock
+    let productResult = await pool.query(
       "SELECT stock FROM products WHERE id = $1",
       [product_id]
     );
     
+    let isPackage = false;
     if (productResult.rows.length === 0) {
-      return res.status(404).json({ error: "Product not found" });
+      // If not found in products, check packages table
+      const packageResult = await pool.query(
+        "SELECT stock FROM packages WHERE id = $1",
+        [product_id]
+      );
+      
+      if (packageResult.rows.length === 0) {
+        return res.status(404).json({ error: "Product/Package not found" });
+      }
+      isPackage = true;
+      productResult = packageResult;
     }
     
     const availableStock = productResult.rows[0].stock;
@@ -307,14 +333,25 @@ app.put("/cart/:itemId", authenticateToken, async (req, res) => {
 
     const productId = cartItemResult.rows[0].product_id;
 
-    // Get product stock
-    const productResult = await pool.query(
+    // Check both products and packages tables for stock
+    let productResult = await pool.query(
       "SELECT stock FROM products WHERE id = $1",
       [productId]
     );
     
+    let isPackage = false;
     if (productResult.rows.length === 0) {
-      return res.status(404).json({ error: "Product not found" });
+      // If not found in products, check packages table
+      const packageResult = await pool.query(
+        "SELECT stock FROM packages WHERE id = $1",
+        [productId]
+      );
+      
+      if (packageResult.rows.length === 0) {
+        return res.status(404).json({ error: "Product/Package not found" });
+      }
+      isPackage = true;
+      productResult = packageResult;
     }
     
     const availableStock = productResult.rows[0].stock;
@@ -607,7 +644,7 @@ app.get("/api/products/:id", async (req, res) => {
 app.get("/api/packages", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, size, color, created_at, updated_at FROM packages ORDER BY category, name"
+      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages ORDER BY category, name"
     );
     res.json({ packages: result.rows });
   } catch (error) {
@@ -621,7 +658,7 @@ app.get("/api/packages/:id", async (req, res) => {
   try {
     const packageId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, size, color, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     
@@ -643,7 +680,7 @@ app.get("/api/packages/:id/details", async (req, res) => {
     
     // Get package info
     const packageResult = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, size, color, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     

@@ -13,10 +13,18 @@ export const packageService = {
       
       // Transform API data to match frontend expectations
       return data.packages.map((pkg: any) => ({
-        ...pkg,
+        id: pkg.id,
+        name: pkg.name,
         price: parseFloat(pkg.price),
+        category: pkg.category,
+        description: pkg.description,
         rating: parseFloat(pkg.rating),
-        image: pkg.image
+        image_url: pkg.image_url,
+        size: pkg.size,
+        color: pkg.color,
+        stock: pkg.stock || 0,
+        created_at: pkg.created_at,
+        updated_at: pkg.updated_at
       }));
     } catch (error) {
       console.error('Error fetching packages:', error);
@@ -37,10 +45,18 @@ export const packageService = {
       
       // Transform API data to match frontend expectations
       const pkg = {
-        ...data.package,
-        price: parseFloat(data.package.price),
-        rating: parseFloat(data.package.rating),
-        image: data.package.image 
+        id: data.id,
+        name: data.name,
+        price: parseFloat(data.price),
+        category: data.category,
+        description: data.description,
+        rating: parseFloat(data.rating),
+        image_url: data.image_url,
+        size: data.size,
+        color: data.color,
+        stock: data.stock || 0,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       };
       
       return pkg;
@@ -64,10 +80,18 @@ export const packageService = {
       );
       
       return filteredPackages.map((pkg: any) => ({
-        ...pkg,
+        id: pkg.id,
+        name: pkg.name,
         price: parseFloat(pkg.price),
+        category: pkg.category,
+        description: pkg.description,
         rating: parseFloat(pkg.rating),
-        image: pkg.image
+        image_url: pkg.image_url,
+        size: pkg.size,
+        color: pkg.color,
+        stock: pkg.stock || 0,
+        created_at: pkg.created_at,
+        updated_at: pkg.updated_at
       }));
     } catch (error) {
       console.error('Error fetching packages by category:', error);
@@ -87,10 +111,18 @@ export const packageService = {
       const data = await response.json();
       
       return {
-        ...data.package,
+        id: data.package.id,
+        name: data.package.name,
         price: parseFloat(data.package.price),
+        category: data.package.category,
+        description: data.package.description,
         rating: parseFloat(data.package.rating),
-        image: data.package.image 
+        image_url: data.package.image_url,
+        size: data.package.size,
+        color: data.package.color,
+        stock: data.package.stock || 0,
+        created_at: data.package.created_at,
+        updated_at: data.package.updated_at
       };
     } catch (error) {
       console.error('Error fetching package details:', error);

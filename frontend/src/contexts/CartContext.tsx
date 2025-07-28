@@ -81,16 +81,17 @@ const cartAPI = {
   // add item to backend cart
   async addItem(product_id: number, quantity: number = 1, selected_size?: string, selected_color?: string) {
     const response = await fetch(`${process.env.REACT_APP_API_URL}/cart`, {
-
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ product_id, quantity, selected_size, selected_color })
     });
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('cartAPI.addItem error:', errorData);
       throw new Error(JSON.stringify(errorData));
     }
-    return response.json();
+    const data = await response.json();
+    return data;
   },
 
   // update quantity of a cart item
@@ -138,9 +139,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Helper function to get product by ID
   const getProductById = async (productId: number): Promise<Product | null> => {
     try {
-      return await productService.getProductById(productId);
+      // First try products
+      const product = await productService.getProductById(productId);
+      if (product) {
+        return product;
+      }
+      
+      // If not found, try packages
+      const packageService = (await import('../services/packageService')).packageService;
+      const pkg = await packageService.getPackageById(productId);
+      return pkg;
     } catch (error) {
-      console.error('Error fetching product:', error);
+      console.error('Error fetching product/package:', error);
       return null;
     }
   };
@@ -327,16 +337,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
               ? { ...item, quantity: item.quantity + quantity }
               : item
           );
-          console.log('[CartContext] Guest addToCart: Increased quantity for existing item', newItems);
         } else {
           // new item - create unique cartItemId for localStorage
           const cartItemId = `local_${product.id}_${selectedSize || 'nosize'}_${selectedColor || 'nocolor'}_${Date.now()}`;
           newItems = [...currentItems, { ...product, quantity, selectedSize, selectedColor, cartItemId }];
-          console.log('[CartContext] Guest addToCart: Added new item', newItems);
         }
         // Save to localStorage
         saveCartToStorage(newItems);
-        console.log('[CartContext] Guest cart after add:', newItems);
         return newItems;
       });
     }
