@@ -1274,27 +1274,47 @@ app.get("/api/order-details/:orderNumber", async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      `SELECT o.*, 
-              json_agg(json_build_object(
-                'product_id', oi.product_id,
-                'product_name', oi.product_name,
-                'product_price', oi.product_price,
-                'quantity', oi.quantity,
-                'subtotal', oi.subtotal
-              )) AS items
-       FROM orders o
-       LEFT JOIN order_items oi ON o.id = oi.order_id
-       WHERE o.order_number = $1
-       GROUP BY o.id`,
-      [orderNumber]
-    );
-
-    if (result.rows.length === 0) {
+    const orderRes = await pool.query(`SELECT * FROM orders WHERE order_number = $1`, [orderNumber]);
+    if (orderRes.rowCount === 0) {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    res.json({ order: result.rows[0] });
+    const order = orderRes.rows[0];
+    const orderId = order.id;
+
+    // Get product items
+    const productRes = await pool.query(
+      `SELECT 
+         'product' AS item_type,
+         product_id, 
+         product_name AS name, 
+         product_price AS price, 
+         quantity, 
+         subtotal 
+       FROM order_items 
+       WHERE order_id = $1`,
+      [orderId]
+    );
+
+    // Get package items
+    const packageRes = await pool.query(
+      `SELECT 
+         'package' AS item_type,
+         op.package_id, 
+         p.name, 
+         p.price, 
+         op.quantity, 
+         (p.price * op.quantity) AS subtotal 
+       FROM order_packages op
+       JOIN packages p ON op.package_id = p.id
+       WHERE op.order_id = $1`,
+      [orderId]
+    );
+
+    // Combine both types into single `items` array
+    const items = [...productRes.rows, ...packageRes.rows];
+
+    res.json({ order: { ...order, items } });
   } catch (error) {
     console.error("Error fetching order details:", error);
     res.status(500).json({ error: "Failed to fetch order details" });

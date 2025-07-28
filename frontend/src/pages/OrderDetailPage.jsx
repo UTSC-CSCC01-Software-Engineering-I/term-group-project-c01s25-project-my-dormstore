@@ -38,9 +38,9 @@ export default function OrderDetailPage() {
             <tbody>
               {order.items.map((item, idx) => (
                 <tr key={idx}>
-                  <td>{item.product_name}</td>
+                  <td>{item.name}</td>
                   <td>x{item.quantity}</td>
-                  <td>${item.product_price?.toFixed(2)}</td>
+                  <td>${Number(item.price).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
