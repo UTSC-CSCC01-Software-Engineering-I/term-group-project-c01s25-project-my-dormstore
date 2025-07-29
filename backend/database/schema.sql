@@ -113,6 +113,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
 INSERT INTO admin_users (email, password)
 VALUES ('admin@example.com', 'admin123');
 
+-- order_packages table
 CREATE TABLE order_packages (
   id SERIAL PRIMARY KEY,
   order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
@@ -121,6 +122,7 @@ CREATE TABLE order_packages (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ambassadors table
 CREATE TABLE IF NOT EXISTS ambassadors (
   id SERIAL PRIMARY KEY,
   first_name VARCHAR(100),
@@ -130,11 +132,52 @@ CREATE TABLE IF NOT EXISTS ambassadors (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- contact_messages table
 CREATE TABLE IF NOT EXISTS contact_messages (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   phone VARCHAR(50),
   email VARCHAR(255) NOT NULL,
   message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- packages table
+CREATE TABLE IF NOT EXISTS packages (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  description TEXT,
+  rating DECIMAL(2,1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  image_url TEXT,
+  size TEXT,
+  color TEXT,
+  stock INTEGER DEFAULT 0,
+  active BOOLEAN DEFAULT true
+);
+
+
+-- package_items
+CREATE TABLE IF NOT EXISTS package_items (
+  id SERIAL PRIMARY KEY,
+  package_id INTEGER NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
+  product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  quantity INTEGER DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(package_id, product_id)
+);
+
+-- order_packages
+CREATE TABLE IF NOT EXISTS order_packages (
+  id SERIAL PRIMARY KEY,
+  order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+  package_id INTEGER REFERENCES packages(id) ON DELETE CASCADE,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  package_name TEXT,
+  package_price DECIMAL(10,2),
+  subtotal DECIMAL(10,2),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

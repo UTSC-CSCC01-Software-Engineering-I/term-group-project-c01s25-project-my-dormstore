@@ -14,32 +14,44 @@ describe('Orders Routes', () => {
   let orderNumber = '';
 
   beforeAll(async () => {
-    await pool.query(`DELETE FROM users WHERE email = $1`, [testUser.email]);
-
+    const existingUser = await pool.query(`SELECT id FROM users WHERE email = $1`, [testUser.email]);
+    const userId = existingUser.rows[0]?.id;
+  
+    if (userId) {
+      await pool.query(`DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [userId]);
+      await pool.query(`DELETE FROM order_packages WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [userId]);
+      await pool.query(`DELETE FROM orders WHERE user_id = $1`, [userId]);
+      await pool.query(`DELETE FROM cart_items WHERE user_id = $1`, [userId]);
+      await pool.query(`DELETE FROM user_balance WHERE user_id = $1`, [userId]); // optional if you want to reset
+      await pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
+    }
+  
+    // Now safe to register new user
     const registerRes = await request(app).post('/registerUser').send(testUser);
     token = registerRes.body.token;
-
+  
     const userRes = await request(app).get('/me').set('Authorization', `Bearer ${token}`);
-    const userId = userRes.body.id;
-
+    const newUserId = userRes.body.id;
+  
     await pool.query(`
       INSERT INTO user_balance (user_id, balance, total_spent)
       VALUES ($1, 1000, 0)
       ON CONFLICT (user_id) DO NOTHING
-    `, [userId]);
-
+    `, [newUserId]);
+  
     const result = await pool.query(
       `INSERT INTO products (name, price, category, description, rating, size, color, stock, active)
        VALUES ('Order Product', 25.0, 'Test', 'Order test product', 4.5, 'M', 'Blue', 20, true)
        RETURNING id`
     );
     productId = result.rows[0].id;
-
+  
     await request(app)
       .post('/cart')
       .set('Authorization', `Bearer ${token}`)
       .send({ product_id: productId, quantity: 2 });
   });
+  
 
   afterAll(async () => {
     if (orderId) await pool.query('DELETE FROM orders WHERE id = $1', [orderId]);

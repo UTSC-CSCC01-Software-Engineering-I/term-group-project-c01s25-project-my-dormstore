@@ -31,8 +31,22 @@ async function setupDatabase() {
     console.log('Database setup completed successfully!');
     
     // verify by querying the tables
-    const tables = ['products', 'users', 'cart_items', 'orders', 'order_items', 'order_updates'];
-    
+    const tables = [
+      'products',
+      'users',
+      'user_balance',
+      'cart_items',
+      'orders',
+      'order_items',
+      'order_packages',
+      'packages',
+      'package_items',
+      'order_updates',
+      'admin_users',
+      'ambassadors',
+      'contact_messages'
+    ];
+        
     for (const table of tables) {
       try {
         const result = await pool.query(`SELECT COUNT(*) FROM ${table}`);
