@@ -55,12 +55,13 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
     - In `frontend/.env`: set `REACT_APP_API_URL=http://localhost:5002`
   
 4. **Create PostgreSQL Database**
-
+  - Ensure PostgreSQL is running, then create the database:
+   
     ```bash
-   createdb -U postgres mydormstore
+    createdb -U postgres mydormstore
     ```
     
-5. **Initialize Database Tables and Seed Data**
+6. **Initialize Database Tables and Seed Data**
 
     ```bash
     npm run setup
@@ -68,7 +69,7 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
 
     - Create all necessary tables from schema.sql
 
-6. **Run the Application**
+7. **Run the Application**
 
   - Open two separate terminals to run the backend and frontend servers
 
