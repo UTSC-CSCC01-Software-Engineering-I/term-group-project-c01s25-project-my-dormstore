@@ -19,6 +19,10 @@ async function setupDatabase() {
     
     // read the schema file
     const schemaPath = path.join(process.cwd(), 'database', 'schema.sql');
+    if (!fs.existsSync(schemaPath)) {
+      console.error(`❌ schema.sql not found at: ${schemaPath}`);
+      process.exit(1);
+    }
     const schema = fs.readFileSync(schemaPath, 'utf8');
     
     // execute the SQL

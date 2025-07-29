@@ -72,7 +72,13 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_status VARCHAR(50) DEFAULT 'pending',
   order_status VARCHAR(50) DEFAULT 'processing',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  billing_first_name TEXT,
+  billing_last_name TEXT,
+  billing_address TEXT,
+  billing_city TEXT,
+  billing_province TEXT,
+  billing_postal_code TEXT
 );
 
 -- order_items table for items in each order
@@ -93,7 +99,9 @@ CREATE TABLE IF NOT EXISTS order_updates (
   order_number VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL,
   update_text TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  status TEXT DEFAULT 'wait for process',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Add Admin table
@@ -110,5 +118,23 @@ CREATE TABLE order_packages (
   order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
   package_id INTEGER REFERENCES packages(id) ON DELETE CASCADE,
   quantity INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ambassadors (
+  id SERIAL PRIMARY KEY,
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  phone VARCHAR(50),
+  email VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
