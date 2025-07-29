@@ -32,21 +32,65 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
     ```
 
 3. **Set Up Environment Variables**
+  - Frontend (frontend/.env):
 
-  - Create a <code>.env</code> file and add any configurations
+     ```env
+    REACT_APP_API_URL=http://localhost:5001
+    ```
 
-4. **Run the Application**
+  - Backend (backend/.env):
+    
+    ```env
+    PORT=5001
+    PG_USER=your_db_user
+    PG_PASSWORD=your_db_password
+    PG_DATABASE=your_db_name
+    PG_HOST=localhost
+    PG_PORT=5432
+    JWT_SECRET=your_jwt_secret
+    ```
+
+  - If you're using a custom port (e.g., 5002 instead of 5001), make sure:
+    - In `backend/.env`: set `PORT=5002`
+    - In `frontend/.env`: set `REACT_APP_API_URL=http://localhost:5002`
+  
+4. **Create PostgreSQL Database**
+
+    ```bash
+   createdb -U postgres mydormstore
+    ```
+    
+5. **Initialize Database Tables and Seed Data**
+
+    ```bash
+    npm run setup
+    ```
+
+    - Create all necessary tables from schema.sql
+
+6. **Run the Application**
 
   - Open two separate terminals to run the backend and frontend servers
 
     ```bash
     #Backend Servier
     cd backend
-    node server.js (or npm run dev)
+    npm run dev
 
     #frontend Server
     cd frontend
-    npm run dev (or npm start)
+    npm start)
+    ```
+(Optional) Dev Commands backend
+  - Remove all products
+     ```bash
+    npm run clear-products
+    ```
+     
+  - Remove all packages
+
+    ```bash
+    npm run clear-packages
     ```
 
 ## Contribution Guidelines
@@ -74,11 +118,3 @@ We use Git Flow to manage development:
 ### Issues and ticketing 
 
 All tasks are tracked using [Github Issues](https://github.com/yourusername/your-repo/issues) for tracking features, bugs, and enhancements. All tasks must be linked to an issue. Each issue should be assigned, labled (e.g., <code>frontend</code>, <code>backend</code>, bug, enhancement), and referenced in pull requests where applicable. 
-
-
-
-
-
-
-
-
