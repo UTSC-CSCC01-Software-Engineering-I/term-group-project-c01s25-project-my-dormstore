@@ -9,9 +9,12 @@ export default function OrderDetailPage() {
   useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL}/api/order-details/${orderId}`)
     .then(res => res.json())
-      .then(data => setOrder(data.order)) 
-      .catch(err => console.error("Failed to load order details", err));
-  }, [orderId]);
+    .then(data => {
+      console.log("Fetched order:", data.order);
+      setOrder(data.order);
+    })
+    .catch(err => console.error("Failed to load order details", err));
+}, [orderId]);
 
   if (!order) return <p className="loading-text">Loading order details...</p>;
 
@@ -38,9 +41,9 @@ export default function OrderDetailPage() {
             <tbody>
               {order.items.map((item, idx) => (
                 <tr key={idx}>
-                  <td>{item.product_name}</td>
+                  <td>{item.name}</td>
                   <td>x{item.quantity}</td>
-                  <td>${item.product_price?.toFixed(2)}</td>
+                  <td>${Number(item.price).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

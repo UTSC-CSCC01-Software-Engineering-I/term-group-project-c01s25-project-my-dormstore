@@ -1475,27 +1475,37 @@ app.get("/api/order-details/:orderNumber", async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      `SELECT o.*, 
-              json_agg(json_build_object(
-                'product_id', oi.product_id,
-                'product_name', oi.product_name,
-                'product_price', oi.product_price,
-                'quantity', oi.quantity,
-                'subtotal', oi.subtotal
-              )) AS items
-       FROM orders o
-       LEFT JOIN order_items oi ON o.id = oi.order_id
-       WHERE o.order_number = $1
-       GROUP BY o.id`,
+    const orderRes = await pool.query(
+      `SELECT * FROM orders WHERE order_number = $1`,
       [orderNumber]
     );
 
-    if (result.rows.length === 0) {
+    if (orderRes.rows.length === 0) {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    res.json({ order: result.rows[0] });
+    const order = orderRes.rows[0];
+
+    console.log("Order ID:", order.id);
+
+    const productItems = await pool.query(
+      `SELECT 'product' AS item_type, product_name AS name, product_price AS price, quantity
+       FROM order_items
+       WHERE order_id = $1`,
+      [order.id]
+    );
+
+    const packageItems = await pool.query(
+      `SELECT 'package' AS item_type, p.name, p.price, op.quantity
+       FROM order_packages op
+       JOIN packages p ON op.package_id = p.id
+       WHERE op.order_id = $1`,
+      [order.id]
+    );
+
+    order.items = [...productItems.rows, ...packageItems.rows];
+
+    res.json({ order });
   } catch (error) {
     console.error("Error fetching order details:", error);
     res.status(500).json({ error: "Failed to fetch order details" });

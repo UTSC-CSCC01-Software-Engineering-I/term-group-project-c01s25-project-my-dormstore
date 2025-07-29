@@ -32,22 +32,23 @@ export default function ProductDetail()  {
         
         if (isPackage) {
           // Fetch package details with included products
-          const packageData = await packageService.getPackageDetails(Number(id))
+          const packageData = await packageService.getPackageDetails(Number(id));          
+          console.log(packageData.included_products);
           // Transform package data to match Product interface
           const transformedPackage = {
-            id: packageData.package.id,
-            name: packageData.package.name,
-            price: parseFloat(packageData.package.price),
+            id: packageData.id,
+            name: packageData.name,
+            price: parseFloat(packageData.price),
             category: 'package',
-            description: packageData.package.description,
-            rating: parseFloat(packageData.package.rating),
-            image: packageData.package.image_url,
-            image_url: packageData.package.image_url,
-            size: packageData.package.size,
-            color: packageData.package.color,
-            stock: packageData.package.stock || 0,
-            created_at: packageData.package.created_at,
-            updated_at: packageData.package.updated_at,
+            description: packageData.description,
+            rating: parseFloat(packageData.rating),
+            image: packageData.image_url,
+            image_url: packageData.image_url,
+            size: packageData.size,
+            color: packageData.color,
+            stock: packageData.stock !== undefined ? packageData.stock : null,
+            created_at: packageData.created_at,
+            updated_at: packageData.updated_at,
             isPackage: true
           }
           setProduct(transformedPackage)
@@ -232,6 +233,10 @@ export default function ProductDetail()  {
             Add To Cart
           </button>
         </div>
+
+        {product.stock === 0 && (
+          <p className="out-of-stock-message">Out of stock</p>
+          )}
       </div>
 
       {isPackage && packageDetails?.included_products && packageDetails.included_products.length > 0 && (

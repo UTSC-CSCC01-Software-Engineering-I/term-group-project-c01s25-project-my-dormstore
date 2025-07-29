@@ -162,7 +162,6 @@ const Orders = () => {
                             <>
                               {orderItems[order.id].items?.length > 0 && (
                                 <>
-                                  <h4>Products</h4>
                                   <table className="products-table">
                                     <thead>
                                       <tr>
@@ -189,7 +188,6 @@ const Orders = () => {
                               )}
                               {orderItems[order.id].packages?.length > 0 && (
                                 <>
-                                  <h4>Packages</h4>
                                   <table className="products-table">
                                     <thead>
                                       <tr>

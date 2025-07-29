@@ -111,7 +111,7 @@ export const packageService = {
         throw new Error('Failed to fetch package details');
       }
       const data = await response.json();
-      return data;
+      return data.package;;
     } catch (error) {
       console.error('Error fetching package details:', error);
       throw error;
