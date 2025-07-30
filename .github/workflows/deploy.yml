@@ -27,3 +27,6 @@ jobs:
 
       - name: Run Container
         run: docker run -d -p 5001:5001 ashleylinn/mydormstore:latest
+
+      - name: Run Health Check Test
+        run: bash CICD/test-script.sh
