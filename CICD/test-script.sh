@@ -3,9 +3,9 @@
 # wait for the container to be ready
 sleep 5
 
-echo "Running health check on http://localhost:5001"
+echo "Running health check on http://localhost:3000"
 
-if curl --fail http://localhost:5001; then
+if curl --fail http://localhost:3000; then
   echo "Server is up and responding!"
   exit 0
 else
