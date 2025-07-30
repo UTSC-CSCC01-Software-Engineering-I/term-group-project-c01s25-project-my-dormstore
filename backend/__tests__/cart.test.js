@@ -1,6 +1,8 @@
 import request from 'supertest';
 import app from '../server.js';
 import { pool } from '../server.js';
+import { jest } from '@jest/globals';
+
 
 describe('Cart Routes', () => {
   const testUser = {
@@ -133,5 +135,36 @@ describe('Cart Routes', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.itemsRemoved).toBeGreaterThan(0);
+  });
+  test('GET /cart without token returns 200 if public', async () => {
+    const res = await request(app).get('/cart');
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body.cartItems)).toBe(true);
+  });
+  test('POST /cart fails with invalid product ID', async () => {
+    const res = await request(app)
+      .post('/cart')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ product_id: 9999999, quantity: 1 });
+    expect(res.statusCode).toBe(404);
+  });
+  test('POST /cart handles server error gracefully', async () => {
+    const originalQuery = pool.query;
+  
+    try {
+      pool.query = jest.fn(() => {
+        throw new Error('Simulated DB error');
+      });
+  
+      const res = await request(app)
+        .post('/cart')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ product_id: productId, quantity: 1 });
+  
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toMatch(/failed to add item to cart/i);
+    } finally {
+      pool.query = originalQuery; 
+    }
   });
 });

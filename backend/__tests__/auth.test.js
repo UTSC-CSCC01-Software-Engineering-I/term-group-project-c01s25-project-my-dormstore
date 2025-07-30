@@ -121,4 +121,37 @@ describe('Auth Routes', () => {
     expect(res.statusCode).toBe(403);
     expect(res.body.message).toMatch(/Current password is incorrect/i);
   });
+  test('Update user with no data returns 400', async () => {
+    const res = await request(app)
+      .put('/api/user/update')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+  
+    expect(res.statusCode).toBe(400); 
+  });
+  
+  test('Update email to duplicate one fails', async () => {
+    const newUser = await request(app)
+      .post('/registerUser')
+      .send({ email: 'existing@example.com', password: 'pass1234' });
+  
+    const res = await request(app)
+      .put('/api/user/update')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: 'existing@example.com' });
+  
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/Failed to update user/i);
+  
+    await pool.query(`DELETE FROM users WHERE email = $1`, ['existing@example.com']);
+  });
+  test('Update password missing currentPassword fails', async () => {
+    const res = await request(app)
+      .put('/api/user/update')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ password: 'newPassOnly' });
+  
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
 });

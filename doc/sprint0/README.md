@@ -54,18 +54,43 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
     - In `backend/.env`: set `PORT=5002`
     - In `frontend/.env`: set `REACT_APP_API_URL=http://localhost:5002`
   
-4. **Run the Application**
+4. **Create PostgreSQL Database**
+
+    ```bash
+   createdb -U postgres mydormstore
+    ```
+    
+5. **Initialize Database Tables and Seed Data**
+
+    ```bash
+    npm run setup
+    ```
+
+    - Create all necessary tables from schema.sql
+
+6. **Run the Application**
 
   - Open two separate terminals to run the backend and frontend servers
 
     ```bash
     #Backend Servier
     cd backend
-    node server.js (or npm run dev)
+    npm run dev
 
     #frontend Server
     cd frontend
-    npm run dev (or npm start)
+    npm start)
+    ```
+(Optional) Dev Commands backend
+  - Remove all products
+     ```bash
+    npm run clear-products
+    ```
+     
+  - Remove all packages
+
+    ```bash
+    npm run clear-packages
     ```
 
 ## Contribution Guidelines
@@ -93,11 +118,3 @@ We use Git Flow to manage development:
 ### Issues and ticketing 
 
 All tasks are tracked using [Github Issues](https://github.com/yourusername/your-repo/issues) for tracking features, bugs, and enhancements. All tasks must be linked to an issue. Each issue should be assigned, labled (e.g., <code>frontend</code>, <code>backend</code>, bug, enhancement), and referenced in pull requests where applicable. 
-
-
-
-
-
-
-
-

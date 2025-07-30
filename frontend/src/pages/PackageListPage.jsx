@@ -38,9 +38,10 @@ const PackageListPage = ({ category }) => {
     // Find the package by ID and add it to cart
     const pkg = packages.find(p => p.id === packageId);
     if (pkg) {
-      // packages don't have size/color options yet
-      addToCart(pkg, 1, undefined, undefined);
-      console.log('Added to cart:', pkg.name);
+      // Mark as package and add to cart
+      const packageWithFlag = { ...pkg, isPackage: true };
+      addToCart(packageWithFlag, 1);
+      console.log('Added package to cart:', pkg.name);
     }
   };
 

@@ -19,6 +19,10 @@ async function setupDatabase() {
     
     // read the schema file
     const schemaPath = path.join(process.cwd(), 'database', 'schema.sql');
+    if (!fs.existsSync(schemaPath)) {
+      console.error(`❌ schema.sql not found at: ${schemaPath}`);
+      process.exit(1);
+    }
     const schema = fs.readFileSync(schemaPath, 'utf8');
     
     // execute the SQL
@@ -27,8 +31,22 @@ async function setupDatabase() {
     console.log('Database setup completed successfully!');
     
     // verify by querying the tables
-    const tables = ['products', 'users', 'cart_items', 'orders', 'order_items', 'order_updates'];
-    
+    const tables = [
+      'products',
+      'users',
+      'user_balance',
+      'cart_items',
+      'orders',
+      'order_items',
+      'order_packages',
+      'packages',
+      'package_items',
+      'order_updates',
+      'admin_users',
+      'ambassadors',
+      'contact_messages'
+    ];
+        
     for (const table of tables) {
       try {
         const result = await pool.query(`SELECT COUNT(*) FROM ${table}`);

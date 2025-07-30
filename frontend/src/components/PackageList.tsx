@@ -1,5 +1,5 @@
 import { Package } from '../types/Package';
-import { ProductCard } from './ProductCard'; // Reusing component
+import { ProductCard } from './ProductCard'; 
 import './ProductComponents.css';
 
 interface PackageListProps {
@@ -78,4 +78,3 @@ export const PackageList = ({
     </div>
   );
 };
-

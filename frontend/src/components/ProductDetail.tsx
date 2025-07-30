@@ -32,8 +32,26 @@ export default function ProductDetail()  {
         
         if (isPackage) {
           // Fetch package details with included products
-          const packageData = await packageService.getPackageDetails(Number(id))
-          setProduct(packageData)
+          const packageData = await packageService.getPackageDetails(Number(id));          
+          console.log(packageData.included_products);
+          // Transform package data to match Product interface
+          const transformedPackage = {
+            id: packageData.id,
+            name: packageData.name,
+            price: parseFloat(packageData.price),
+            category: 'package',
+            description: packageData.description,
+            rating: parseFloat(packageData.rating),
+            image: packageData.image_url,
+            image_url: packageData.image_url,
+            size: packageData.size,
+            color: packageData.color,
+            stock: packageData.stock !== undefined ? packageData.stock : null,
+            created_at: packageData.created_at,
+            updated_at: packageData.updated_at,
+            isPackage: true
+          }
+          setProduct(transformedPackage)
           setPackageDetails(packageData)
         } else {
           const fetchedItem = await productService.getProductById(Number(id))
@@ -76,6 +94,10 @@ export default function ProductDetail()  {
   const hasColors = !!product.color && product.color.split(',').length > 0 && product.color.split(',')[0].trim() !== '';
 
   const handleAddToCart = () => {
+    console.log('handleAddToCart clicked');
+    console.log('Product:', product);
+    console.log('Is Package:', isPackage);
+    
     if (product) {
       // Check if size/color selection is required
       const availableSizes = product.size ? product.size.split(',') : [];
@@ -91,7 +113,10 @@ export default function ProductDetail()  {
       // Determine final size and color
       const finalSize = selectedSize || (availableSizes.length === 1 ? availableSizes[0] : undefined);
       const finalColor = selectedColor || (availableColors.length === 1 ? availableColors[0] : undefined);
+      console.log('Calling addToCart with:', { product, quantity, finalSize, finalColor });
       addToCart(product, quantity, finalSize, finalColor);
+    } else {
+      console.log('Product is null');
     }
   }
 
@@ -143,7 +168,7 @@ export default function ProductDetail()  {
         </div>
 
         <p className="product-price-p">
-          ${product.price.toFixed(2)} CAD
+          ${(product.price || 0).toFixed(2)} CAD
         </p>
 
         {product.shippingInfo && (
@@ -198,11 +223,20 @@ export default function ProductDetail()  {
             <span>{quantity}</span>
             <button onClick={() => setQuantity(q => q + 1)}>+</button>
           </div>
-          <button onClick={handleAddToCart}
-          className="add-to-cart-button">
+          <button 
+            onClick={() => {
+              console.log('Add to Cart button clicked');
+              handleAddToCart();
+            }}
+            className="add-to-cart-button"
+          >
             Add To Cart
           </button>
         </div>
+
+        {product.stock === 0 && (
+          <p className="out-of-stock-message">Out of stock</p>
+          )}
       </div>
 
       {isPackage && packageDetails?.included_products && packageDetails.included_products.length > 0 && (
@@ -233,7 +267,7 @@ export default function ProductDetail()  {
                 >
                   <div className="included-product-info">
                     <h3 className="included-product-name">{includedProduct.name}</h3>
-                    <p className="included-product-price">${parseFloat(includedProduct.price).toFixed(2)} CAD</p>
+                    <p className="included-product-price">${(parseFloat(includedProduct.price) || 0).toFixed(2)} CAD</p>
                     <p className="included-product-quantity">Quantity: {includedProduct.quantity}</p>
                     <p className="included-product-description">{includedProduct.description}</p>
                   </div>

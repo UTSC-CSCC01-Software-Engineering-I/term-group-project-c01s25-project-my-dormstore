@@ -170,3 +170,25 @@
   border-color: #0077cc;
   background: #fff;
 }
+
+.orders-page h4 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+  padding-left: 1rem;
+}
+
+.products-table.packages {
+  background-color: #fef9f1;
+  border-color: #f1e0c3;
+}
+
+.products-table.packages th {
+  background-color: #fdf1d9;
+  color: #8a5e00;
+}
+
+.products-table:not(:last-child) {
+  margin-bottom: 1.5rem;
+}
