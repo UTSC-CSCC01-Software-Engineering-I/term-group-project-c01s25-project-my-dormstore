@@ -42,21 +42,6 @@ CREATE TABLE IF NOT EXISTS user_balance (
   UNIQUE(user_id)
 );
 
--- cart_items table for shopping cart functionality
-CREATE TABLE IF NOT EXISTS cart_items (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
-  quantity INTEGER NOT NULL DEFAULT 1,
-  selected_size VARCHAR(50),
-  selected_color VARCHAR(50),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  package_id INTEGER REFERENCES packages(id) ON DELETE CASCADE,
-  item_type VARCHAR(50) NOT NULL DEFAULT 'product', -- 'product' or 'package'
-  UNIQUE(user_id, product_id, selected_size, selected_color)
-);
-
 -- orders table for completed orders
 CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
@@ -178,84 +163,99 @@ CREATE TABLE IF NOT EXISTS order_packages (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Deduct stock when order_packages are inserted
-CREATE OR REPLACE FUNCTION deduct_package_stock()
-RETURNS TRIGGER AS $$
-DECLARE
-  item RECORD;
-  found_items INTEGER;
-BEGIN
-  -- Check if there are mapped products
-  SELECT COUNT(*) INTO found_items
-  FROM package_items
-  WHERE package_id = NEW.package_id;
+-- cart_items table for shopping cart functionality
+CREATE TABLE IF NOT EXISTS cart_items (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  selected_size VARCHAR(50),
+  selected_color VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  package_id INTEGER REFERENCES packages(id) ON DELETE CASCADE,
+  item_type VARCHAR(50) NOT NULL DEFAULT 'product', -- 'product' or 'package'
+  UNIQUE(user_id, product_id, selected_size, selected_color)
+);
 
-  IF found_items > 0 THEN
-    -- Loop and deduct product stock
-    FOR item IN
-      SELECT product_id, quantity
-      FROM package_items
-      WHERE package_id = NEW.package_id
-    LOOP
-      UPDATE products
-      SET stock = stock - (item.quantity * NEW.quantity),
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = item.product_id;
-    END LOOP;
-  ELSE
-    -- Deduct stock directly from the package itself
-    UPDATE packages
-    SET stock = stock - NEW.quantity
-    WHERE id = NEW.package_id;
-  END IF;
+-- -- Deduct stock when order_packages are inserted
+-- CREATE OR REPLACE FUNCTION deduct_package_stock()
+-- RETURNS TRIGGER AS $$
+-- DECLARE
+--   item RECORD;
+--   found_items INTEGER;
+-- BEGIN
+--   -- Check if there are mapped products
+--   SELECT COUNT(*) INTO found_items
+--   FROM package_items
+--   WHERE package_id = NEW.package_id;
 
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+--   IF found_items > 0 THEN
+--     -- Loop and deduct product stock
+--     FOR item IN
+--       SELECT product_id, quantity
+--       FROM package_items
+--       WHERE package_id = NEW.package_id
+--     LOOP
+--       UPDATE products
+--       SET stock = stock - (item.quantity * NEW.quantity),
+--           updated_at = CURRENT_TIMESTAMP
+--       WHERE id = item.product_id;
+--     END LOOP;
+--   ELSE
+--     -- Deduct stock directly from the package itself
+--     UPDATE packages
+--     SET stock = stock - NEW.quantity
+--     WHERE id = NEW.package_id;
+--   END IF;
 
--- Create trigger for deducting stock when a package is ordered
-CREATE TRIGGER trigger_deduct_stock_on_package_order
-AFTER INSERT ON order_packages
-FOR EACH ROW
-EXECUTE FUNCTION deduct_package_stock();
+--   RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
--- Update package stock automatically when a product's stock changes
-CREATE OR REPLACE FUNCTION update_related_packages_stock()
-RETURNS TRIGGER AS $$
-DECLARE
-  pkg_id INTEGER;
-BEGIN
-  FOR pkg_id IN
-    SELECT DISTINCT package_id
-    FROM package_items
-    WHERE product_id = NEW.id
-  LOOP
-    PERFORM
-      (
-        WITH items AS (
-          SELECT p.stock, pi.quantity
-          FROM package_items pi
-          JOIN products p ON pi.product_id = p.id
-          WHERE pi.package_id = pkg_id
-        )
-        UPDATE packages
-        SET stock = (
-          SELECT
-            CASE WHEN COUNT(*) = 0 THEN 0
-                 ELSE MIN(FLOOR(stock / quantity)) END
-          FROM items
-        )
-        WHERE id = pkg_id
-      );
-  END LOOP;
+-- -- Create trigger for deducting stock when a package is ordered
+-- CREATE TRIGGER trigger_deduct_stock_on_package_order
+-- AFTER INSERT ON order_packages
+-- FOR EACH ROW
+-- EXECUTE FUNCTION deduct_package_stock();
 
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- -- Update package stock automatically when a product's stock changes
+-- CREATE OR REPLACE FUNCTION update_related_packages_stock()
+-- RETURNS TRIGGER AS $$
+-- DECLARE
+--   pkg_id INTEGER;
+-- BEGIN
+--   FOR pkg_id IN
+--     SELECT DISTINCT package_id
+--     FROM package_items
+--     WHERE product_id = NEW.id
+--   LOOP
+--     PERFORM
+--       (
+--         WITH items AS (
+--           SELECT p.stock, pi.quantity
+--           FROM package_items pi
+--           JOIN products p ON pi.product_id = p.id
+--           WHERE pi.package_id = pkg_id
+--         )
+--         UPDATE packages
+--         SET stock = (
+--           SELECT
+--             CASE WHEN COUNT(*) = 0 THEN 0
+--                  ELSE MIN(FLOOR(stock / quantity)) END
+--           FROM items
+--         )
+--         WHERE id = pkg_id
+--       );
+--   END LOOP;
 
--- Create trigger to auto-update package stock after product stock changes
-CREATE TRIGGER trg_auto_update_package_stock
-AFTER UPDATE OF stock ON products
-FOR EACH ROW
-WHEN (OLD.stock IS DISTINCT FROM NEW.stock)
-EXECUTE FUNCTION update_related_packages_stock();
+--   RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
+
+-- -- Create trigger to auto-update package stock after product stock changes
+-- CREATE TRIGGER trg_auto_update_package_stock
+-- AFTER UPDATE OF stock ON products
+-- FOR EACH ROW
+-- WHEN (OLD.stock IS DISTINCT FROM NEW.stock)
+-- EXECUTE FUNCTION update_related_packages_stock();

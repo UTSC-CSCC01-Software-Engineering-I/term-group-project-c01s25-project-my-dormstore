@@ -15,61 +15,37 @@ async function setupDatabase() {
   });
 
   try {
-    console.log('Setting up database...');
-    
-    // read the schema file
+    console.log('🔧 Setting up database...');
+
     const schemaPath = path.join(process.cwd(), 'database', 'schema.sql');
     if (!fs.existsSync(schemaPath)) {
-      console.error(`❌ schema.sql not found at: ${schemaPath}`);
+      console.error(` schema.sql not found at: ${schemaPath}`);
       process.exit(1);
     }
+
     const schema = fs.readFileSync(schemaPath, 'utf8');
-    
-    // execute the SQL
-    await pool.query(schema);
-    
-    console.log('Database setup completed successfully!');
-    
-    // verify by querying the tables
-    const tables = [
-      'products',
-      'users',
-      'user_balance',
-      'cart_items',
-      'orders',
-      'order_items',
-      'order_packages',
-      'packages',
-      'package_items',
-      'order_updates',
-      'admin_users',
-      'ambassadors',
-      'contact_messages'
-    ];
-        
-    for (const table of tables) {
+
+    // Split the SQL file into statements based on semicolon, preserving FUNCTION blocks
+    const statements = schema
+      .split(/;\s*(?=CREATE|INSERT|ALTER|UPDATE|DELETE|DROP|--|$)/gi)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    for (const [i, statement] of statements.entries()) {
       try {
-        const result = await pool.query(`SELECT COUNT(*) FROM ${table}`);
-        console.log(`   - ${table}: ${result.rows[0].count} records`);
+        await pool.query(statement);
+        console.log(` Executed statement ${i + 1}`);
       } catch (err) {
-        console.log(`   - ${table}: Error checking table`);
+        console.error(` Error in statement ${i + 1}:\n${statement}\n↳ ${err.message}`);
       }
     }
-    
-    // show products if any exist
-    const productsResult = await pool.query('SELECT * FROM products LIMIT 3');
-    if (productsResult.rows.length > 0) {
-      console.log('\nSample products:');
-      productsResult.rows.forEach(product => {
-        console.log(`   - ${product.name}: $${product.price}`);
-      });
-    }
-    
-  } catch (error) {
-    console.error('Database setup failed:', error.message);
+
+    console.log('\n Database setup completed!');
+  } catch (err) {
+    console.error('Database setup failed:', err.message);
   } finally {
     await pool.end();
   }
 }
 
-setupDatabase(); 
+setupDatabase();
