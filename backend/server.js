@@ -1074,7 +1074,7 @@ app.post("/api/user/balance/add", authenticateToken, async (req, res) => {
 });
 
 // Order creation endpoint with balance deduction (supports both authenticated and guest users)
-app.post("/api/orders", async (req, res) => {
+app.post("/api/orders", authenticateToken, async (req, res) => {
   const client = await pool.connect();
   
   try {
@@ -1127,6 +1127,7 @@ app.post("/api/orders", async (req, res) => {
 
     // Check user balance (only for authenticated users)
     if (userId) {
+      console.log("Processing order for user ID:", userId);
       let balanceResult = await client.query(
         "SELECT * FROM user_balance WHERE user_id = $1",
         [userId]
@@ -1195,6 +1196,7 @@ app.post("/api/orders", async (req, res) => {
       // Authenticated user - get from database
       const cartResult = await client.query(
         `SELECT ci.*, 
+                ci.item_type,
                 p.name as product_name, p.price as product_price,
                 pk.name as package_name, pk.price as package_price
          FROM cart_items ci 
@@ -1210,9 +1212,18 @@ app.post("/api/orders", async (req, res) => {
       console.log('Guest checkout - using cart items from request body:', cartItems.length, 'items');
     }
 
+    
     // Create order items and reduce inventory
     for (const item of cartItems) {
       if (item.item_type === 'product') {
+        const productRes = await client.query("SELECT name, price FROM products WHERE id = $1", [item.product_id]);
+
+        if (productRes.rows.length === 0) {
+          throw new Error(`Product with ID ${item.product_id} not found`);
+        }
+
+        const { name: product_name, price: product_price } = productRes.rows[0];
+        
         // Handle product
         await client.query(
           `INSERT INTO order_items (
@@ -1224,15 +1235,23 @@ app.post("/api/orders", async (req, res) => {
           ]
         );
         
-        // Reduce product inventory
+        // Reduce product stock
         await client.query(
           `UPDATE products 
-           SET inventory = inventory - $1, 
+           SET stock = stock - $1, 
                updated_at = CURRENT_TIMESTAMP 
            WHERE id = $2`,
           [item.quantity, item.product_id]
         );
       } else if (item.item_type === 'package') {
+        const packageRes = await client.query("SELECT name, price FROM packages WHERE id = $1", [item.package_id]);
+
+        if (packageRes.rows.length === 0) {
+          throw new Error(`Package with ID ${item.package_id} not found`);
+        }
+
+        const { name: package_name, price: package_price } = packageRes.rows[0];
+      
         // Handle package
         await client.query(
           `INSERT INTO order_packages (
@@ -1240,8 +1259,11 @@ app.post("/api/orders", async (req, res) => {
           ) VALUES ($1, $2, $3)`,
           [orderId, item.package_id, item.quantity]
         );
-        
-        // Package inventory will be reduced automatically by the trigger
+
+        const packageItemsRes = await client.query(
+          `SELECT product_id, quantity FROM package_items WHERE package_id = $1`,
+          [item.package_id]
+        );
       }
     }
 
@@ -1256,7 +1278,7 @@ app.post("/api/orders", async (req, res) => {
           [orderId, packageItem.package_id, packageItem.quantity]
         );
         
-        // Package inventory will be reduced automatically by the trigger
+        // Package stock will be reduced automatically by the trigger
       }
     }
 
