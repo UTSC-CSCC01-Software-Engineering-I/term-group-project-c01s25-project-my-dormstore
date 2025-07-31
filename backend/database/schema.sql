@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS products (
     image_url TEXT,
     stock INTEGER DEFAULT 100, -- Add stock field with default 100
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    active BOOLEAN DEFAULT true -- Add active field to manage product visibility
 );
 
 -- users table
@@ -22,6 +23,11 @@ CREATE TABLE IF NOT EXISTS users (
   dorm VARCHAR(255),
   first_name VARCHAR(255),
   last_name VARCHAR(255),
+  phone VARCHAR(50),
+  address TEXT,
+  city VARCHAR(255),
+  province VARCHAR(255),
+  postal_code VARCHAR(20),
   school VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -40,12 +46,14 @@ CREATE TABLE IF NOT EXISTS user_balance (
 CREATE TABLE IF NOT EXISTS cart_items (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
   quantity INTEGER NOT NULL DEFAULT 1,
   selected_size VARCHAR(50),
   selected_color VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  package_id INTEGER REFERENCES packages(id) ON DELETE CASCADE,
+  item_type VARCHAR(50) NOT NULL DEFAULT 'product', -- 'product' or 'package'
   UNIQUE(user_id, product_id, selected_size, selected_color)
 );
 
@@ -70,7 +78,8 @@ CREATE TABLE IF NOT EXISTS orders (
   total DECIMAL(10,2) NOT NULL,
   payment_method VARCHAR(100),
   payment_status VARCHAR(50) DEFAULT 'pending',
-  order_status VARCHAR(50) DEFAULT 'processing',
+  status VARCHAR(50) DEFAULT 'processing',
+  order_status VARCHAR(50) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   billing_first_name TEXT,
@@ -110,17 +119,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL
 );
-INSERT INTO admin_users (email, password)
-VALUES ('admin@example.com', 'admin123');
 
--- order_packages table
-CREATE TABLE order_packages (
-  id SERIAL PRIMARY KEY,
-  order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
-  package_id INTEGER REFERENCES packages(id) ON DELETE CASCADE,
-  quantity INTEGER NOT NULL DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 -- ambassadors table
 CREATE TABLE IF NOT EXISTS ambassadors (
@@ -176,8 +175,5 @@ CREATE TABLE IF NOT EXISTS order_packages (
   order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
   package_id INTEGER REFERENCES packages(id) ON DELETE CASCADE,
   quantity INTEGER NOT NULL DEFAULT 1,
-  package_name TEXT,
-  package_price DECIMAL(10,2),
-  subtotal DECIMAL(10,2),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
