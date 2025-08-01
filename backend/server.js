@@ -30,11 +30,15 @@ async function connectToPG() {
       password: process.env.PG_PWD,
       port: process.env.PG_PORT,
     });
+    console.log("Database connection established");
   } catch (error) {
     console.error("Error connecting to PostgreSQL:", error);
+    console.log("Server will start without database connection");
   }
 }
-connectToPG();
+
+// Don't call connectToPG() immediately - let the server start first
+// connectToPG();
 
 
 function authenticateToken(req, res, next) {
@@ -61,8 +65,18 @@ app.listen(PORT, () => {
 
 // Simple health check endpoint
 app.get("/", (req, res) => {
-    res.json({ status: "Server is running", timestamp: new Date().toISOString() });
+    const dbStatus = pool ? "connected" : "disconnected";
+    res.json({ 
+        status: "Server is running", 
+        timestamp: new Date().toISOString(),
+        database: dbStatus
+    });
 });
+
+// Initialize database connection after server starts
+setTimeout(() => {
+    connectToPG();
+}, 1000);
   
 
 // Register a new user
