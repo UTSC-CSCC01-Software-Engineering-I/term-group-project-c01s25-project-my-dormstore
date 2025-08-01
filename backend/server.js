@@ -58,6 +58,11 @@ function authenticateToken(req, res, next) {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+// Simple health check endpoint
+app.get("/", (req, res) => {
+    res.json({ status: "Server is running", timestamp: new Date().toISOString() });
+});
   
 
 // Register a new user
