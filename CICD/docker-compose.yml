@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  app:
+    image: ashleylinn/mydormstore:latest
+    ports:
+      - "5001:5000"
+    environment:
+      - PG_USER=postgres
+      - PG_HOST=db
+      - PG_DATABASE=mydormstore
+      - PG_PWD=password
+      - PG_PORT=5432
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=mydormstore
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data: 

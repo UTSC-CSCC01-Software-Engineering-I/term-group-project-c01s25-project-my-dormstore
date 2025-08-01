@@ -25,8 +25,19 @@ jobs:
       - name: Pull Docker Image
         run: docker pull ashleylinn/mydormstore:latest
 
-      - name: Run Container
-        run: docker run -d -p 5001:5000 -e PG_USER=postgres -e PG_HOST=localhost -e PG_DATABASE=mydormstore -e PG_PWD=password -e PG_PORT=5432 ashleylinn/mydormstore:latest
+      - name: Deploy with Docker Compose
+        run: |
+          cd CICD
+          docker-compose up -d
+
+      - name: Wait for services to be ready
+        run: sleep 10
 
       - name: Run Health Check Test
         run: bash CICD/test-script.sh
+
+      - name: Cleanup
+        if: always()
+        run: |
+          cd CICD
+          docker-compose down
