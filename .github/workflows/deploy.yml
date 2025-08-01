@@ -26,7 +26,7 @@ jobs:
         run: docker pull ashleylinn/mydormstore:latest
 
       - name: Run Container
-        run: docker run -d -p 5001:5000 ashleylinn/mydormstore:latest
+        run: docker run -d -p 5001:5000 -e PG_USER=postgres -e PG_HOST=localhost -e PG_DATABASE=mydormstore -e PG_PWD=password -e PG_PORT=5432 ashleylinn/mydormstore:latest
 
       - name: Run Health Check Test
         run: bash CICD/test-script.sh
