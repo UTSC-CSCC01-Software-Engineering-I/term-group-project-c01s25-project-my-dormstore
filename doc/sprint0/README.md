@@ -60,10 +60,13 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
    createdb -U postgres mydormstore
     ```
     
-5. **Initialize Database Tables and Seed Data**
+5. **Initialize Database Table and Functions**
 
     ```bash
+    npm run setup-db
+    npm run setup-functions
     npm run setup
+    npm run run-seed 
     ```
 
     - Create all necessary tables from schema.sql
