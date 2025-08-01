@@ -64,7 +64,10 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
 6. **Initialize Database Tables and Seed Data**
 
     ```bash
+    npm run setup-db
+    npm run setup-functions
     npm run setup
+    npm run run-seed 
     ```
 
     - Create all necessary tables from schema.sql

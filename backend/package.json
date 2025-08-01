@@ -22,7 +22,9 @@
     "clear-packages": "node --env-file=.env scripts/clear-packages.js",
     "check-database": "node --env-file=.env scripts/check-database-contents.js",
     "add-users": "node --env-file=.env scripts/add-users.js",
-    "add-order-updates": "node --env-file=.env scripts/add-order-updates.js"
+    "add-order-updates": "node --env-file=.env scripts/add-order-updates.js",
+    "run-seed": "node --env-file=.env scripts/run-seed.js",
+    "setup-functions": "node --env-file=.env scripts/setup-functions.js"
   },
   "keywords": [],
   "author": "",

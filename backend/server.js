@@ -30,11 +30,15 @@ async function connectToPG() {
       password: process.env.PG_PWD,
       port: process.env.PG_PORT,
     });
+    console.log("Database connection established");
   } catch (error) {
     console.error("Error connecting to PostgreSQL:", error);
+    console.log("Server will start without database connection");
   }
 }
-connectToPG();
+
+// Don't call connectToPG() immediately - let the server start first
+// connectToPG();
 
 
 function authenticateToken(req, res, next) {
@@ -58,6 +62,21 @@ function authenticateToken(req, res, next) {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+// Simple health check endpoint
+app.get("/", (req, res) => {
+    const dbStatus = pool ? "connected" : "disconnected";
+    res.json({ 
+        status: "Server is running", 
+        timestamp: new Date().toISOString(),
+        database: dbStatus
+    });
+});
+
+// Initialize database connection after server starts
+setTimeout(() => {
+    connectToPG();
+}, 1000);
   
 
 // Register a new user
@@ -1074,7 +1093,7 @@ app.post("/api/user/balance/add", authenticateToken, async (req, res) => {
 });
 
 // Order creation endpoint with balance deduction (supports both authenticated and guest users)
-app.post("/api/orders", async (req, res) => {
+app.post("/api/orders", authenticateToken, async (req, res) => {
   const client = await pool.connect();
   
   try {
@@ -1127,6 +1146,7 @@ app.post("/api/orders", async (req, res) => {
 
     // Check user balance (only for authenticated users)
     if (userId) {
+      console.log("Processing order for user ID:", userId);
       let balanceResult = await client.query(
         "SELECT * FROM user_balance WHERE user_id = $1",
         [userId]
@@ -1259,6 +1279,10 @@ app.post("/api/orders", async (req, res) => {
           [orderId, item.package_id, item.quantity]
         );
 
+        const packageItemsRes = await client.query(
+          `SELECT product_id, quantity FROM package_items WHERE package_id = $1`,
+          [item.package_id]
+        );
       }
     }
 
