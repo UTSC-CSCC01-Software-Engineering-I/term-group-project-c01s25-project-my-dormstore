@@ -3,6 +3,9 @@
 # wait for the container to be ready
 sleep 5
 
+echo "Checking Docker containers..."
+docker ps
+
 echo "Running health check on http://localhost:5001/"
 
 if curl --silent --show-error http://localhost:5001/; then

@@ -9,7 +9,7 @@ docker pull ashleylinn/mydormstore:latest
 # Deploy with Docker Compose
 echo "Deploying with Docker Compose..."
 cd CICD
-docker-compose up -d
+docker compose up -d
 
 # Wait for services to be ready
 echo "Waiting for services to be ready..."
