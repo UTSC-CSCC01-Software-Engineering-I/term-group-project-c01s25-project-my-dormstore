@@ -1,5 +1,8 @@
 import request from 'supertest';
 import app from '../server.js'; 
+import { pool } from '../server.js';
+import { jest } from '@jest/globals';
+
 
 describe('Contact Us Routes', () => {
   test('POST /api/contact - valid message', async () => {
@@ -26,5 +29,22 @@ describe('Contact Us Routes', () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body.error || res.body.message).toMatch(/missing/i);
+  });
+  test('should return 500 if database insert fails', async () => {
+    const originalQuery = pool.query;
+    pool.query = jest.fn(() => {
+      throw new Error('Simulated DB insert failure');
+    });
+
+    const res = await request(app).post('/api/contact').send({
+      name: 'Test User',
+      email: 'test@example.com',
+      message: 'Test message'
+    });
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/database error/i);
+
+    pool.query = originalQuery;
   });
 });

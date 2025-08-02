@@ -13,29 +13,36 @@ describe('Checkout Endpoint', () => {
   let packageId;
 
   beforeAll(async () => {
-    // Cleanup old user if exists
-    await pool.query(`DELETE FROM users WHERE email = $1`, [user.email]);
-
+    const userRes = await pool.query(`SELECT id FROM users WHERE email = $1`, [user.email]);
+    if (userRes.rows.length > 0) {
+      const tempUserId = userRes.rows[0].id;
+    
+      await pool.query(`DELETE FROM order_packages WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [tempUserId]);
+      await pool.query(`DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [tempUserId]);
+      await pool.query(`DELETE FROM orders WHERE user_id = $1`, [tempUserId]);
+      await pool.query(`DELETE FROM user_balance WHERE user_id = $1`, [tempUserId]);
+      await pool.query(`DELETE FROM users WHERE id = $1`, [tempUserId]);
+    }
+  
     const res = await request(app).post('/registerUser').send(user);
     token = res.body.token;
-
-    const userRes = await pool.query('SELECT id FROM users WHERE email = $1', [user.email]);
-    userId = userRes.rows[0].id;
-
-    // Insert initial balance
+  
+    const newUserRes = await pool.query('SELECT id FROM users WHERE email = $1', [user.email]);
+    userId = newUserRes.rows[0].id;
+  
     await pool.query(`
       INSERT INTO user_balance (user_id, balance, total_spent)
       VALUES ($1, $2, $3)
       ON CONFLICT (user_id) DO UPDATE SET balance = EXCLUDED.balance
     `, [userId, 1000, 0]);
-
+  
     const prodRes = await pool.query(`
       INSERT INTO products (name, price, category, description, rating, size, color, stock, active)
       VALUES ('Test Prod', 50.0, 'Testing', 'desc', 4, 'One Size', 'Black', 100, true)
       RETURNING id
     `);
     productId = prodRes.rows[0].id;
-
+  
     const packRes = await pool.query(`
       INSERT INTO packages (name, price, category, description, rating, size, color)
       VALUES ('Test Pack', 100.0, 'Testing', 'desc', 5, 'One Size', 'Blue')
@@ -43,15 +50,25 @@ describe('Checkout Endpoint', () => {
     `);
     packageId = packRes.rows[0].id;
   });
+  
 
   afterAll(async () => {
-    await pool.query(`DELETE FROM order_packages WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [userId]);
-    await pool.query(`DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [userId]);
-    await pool.query(`DELETE FROM orders WHERE user_id = $1`, [userId]);
-    await pool.query(`DELETE FROM user_balance WHERE user_id = $1`, [userId]);
-    await pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
-    await pool.query(`DELETE FROM products WHERE id = $1`, [productId]);
-    await pool.query(`DELETE FROM packages WHERE id = $1`, [packageId]);
+    if (userId) {
+      await pool.query(`DELETE FROM order_packages WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [userId]);
+      await pool.query(`DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [userId]);
+      await pool.query(`DELETE FROM orders WHERE user_id = $1`, [userId]);
+      await pool.query(`DELETE FROM user_balance WHERE user_id = $1`, [userId]);
+      await pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
+    }
+  
+    if (productId) {
+      await pool.query(`DELETE FROM products WHERE id = $1`, [productId]);
+    }
+  
+    if (packageId) {
+      await pool.query(`DELETE FROM packages WHERE id = $1`, [packageId]);
+    }
+  
     await pool.end();
   });
 

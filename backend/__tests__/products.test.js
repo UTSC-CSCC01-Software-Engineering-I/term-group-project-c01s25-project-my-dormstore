@@ -1,6 +1,8 @@
 import request from 'supertest';
 import app from '../server.js';
 import { pool } from '../server.js';
+import { jest } from '@jest/globals';
+
 
 describe('Products Routes', () => {
   const admin = {
@@ -113,5 +115,31 @@ describe('Products Routes', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.statusCode).toBe(404);
     expect(res.body.error).toMatch(/not found/i);
+  });
+  test('GET /api/products/:id - should return 500 on DB failure', async () => {
+    const originalQuery = pool.query;
+    pool.query = jest.fn(() => {
+      throw new Error('Simulated DB failure');
+    });
+
+    const res = await request(app).get('/api/products/123');
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/failed to fetch product/i);
+
+    pool.query = originalQuery;
+  });
+  test('GET /api/products - should return 500 on DB failure', async () => {
+    const originalQuery = pool.query;
+    pool.query = jest.fn(() => {
+      throw new Error('Simulated DB failure');
+    });
+
+    const res = await request(app).get('/api/products');
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/failed to fetch products/i);
+
+    pool.query = originalQuery;
   });
 });
