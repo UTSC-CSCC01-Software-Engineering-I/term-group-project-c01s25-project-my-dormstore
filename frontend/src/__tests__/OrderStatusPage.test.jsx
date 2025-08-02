@@ -1,84 +1,129 @@
-// OrderStatusPage.test.jsx
-import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import OrderStatusPage from '../pages/OrderStatusPage.jsx';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import '@testing-library/jest-dom';
-import fetchMock from 'jest-fetch-mock';
+import React from "react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import OrderStatusPage from "../pages/OrderStatusPage";
+import "@testing-library/jest-dom";
 
-fetchMock.enableMocks();
-
-
-
-beforeEach(() => {
-  fetch.resetMocks();
+// Suppress router warnings
+beforeAll(() => {
+  jest.spyOn(console, "warn").mockImplementation((msg) => {
+    if (
+      msg.includes("React Router Future Flag Warning") ||
+      msg.includes("Relative route resolution")
+    )
+      return;
+    console.warn(msg);
+  });
 });
 
-const mockOrder = {
-  order_number: 'ORD-123',
-  order_status: 'shipped',
-  created_at: '2025-07-15T00:00:00.000Z',
-  total: 49.99,
-  estimated_delivery: '2025-07-20',
-};
+// Mock useNavigate
+const mockNavigate = jest.fn();
+jest.mock("react-router-dom", () => {
+  const actual = jest.requireActual("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
-function renderWithRouter(route) {
-  window.history.pushState({}, 'Order Status', route);
-  return render(
-    <MemoryRouter initialEntries={[route]}>
+// Helper: render with route
+const renderWithRoute = (initialPath = "/track/ABC123?email=test@example.com") => {
+  render(
+    <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
-        <Route path="/order-status/:orderId" element={<OrderStatusPage />} />
-        <Route path="/order-details/:orderId" element={<div>Order Detail Page</div>} />
+        <Route path="/track/:orderId" element={<OrderStatusPage />} />
       </Routes>
     </MemoryRouter>
   );
-}
+};
 
-describe.skip('Order Status Page', () => {
-  test('displays loading initially', () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true, data: mockOrder }));
-    renderWithRouter('/order-status/ORD-123?email=test@example.com');
-    expect(screen.getByText(/Loading order info/i)).toBeInTheDocument();
+// Common mock order
+const mockOrder = {
+  created_at: "2025-08-01T00:00:00Z",
+  order_number: "ABC123",
+  total: 120,
+  order_status: "Shipped",
+  estimated_delivery: "2025-08-07",
+};
+
+describe("OrderStatusPage - 100% coverage", () => {
+  beforeEach(() => {
+    global.fetch = jest.fn();
+    mockNavigate.mockReset();
   });
 
-  test('renders order details correctly', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true, data: mockOrder }));
+  test("renders full order status when fetch returns success", async () => {
+    fetch.mockResolvedValueOnce({
+      json: async () => ({ success: true, data: mockOrder }),
+    });
 
-    renderWithRouter('/order-status/ORD-123?email=test@example.com');
+    renderWithRoute();
+
+    expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent("YOURORDERSTATUS");
+    expect(screen.getByText("ABC123")).toBeInTheDocument();
+    expect(screen.getByText("$120")).toBeInTheDocument();
+    expect(screen.getByText("Shipped")).toBeInTheDocument();
+    expect(screen.getByText("2025-08-07")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /VIEW ORDER DETAILS/i })).toBeInTheDocument();
+  });
+
+  test("renders fallback when fetch returns order_number without success", async () => {
+    fetch.mockResolvedValueOnce({
+      json: async () => ({ order_number: "ABC123", created_at: "2025-08-01T00:00:00Z", total: 120, order_status: "Shipped" }),
+    });
+
+    renderWithRoute();
+
+    expect(await screen.findByText("ABC123")).toBeInTheDocument();
+    expect(screen.getByText("Shipped")).toBeInTheDocument();
+  });
+
+  test("handles unexpected API format", async () => {
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    fetch.mockResolvedValueOnce({ json: async () => ({ something: "unexpected" }) });
+
+    renderWithRoute();
 
     await waitFor(() => {
-      expect(screen.getByText(/your.*order.*status/i)).toBeInTheDocument();
-      expect(screen.getByText('ORD-123')).toBeInTheDocument();
-      expect(screen.getByText('$49.99')).toBeInTheDocument();
-      expect(screen.getByText('shipped')).toBeInTheDocument();
-      expect(screen.getByText('2025-07-20')).toBeInTheDocument();
+      expect(warnSpy).toHaveBeenCalledWith("Unexpected response format");
+    });
+
+    warnSpy.mockRestore();
+  });
+
+  test("handles fetch error", async () => {
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    fetch.mockRejectedValueOnce(new Error("Fetch failed"));
+
+    renderWithRoute();
+
+    await waitFor(() => {
+      expect(errorSpy).toHaveBeenCalledWith("Error fetching order:", expect.any(Error));
+    });
+
+    errorSpy.mockRestore();
+  });
+
+  test("does not fetch if orderId or email is missing", async () => {
+    fetch.mockClear(); // Make sure nothing runs
+
+    renderWithRoute("/track/ABC123"); // no email param
+
+    await waitFor(() => {
+      expect(fetch).not.toHaveBeenCalled();
     });
   });
 
-  test('shows correct step as active', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true, data: mockOrder }));
-
-    renderWithRouter('/order-status/ORD-123?email=test@example.com');
-
-    await waitFor(() => {
-      const activeSteps = screen.getAllByText(/Order/i).filter(el => el.closest('.step.active'));
-      expect(activeSteps.length).toBeGreaterThanOrEqual(3); // shipped = 3rd step
-    });
-  });
-
-  test('navigates to order detail page on button click', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true, data: mockOrder }));
-
-    renderWithRouter('/order-status/ORD-123?email=test@example.com');
-
-    await waitFor(() => {
-      expect(screen.getByText('VIEW ORDER DETAILS')).toBeInTheDocument();
+  test("clicking view order details navigates", async () => {
+    fetch.mockResolvedValueOnce({
+      json: async () => ({ success: true, data: mockOrder }),
     });
 
-    fireEvent.click(screen.getByText('VIEW ORDER DETAILS'));
+    renderWithRoute();
 
-    await waitFor(() => {
-      expect(screen.getByText('Order Detail Page')).toBeInTheDocument();
-    });
+    const button = await screen.findByRole("button", { name: /VIEW ORDER DETAILS/i });
+    fireEvent.click(button);
+
+    expect(mockNavigate).toHaveBeenCalledWith("/order-details/ABC123");
   });
 });
