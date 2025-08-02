@@ -1467,7 +1467,7 @@ app.put("/api/order-status", async (req, res) => {
   }
 });
 
-app.get("/api/order-details/:orderNumber", async (req, res) => {
+app.get("/api/order-details/:orderNumber", authenticateToken, async (req, res) => {
   const { orderNumber } = req.params;
 
   if (!orderNumber) {
