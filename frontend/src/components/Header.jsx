@@ -28,7 +28,6 @@ export default function Header({ onShowCart }) {
           <img src="/check_box.png" alt="Checklist icon" />
         </span>
         <span onClick={onShowCart} style={{ cursor: 'pointer' }}>
-
           <img src="/shopping.png" alt="Cart icon" />
         </span>
       </div>

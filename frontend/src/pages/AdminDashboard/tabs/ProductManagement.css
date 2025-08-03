@@ -244,10 +244,12 @@
   border-radius: 8px;
   border: 1px solid #e6f0fa;
 }
-.product-name {
+
+/*.product-name {
   font-weight: 600;
   color: #23324d;
 }
+*/
 
 .product-table td input[type="text"],
 .product-table td input[type="number"],

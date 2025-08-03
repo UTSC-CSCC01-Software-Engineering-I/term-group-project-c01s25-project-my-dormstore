@@ -2,97 +2,109 @@
   font-family: 'Helvetica Neue', sans-serif;
   margin: 0;
   padding: 0;
+  background-color: #fefefe;
 }
 
 /* Header */
 .contact-header {
   position: relative;
-  height: 250px;
-  overflow: hidden;
+  height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
+  overflow: hidden;
 }
 
 .header-img {
   position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
+  inset: 0;
   object-fit: cover;
+  width: 100%;
+  height: 100%;
   z-index: 0;
 }
 
 .contact-header .overlay {
   position: absolute;
   inset: 0;
-  background-color: rgba(232, 232, 232, 0.4);
+  background-color: rgba(232, 232, 232, 0.5);
   z-index: 1;
 }
 
 .contact-header h1 {
   position: relative;
   z-index: 2;
-  font-size: 40px;
+  font-size: 42px;
   text-align: center;
-  background-color: #E7F3FB;
-  color: rgb(92, 92, 92);
-  padding: 20px 40px;
+  background-color: #e5f0fa;
+  color: #404040;
+  padding: 16px 32px;
   border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
 
-/* Main Section - Two Columns */
+/* Main Section */
 .contact-main {
   display: flex;
   flex-wrap: wrap;
   gap: 40px;
   justify-content: center;
-  align-items: stretch;
-  padding: 40px 20px;
+  align-items: flex-start;
+  padding: 60px 20px;
   max-width: 1200px;
   margin: 0 auto;
-
 }
 
-/* Shared card styles for both sides */
+/* Shared styles */
 .info-card,
 .contact-form {
-  flex: 1 1 500px; 
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 30px 35px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  flex: 1 1 500px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  padding: 35px 40px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
-  margin-top: 45px;
-  margin-bottom: 45px;
-
 }
 
-/* Left side (info) */
+/* Info Card */
 .info-card h2 {
   font-size: 24px;
-  color: #0077cc;
-  margin-top: 25px;
-  margin-bottom: 15px;
-  margin-left: 8px;
+  color: #0c4d8c;
+  margin-bottom: 20px;
+  font-weight: 700;
 }
 
 .info-card p {
   font-size: 16px;
-  margin-bottom: 12px;
   line-height: 1.6;
-  padding: 10px;
+  margin-bottom: 16px;
+  color: #444;
+}
+
+.email-info,
+.service-hours {
+  background-color: #f0f7ff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 15px;
 }
 
 .info-card a {
-  color: #0077cc;
+  color: #0a6cbd;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.info-card a:hover {
   text-decoration: underline;
 }
 
-/* Right side (form) */
+/* Form */
 .contact-form form {
   display: flex;
   flex-direction: column;
@@ -102,6 +114,7 @@
 .form-row {
   display: flex;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .form-row input {
@@ -111,45 +124,64 @@
 .contact-form input,
 .contact-form textarea {
   padding: 14px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid #ccc;
   font-size: 16px;
-  width: 100%;
-  box-sizing: border-box;
-  transition: border 0.2s ease;
+  background-color: #fdfdfd;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
 .contact-form input:focus,
 .contact-form textarea:focus {
   outline: none;
   border-color: #0077cc;
+  box-shadow: 0 0 0 2px rgba(0, 119, 204, 0.2);
+}
+
+.contact-form textarea {
+  resize: vertical;
 }
 
 .contact-form button {
-  background-color: #E7F3FB;
-  color: black;
+  background-color: #dfebf6;
   border: none;
   padding: 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 16px;
-  font: bold;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.25s ease;
 }
 
 .contact-form button:hover {
-  background-color: #b7def8;
-}
-.status-msg {
-  margin-top: 10px;
-  font-weight: 500;
-  color: #0077cc;
+  background-color: #53b0f2;
 }
 
-/* Responsive */
+.status-msg {
+  margin-top: 14px;
+  font-weight: 500;
+  color: #0a6cbd;
+  font-size: 15px;
+  background-color: #eef7ff;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #c2e1ff;
+}
+
+/* Mobile Responsive */
 @media screen and (max-width: 768px) {
   .contact-main {
     flex-direction: column;
+    padding: 40px 15px;
+  }
+
+  .info-card,
+  .contact-form {
+    padding: 25px 25px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 16px;
   }
 }

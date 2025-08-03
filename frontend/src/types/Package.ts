@@ -12,7 +12,10 @@ export interface Package {
   updated_at?: string;
   suggestedWithPurchase?: boolean;
   shippingInfo?: string;
-  image_url?: string; 
+  image_url?: string;
+  size?: string; // Available sizes (comma-separated)
+  color?: string; // Available colors (comma-separated)
+  stock?: number; // Available stock quantity
 }
 
 export interface Variant {

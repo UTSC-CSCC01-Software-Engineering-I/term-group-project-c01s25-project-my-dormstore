@@ -38,16 +38,14 @@ const Orders = () => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ order_status: newStatus }),
-    })
-      .then(res => res.json())
-      .catch(err => {
-        console.error("Failed to update order status", err);
-      });
+    }).catch(err => {
+      console.error("Failed to update order status", err);
+    });
   };
 
   const fetchOrderItems = (orderId) => {
     setLoadingItems(orderId);
-    fetch(`${API}/api/admin/order_items?order_id=${orderId}`)
+    fetch(`${API}/api/admin/orders/${orderId}`)
       .then(res => res.json())
       .then(data => {
         setOrderItems(prev => ({ ...prev, [orderId]: data }));
@@ -159,32 +157,64 @@ const Orders = () => {
                       <td colSpan="10">
                         <div style={{ padding: "1rem 0" }}>
                           {loadingItems === order.id ? (
-                            <div>Loading order items...</div>
-                          ) : orderItems[order.id] && orderItems[order.id].length > 0 ? (
-                            <table className="products-table">
-                              <thead>
-                                <tr>
-                                  <th>Product ID</th>
-                                  <th>Name</th>
-                                  <th>Price</th>
-                                  <th>Quantity</th>
-                                  <th>Subtotal</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {orderItems[order.id].map((item, idx) => (
-                                  <tr key={idx}>
-                                    <td>{item.product_id}</td>
-                                    <td>{item.product_name}</td>
-                                    <td>${Number(item.product_price).toFixed(2)}</td>
-                                    <td>{item.quantity}</td>
-                                    <td>${Number(item.subtotal).toFixed(2)}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                            <div>Loading order details...</div>
+                          ) : orderItems[order.id] ? (
+                            <>
+                              {orderItems[order.id].items?.length > 0 && (
+                                <>
+                                  <table className="products-table">
+                                    <thead>
+                                      <tr>
+                                        <th>Product ID</th>
+                                        <th>Name</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Subtotal</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {orderItems[order.id].items.map((item, idx) => (
+                                        <tr key={`prod-${idx}`}>
+                                          <td>{item.product_id}</td>
+                                          <td>{item.product_name}</td>
+                                          <td>${Number(item.product_price).toFixed(2)}</td>
+                                          <td>{item.quantity}</td>
+                                          <td>${Number(item.subtotal).toFixed(2)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </>
+                              )}
+                              {orderItems[order.id].packages?.length > 0 && (
+                                <>
+                                  <table className="products-table">
+                                    <thead>
+                                      <tr>
+                                        <th>Package ID</th>
+                                        <th>Name</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Subtotal</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {orderItems[order.id].packages.map((pkg, idx) => (
+                                        <tr key={`pkg-${idx}`}>
+                                          <td>{pkg.package_id}</td>
+                                          <td>{pkg.package_name}</td>
+                                          <td>${Number(pkg.package_price).toFixed(2)}</td>
+                                          <td>{pkg.quantity}</td>
+                                          <td>${Number(pkg.subtotal).toFixed(2)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </>
+                              )}
+                            </>
                           ) : (
-                            <div>No order items found.</div>
+                            <div>No order details found.</div>
                           )}
                         </div>
                       </td>

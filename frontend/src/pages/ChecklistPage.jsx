@@ -22,7 +22,6 @@ export default function ChecklistPage() {
   const [checklistLoaded, setChecklistLoaded] = useState(false);
   const location = useLocation();
 
-
   const toggleCheck = (id) => {
     setItems((prev) =>
       prev.map((item) =>
@@ -123,14 +122,26 @@ export default function ChecklistPage() {
     const dormChecklist = DormChecklistItems[selectedDorm] || DormChecklistItems["default"];
   
     const synced = dormChecklist.map((item) => {
-      const isInCart = cartItems.some((cartItem) =>
-        cartItem.name.toLowerCase().includes(item.label.toLowerCase())
-      );
+      const itemLabelLower = item.label.toLowerCase();
+    
+      const isInCart = cartItems.some((cartItem) => {
+        const cartNameLower = cartItem.name.toLowerCase();
+        const selectedSize = cartItem.selectedSize?.toLowerCase();
+    
+        if (cartNameLower.includes(itemLabelLower)) return true;
+    
+        // Match size-specific items like "Queen Sheet", "Twin XL Sheet"
+        const sizeSheetMatch = itemLabelLower.includes("sheet") && selectedSize && itemLabelLower.includes(selectedSize);
+    
+        return sizeSheetMatch;
+      });
+    
       return { ...item, checked: isInCart };
     });
   
     setItems(synced);
   }, [cartItems, cartReady, checklistLoaded, location.pathname, selectedDorm]);
+  
   
   
 

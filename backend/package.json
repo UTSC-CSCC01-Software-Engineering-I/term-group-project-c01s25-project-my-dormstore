@@ -5,10 +5,12 @@
   "proxy": "localhost:5000",
   "type": "module",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "start": "node --env-file=.env server.js",
     "dev": "nodemon --env-file=.env server.js",
     "setup-db": "node --env-file=.env scripts/setup-database.js",
+    "init-db": "npm run setup-db",
+    "setup": "npm run init-db && npm run add-users && npm run add-categories && npm run add-products && npm run add-bedding-products && npm run add-all-packages && npm run add-package-items && npm run add-order-updates",
     "clear-products": "node --env-file=.env scripts/clear-products.js",
     "add-categories": "node --env-file=.env scripts/add-categories.js",
     "add-products": "node --env-file=.env scripts/add-products.js",

@@ -15,7 +15,7 @@ async function addPackagesTables() {
   try {
     console.log('Adding packages and package_items tables...');
     
-    // Create packages table
+    // Create packages tablea
     await pool.query(`
       CREATE TABLE IF NOT EXISTS packages (
         id SERIAL PRIMARY KEY,
@@ -25,6 +25,8 @@ async function addPackagesTables() {
         description TEXT,
         image_url   TEXT,
         rating DECIMAL(2,1) DEFAULT 0,
+        size TEXT,
+        color TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )

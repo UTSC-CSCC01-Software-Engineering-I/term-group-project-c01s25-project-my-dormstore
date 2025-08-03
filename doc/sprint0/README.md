@@ -43,11 +43,10 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
     ```env
     PORT=5001
     PG_USER=your_db_user
-    PG_PASSWORD=your_db_password
+    PG_PWD=your_db_password
     PG_DATABASE=your_db_name
     PG_HOST=localhost
     PG_PORT=5432
-    JWT_SECRET=your_jwt_secret
     ```
 
   - If you're using a custom port (e.g., 5002 instead of 5001), make sure:
@@ -60,10 +59,13 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
    createdb -U postgres mydormstore
     ```
     
-5. **Initialize Database Tables and Seed Data**
+5. **Initialize Database Table and Functions**
 
     ```bash
+    npm run setup-db
+    npm run setup-functions
     npm run setup
+    npm run run-seed 
     ```
 
     - Create all necessary tables from schema.sql
@@ -118,11 +120,3 @@ We use Git Flow to manage development:
 ### Issues and ticketing 
 
 All tasks are tracked using [Github Issues](https://github.com/yourusername/your-repo/issues) for tracking features, bugs, and enhancements. All tasks must be linked to an issue. Each issue should be assigned, labled (e.g., <code>frontend</code>, <code>backend</code>, bug, enhancement), and referenced in pull requests where applicable. 
-
-
-
-
-
-
-
-

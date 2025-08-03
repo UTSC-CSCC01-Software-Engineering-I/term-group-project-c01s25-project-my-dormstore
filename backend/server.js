@@ -30,11 +30,16 @@ async function connectToPG() {
       password: process.env.PG_PWD,
       port: process.env.PG_PORT,
     });
+    console.log("Database connection established");
   } catch (error) {
     console.error("Error connecting to PostgreSQL:", error);
+    console.log("Server will start without database connection");
   }
 }
-connectToPG();
+
+// Don't call connectToPG() immediately - let the server start first
+// connectToPG();
+
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -54,10 +59,38 @@ function authenticateToken(req, res, next) {
 }
 
 // Start server
-app.listen(PORT, () => {
+/*app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
-  
+*/
+
+// Simple health check endpoint
+app.get("/", (req, res) => {
+    const dbStatus = pool ? "connected" : "disconnected";
+    res.json({ 
+        status: "Server is running", 
+        timestamp: new Date().toISOString(),
+        database: dbStatus
+    });
+});
+
+// Initialize database connection after server starts
+/*setTimeout(() => {
+    connectToPG();
+}, 1000);
+ */ 
+
+const startServer = async () => {
+  await connectToPG();
+
+  if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  }
+};
+
+startServer();
 
 // Register a new user
 app.post("/registerUser", async (req, res) => {
@@ -131,84 +164,271 @@ app.post("/loginUser", async (req, res) => {
   });
 
 // Get user's cart items
-app.get("/cart", authenticateToken, async (req, res) => {
+app.get("/cart", async (req, res) => {
   try {
-    const userId = req.user.userId;
-    const result = await pool.query(
-      "SELECT id, product_id, quantity, selected_size, selected_color, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
-      [userId]
-    );
-    res.json({ cartItems: result.rows });
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (token) {
+      // Authenticated user
+      try {
+        const user = jwt.verify(token, "secret-key");
+        const userId = user.userId;
+        
+        // Get all cart items (both products and packages)
+        const cartResult = await pool.query(
+          "SELECT id, product_id, package_id, quantity, selected_size, selected_color, item_type, created_at, updated_at FROM cart_items WHERE user_id = $1 ORDER BY created_at DESC",
+          [userId]
+        );
+
+        // Check stock for each cart item and remove/adjust items as needed
+        const cartItems = [];
+        const removedItems = [];
+        
+        for (const item of cartResult.rows) {
+          let productResult, isPackage = false;
+          
+          // Check if it's a package item
+          if (item.item_type === 'package' && item.package_id) {
+            productResult = await pool.query(
+              "SELECT name, stock FROM packages WHERE id = $1",
+              [item.package_id]
+            );
+            isPackage = true;
+          } else if (item.item_type === 'product' && item.product_id) {
+            // Check products table
+            productResult = await pool.query(
+              "SELECT name, stock FROM products WHERE id = $1",
+              [item.product_id]
+            );
+          }
+          
+          // If no results found, the product/package was deleted
+          if (!productResult || productResult.rows.length === 0) {
+            await pool.query("DELETE FROM cart_items WHERE id = $1", [item.id]);
+            removedItems.push({ 
+              name: `${isPackage ? 'Package' : 'Product'} (ID: ${item.package_id || item.product_id})`, 
+              reason: `${isPackage ? 'Package' : 'Product'} no longer available` 
+            });
+            continue;
+          }
+          
+          const product = productResult.rows[0];
+          
+          if (product.stock === 0) {
+            // product/package is out of stock, remove from cart
+            await pool.query("DELETE FROM cart_items WHERE id = $1", [item.id]);
+            removedItems.push({ name: product.name, reason: "Out of stock" });
+          } 
+          else if (item.quantity > product.stock) {
+            // quantity exceeds available stock, adjust quantity
+            await pool.query(
+              "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+              [product.stock, item.id]
+            );
+            item.quantity = product.stock;
+            removedItems.push({ 
+              name: product.name, 
+              reason: `Quantity adjusted to ${product.stock} (available stock)` 
+            });
+            cartItems.push(item);
+          } else {
+            // Add to cart items if stock is sufficient
+            cartItems.push(item);
+          }
+        }
+        
+        res.json({ 
+          cartItems: cartItems,
+          removedItems: removedItems
+        });
+      } catch (jwtError) {
+        // Invalid token, treat as guest
+        res.json({ 
+          cartItems: [],
+          removedItems: []
+        });
+      }
+    } else {
+      // Guest user - return empty cart
+      res.json({ 
+        cartItems: [],
+        removedItems: []
+      });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to retrieve cart items" });
   }
 });
 
-// Add item to cart
-app.post("/cart", authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { product_id, quantity = 1, selected_size, selected_color } = req.body;
 
-    if (!product_id) {
-      return res.status(400).json({ error: "Product ID is required" });
+// Add item to cart - supports both products and packages
+app.post("/cart", authenticateToken, async (req, res) => {
+  const userId = req.user.userId; // ✅ verified by middleware
+  const { product_id, package_id, quantity = 1, selected_size, selected_color } = req.body;
+  console.log("Add to cart body:", req.body);
+
+  try {
+    if (!product_id && !package_id) {
+      return res.status(400).json({ error: "Product ID or Package ID is required" });
     }
     if (quantity < 1) {
       return res.status(400).json({ error: "Quantity must be at least 1" });
     }
 
-    // Check for existing item with same product_id, size, and color
-    let existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2";
-    let queryParams = [userId, product_id];
-    
-    if (selected_size) {
-      existingItemQuery += " AND selected_size = $3";
-      queryParams.push(selected_size);
+    // Check stock availability
+    if (package_id) {
+      // Check package stock
+      const packageResult = await pool.query(
+        "SELECT stock FROM packages WHERE id = $1",
+        [package_id]
+      );
       
-      if (selected_color) {
-        existingItemQuery += " AND selected_color = $4";
+      if (packageResult.rows.length === 0) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+      
+      const availableStock = packageResult.rows[0].stock;
+      if (quantity > availableStock) {
+        return res.status(400).json({ 
+          error: "Insufficient package stock", 
+          availableStock: availableStock,
+          requestedQuantity: quantity,
+          maxCanAdd: availableStock
+        });
+      }
+    } else if (product_id) {
+      // Check product stock
+      let productResult = await pool.query(
+        "SELECT stock FROM products WHERE id = $1",
+        [product_id]
+      );
+      
+      if (productResult.rows.length === 0) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      const availableStock = productResult.rows[0].stock;
+      if (quantity > availableStock) {
+        return res.status(400).json({ 
+          error: "Insufficient stock", 
+          availableStock: availableStock,
+          requestedQuantity: quantity,
+          maxCanAdd: availableStock
+        });
+      }
+    }
+
+    let existingItemQuery, queryParams, insertQuery, insertParams;
+
+    if (package_id) {
+      // Handle package - include size and color handling like products
+      existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND package_id = $2 AND item_type = 'package'";
+      queryParams = [userId, package_id];
+
+      if (selected_size) {
+        existingItemQuery += " AND selected_size = $3";
+        queryParams.push(selected_size);
+
+        if (selected_color) {
+          existingItemQuery += " AND selected_color = $4";
+          queryParams.push(selected_color);
+        } else {
+          existingItemQuery += " AND selected_color IS NULL";
+        }
+      } else if (selected_color) {
+        existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
         queryParams.push(selected_color);
       } else {
-        existingItemQuery += " AND selected_color IS NULL";
+        existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
       }
-    } else if (selected_color) {
-      existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
-      queryParams.push(selected_color);
+
+      insertQuery = "INSERT INTO cart_items (user_id, package_id, quantity, selected_size, selected_color, item_type) VALUES ($1, $2, $3, $4, $5, 'package') RETURNING *";
+      insertParams = [userId, package_id, quantity, selected_size || null, selected_color || null];
     } else {
-      existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
+      // Handle product
+      existingItemQuery = "SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2 AND item_type = 'product'";
+      queryParams = [userId, product_id];
+
+      if (selected_size) {
+        existingItemQuery += " AND selected_size = $3";
+        queryParams.push(selected_size);
+
+        if (selected_color) {
+          existingItemQuery += " AND selected_color = $4";
+          queryParams.push(selected_color);
+        } else {
+          existingItemQuery += " AND selected_color IS NULL";
+        }
+      } else if (selected_color) {
+        existingItemQuery += " AND selected_size IS NULL AND selected_color = $3";
+        queryParams.push(selected_color);
+      } else {
+        existingItemQuery += " AND selected_size IS NULL AND selected_color IS NULL";
+      }
+
+      insertQuery = "INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color, item_type) VALUES ($1, $2, $3, $4, $5, 'product') RETURNING *";
+      insertParams = [userId, product_id, quantity, selected_size || null, selected_color || null];
     }
 
     const existingItem = await pool.query(existingItemQuery, queryParams);
-    
+
     if (existingItem.rows.length > 0) {
-      // update existing item quantity
+      // update existing item quantity - check total quantity against stock
       const newQuantity = existingItem.rows[0].quantity + quantity;
+      
+      // Get the current available stock for validation
+      let availableStock;
+      if (package_id) {
+        const packageResult = await pool.query(
+          "SELECT stock FROM packages WHERE id = $1",
+          [package_id]
+        );
+        availableStock = packageResult.rows[0].stock;
+      } else {
+        const productResult = await pool.query(
+          "SELECT stock FROM products WHERE id = $1",
+          [product_id]
+        );
+        availableStock = productResult.rows[0].stock;
+      }
+      
+      // Check if total quantity exceeds available stock
+      if (newQuantity > availableStock) {
+        return res.status(400).json({ 
+          error: "Insufficient stock for total quantity", 
+          availableStock: availableStock,
+          currentCartQuantity: existingItem.rows[0].quantity,
+          requestedQuantity: quantity,
+          totalQuantity: newQuantity,
+          maxCanAdd: Math.max(0, availableStock - existingItem.rows[0].quantity)
+        });
+      }
+      
       const result = await pool.query(
         "UPDATE cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
         [newQuantity, existingItem.rows[0].id]
       );
-      
-      res.json({ 
+
+      return res.json({ 
         message: "Cart item updated", 
         cartItem: result.rows[0] 
       });
     } else {
-      const result = await pool.query(
-        "INSERT INTO cart_items (user_id, product_id, quantity, selected_size, selected_color) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [userId, product_id, quantity, selected_size || null, selected_color || null]
-      );
-      
-      res.status(201).json({ 
+      const result = await pool.query(insertQuery, insertParams);
+      return res.status(201).json({ 
         message: "Item added to cart", 
         cartItem: result.rows[0] 
       });
     }
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to add item to cart" });
   }
 });
+
 
 // update cart item quantity
 app.put("/cart/:itemId", authenticateToken, async (req, res) => {
@@ -218,8 +438,67 @@ app.put("/cart/:itemId", authenticateToken, async (req, res) => {
     const { quantity } = req.body;
 
     // validate
-    if (!quantity || quantity < 1) {
-      return res.status(400).json({ error: "Quantity must be at least 1" });
+    if (!quantity || quantity < 0) {
+      return res.status(400).json({ error: "Quantity must be at least 0" });
+    }
+
+    // If quantity is 0, delete the item
+    if (quantity === 0) {
+      await pool.query("DELETE FROM cart_items WHERE id = $1 AND user_id = $2", [itemId, userId]);
+      return res.json({ 
+        message: "Cart item removed", 
+        removed: true 
+      });
+    }
+
+    // Get cart item to check both product_id and package_id
+    const cartItemResult = await pool.query(
+      "SELECT product_id, package_id, item_type FROM cart_items WHERE id = $1 AND user_id = $2",
+      [itemId, userId]
+    );
+    
+    if (cartItemResult.rows.length === 0) {
+      return res.status(404).json({ error: "Cart item not found or not authorized" });
+    }
+
+    const cartItem = cartItemResult.rows[0];
+    let productResult, availableStock;
+
+    // Check stock based on item type
+    if (cartItem.item_type === 'package' && cartItem.package_id) {
+      productResult = await pool.query(
+        "SELECT stock FROM packages WHERE id = $1",
+        [cartItem.package_id]
+      );
+      
+      if (productResult.rows.length === 0) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+      
+      availableStock = productResult.rows[0].stock;
+    } else if (cartItem.item_type === 'product' && cartItem.product_id) {
+      productResult = await pool.query(
+        "SELECT stock FROM products WHERE id = $1",
+        [cartItem.product_id]
+      );
+      
+      if (productResult.rows.length === 0) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      availableStock = productResult.rows[0].stock;
+    } else {
+      return res.status(400).json({ error: "Invalid cart item type" });
+    }
+
+    // Check if requested quantity exceeds available stock
+    if (quantity > availableStock) {
+      return res.status(400).json({ 
+        error: "Insufficient stock", 
+        availableStock: availableStock,
+        requestedQuantity: quantity,
+        maxCanAdd: availableStock
+      });
     }
 
     const result = await pool.query(
@@ -283,10 +562,161 @@ app.delete("/cart", authenticateToken, async (req, res) => {
   }
 });
 
+// Package cart endpoints - supports both authenticated and guest users
+app.post("/package-cart", async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    const { package_id, quantity = 1 } = req.body;
+
+    if (!package_id) {
+      return res.status(400).json({ error: "Package ID is required" });
+    }
+    if (quantity < 1) {
+      return res.status(400).json({ error: "Quantity must be at least 1" });
+    }
+
+    if (token) {
+      // Authenticated user
+      try {
+        const user = jwt.verify(token, "secret-key");
+        const userId = user.userId;
+
+        // Check for existing package in cart
+        const existingItem = await pool.query(
+          "SELECT id, quantity FROM package_cart_items WHERE user_id = $1 AND package_id = $2",
+          [userId, package_id]
+        );
+        
+        if (existingItem.rows.length > 0) {
+          // update existing item quantity
+          const newQuantity = existingItem.rows[0].quantity + quantity;
+          const result = await pool.query(
+            "UPDATE package_cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
+            [newQuantity, existingItem.rows[0].id]
+          );
+          
+          res.json({ 
+            message: "Package cart item updated", 
+            cartItem: result.rows[0] 
+          });
+        } else {
+          const result = await pool.query(
+            "INSERT INTO package_cart_items (user_id, package_id, quantity) VALUES ($1, $2, $3) RETURNING *",
+            [userId, package_id, quantity]
+          );
+          
+          res.status(201).json({ 
+            message: "Package added to cart", 
+            cartItem: result.rows[0] 
+          });
+        }
+      } catch (jwtError) {
+        // Invalid token, treat as guest
+        res.status(401).json({ error: "Invalid token" });
+      }
+    } else {
+      // Guest user - return success but don't store in database
+      res.status(201).json({ 
+        message: "Package added to guest cart", 
+        cartItem: {
+          id: `guest_package_${Date.now()}`,
+          package_id: package_id,
+          quantity: quantity
+        }
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to add package to cart" });
+  }
+});
+
+// Update package cart item quantity
+app.put("/package-cart/:itemId", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const itemId = parseInt(req.params.itemId);
+    const { quantity } = req.body;
+
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ error: "Quantity must be at least 1" });
+    }
+
+    const result = await pool.query(
+      "UPDATE package_cart_items SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3 RETURNING *",
+      [quantity, itemId, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Package cart item not found or not authorized" });
+    }
+
+    res.json({ 
+      message: "Package cart item quantity updated", 
+      cartItem: result.rows[0] 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update package cart item" });
+  }
+});
+
+// Remove package from cart
+app.delete("/package-cart/:itemId", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const itemId = parseInt(req.params.itemId);
+
+    const result = await pool.query(
+      "DELETE FROM package_cart_items WHERE id = $1 AND user_id = $2 RETURNING *",
+      [itemId, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Package cart item not found or not authorized" });
+    }
+    res.json({ 
+      message: "Package removed from cart", 
+      removedItem: result.rows[0] 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to remove package from cart" });
+  }
+});
+
+// Clear package cart
+app.delete("/package-cart", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const result = await pool.query(
+      "DELETE FROM package_cart_items WHERE user_id = $1 RETURNING *",
+      [userId]
+    );
+
+    res.json({ 
+      message: "Package cart cleared successfully", 
+      removedItems: result.rows,
+      itemsRemoved: result.rows.length
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to clear package cart" });
+  }
+});
+
 
   app.put("/api/user/update", authenticateToken, async (req, res) => {
     const { email, password, currentPassword, dorm, first_name, last_name, school, phone, address, city, province, postal_code } = req.body;
     const userId = req.user.userId;
+
+    if (
+      !email && !password && !dorm &&
+      !first_name && !last_name && !school &&
+      !phone && !address && !city && !province && !postal_code
+    ) {
+      return res.status(400).json({ error: "No fields provided" });
+    }
   
     try {
       if (password && currentPassword) {
@@ -456,10 +886,12 @@ app.get("/api/products", async (req, res) => {
     let query, params;
     
     if (category) {
-      query = "SELECT id, name, price, description, rating, image_url, category, size, color, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
+      query = "SELECT id, name, price, description, rating, image_url, category, size, color, stock, created_at, updated_at FROM products WHERE category = $1 ORDER BY name";
       params = [category];
     } else {
-      query = "SELECT id, name, price, description, rating, image_url, category, size, color, created_at, updated_at FROM products ORDER BY name";
+
+      query = "SELECT id, name, price, description, rating, image_url, category, size, color, stock, created_at, updated_at FROM products ORDER BY name";
+
       params = [];
     }
     
@@ -476,7 +908,7 @@ app.get("/api/products/:id", async (req, res) => {
   try {
     const productId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, description, rating, image_url, category, size, color, created_at, updated_at FROM products WHERE id = $1",
+      "SELECT id, name, price, description, rating, image_url, category, size, color, stock, created_at, updated_at FROM products WHERE id = $1",
       [productId]
     );
     
@@ -495,7 +927,7 @@ app.get("/api/products/:id", async (req, res) => {
 app.get("/api/packages", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, created_at, updated_at FROM packages ORDER BY category, name"
+      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages ORDER BY category, name"
     );
     res.json({ packages: result.rows });
   } catch (error) {
@@ -509,7 +941,7 @@ app.get("/api/packages/:id", async (req, res) => {
   try {
     const packageId = parseInt(req.params.id);
     const result = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     
@@ -531,7 +963,7 @@ app.get("/api/packages/:id/details", async (req, res) => {
     
     // Get package info
     const packageResult = await pool.query(
-      "SELECT id, name, price, category, description, rating, image_url, created_at, updated_at FROM packages WHERE id = $1",
+      "SELECT id, name, price, category, description, rating, image_url, size, color, stock, created_at, updated_at FROM packages WHERE id = $1",
       [packageId]
     );
     
@@ -673,14 +1105,33 @@ app.post("/api/user/balance/add", authenticateToken, async (req, res) => {
   }
 });
 
-// Order creation endpoint with balance deduction
+// Order creation endpoint with balance deduction (supports both authenticated and guest users)
 app.post("/api/orders", authenticateToken, async (req, res) => {
   const client = await pool.connect();
   
   try {
     await client.query('BEGIN');
     
-    const userId = req.user.userId;
+    // Check if user is authenticated or guest
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    let userId = null;
+    
+    if (token) {
+      try {
+        const user = jwt.verify(token, "secret-key");
+        userId = user.userId;
+      } catch (jwtError) {
+        // Invalid token, treat as guest
+        userId = null;
+      }
+    }
+    
+    // For guest users, we'll create a temporary user or handle differently
+    if (!userId) {
+      // Guest checkout - create a temporary user or handle without user_id
+      console.log('Processing guest checkout...');
+    }
     const {
       email,
       firstName,
@@ -706,33 +1157,39 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check user balance
-    let balanceResult = await client.query(
-      "SELECT * FROM user_balance WHERE user_id = $1",
-      [userId]
-    );
-    
-    if (balanceResult.rows.length === 0) {
-      // Create initial balance for new user
-      await client.query(
-        "INSERT INTO user_balance (user_id, balance, total_spent) VALUES ($1, $2, $3)",
-        [userId, 1000.00, 0.00]
-      );
-      balanceResult = await client.query(
+    // Check user balance (only for authenticated users)
+    if (userId) {
+      console.log("Processing order for user ID:", userId);
+      let balanceResult = await client.query(
         "SELECT * FROM user_balance WHERE user_id = $1",
         [userId]
       );
-    }
-    
-    const currentBalance = parseFloat(balanceResult.rows[0].balance);
-    
-    if (currentBalance < total) {
-      return res.status(400).json({ 
-        error: "Insufficient funds", 
-        currentBalance: currentBalance,
-        requiredAmount: total,
-        shortfall: total - currentBalance
-      });
+      
+      if (balanceResult.rows.length === 0) {
+        // Create initial balance for new user
+        await client.query(
+          "INSERT INTO user_balance (user_id, balance, total_spent) VALUES ($1, $2, $3)",
+          [userId, 1000.00, 0.00]
+        );
+        balanceResult = await client.query(
+          "SELECT * FROM user_balance WHERE user_id = $1",
+          [userId]
+        );
+      }
+      
+      const currentBalance = parseFloat(balanceResult.rows[0].balance);
+      
+      if (currentBalance < total) {
+        return res.status(400).json({ 
+          error: "Insufficient funds", 
+          currentBalance: currentBalance,
+          requiredAmount: total,
+          shortfall: total - currentBalance
+        });
+      }
+    } else {
+      // Guest checkout - skip balance check
+      console.log('Guest checkout - skipping balance check');
     }
 
     // Generate unique order number
@@ -764,47 +1221,120 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
     const orderId = orderResult.rows[0].id;
     const orderNumberGenerated = orderResult.rows[0].order_number;
 
-    // Get cart items for this user
-    const cartResult = await client.query(
-      "SELECT ci.*, p.name as product_name, p.price as price FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.user_id = $1",
-      [userId]
-    );
-
-    // Create order items
-    for (const item of cartResult.rows) {
-      await client.query(
-        `INSERT INTO order_items (
-          order_id, product_id, product_name, product_price, quantity, subtotal
-        ) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          orderId, item.product_id, item.product_name, item.price,
-          item.quantity, item.product_price * item.quantity
-        ]
+    // Get cart items (for authenticated users from database, for guests from request body)
+    let cartItems = [];
+    
+    if (userId) {
+      // Authenticated user - get from database
+      const cartResult = await client.query(
+        `SELECT ci.*, 
+                ci.item_type,
+                p.name as product_name, p.price as product_price,
+                pk.name as package_name, pk.price as package_price
+         FROM cart_items ci 
+         LEFT JOIN products p ON ci.product_id = p.id 
+         LEFT JOIN packages pk ON ci.package_id = pk.id 
+         WHERE ci.user_id = $1`,
+        [userId]
       );
+      cartItems = cartResult.rows;
+    } else {
+      // Guest user - get from request body
+      cartItems = req.body.cartItems || [];
+      console.log('Guest checkout - using cart items from request body:', cartItems.length, 'items');
     }
 
-    // Deduct from user balance and update total spent
-    await client.query(
-      `UPDATE user_balance 
-       SET balance = balance - $1, 
-           total_spent = total_spent + $1, 
-           last_updated = CURRENT_TIMESTAMP 
-       WHERE user_id = $2`,
-      [total, userId]
-    );
+    
+    // Create order items and reduce inventory
+    for (const item of cartItems) {
+      if (item.item_type === 'product') {
+        const productRes = await client.query("SELECT name, price FROM products WHERE id = $1", [item.product_id]);
 
-    // Clear the user's cart
-    await client.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
+        if (productRes.rows.length === 0) {
+          throw new Error(`Product with ID ${item.product_id} not found`);
+        }
+
+        const { name: product_name, price: product_price } = productRes.rows[0];
+        
+        // Handle product
+        await client.query(
+          `INSERT INTO order_items (
+            order_id, product_id, product_name, product_price, quantity, subtotal
+          ) VALUES ($1, $2, $3, $4, $5, $6)`,
+          [
+            orderId, item.product_id, item.product_name, item.product_price,
+            item.quantity, item.product_price * item.quantity
+          ]
+        );
+        
+        // Reduce product stock
+        await client.query(
+          `UPDATE products 
+           SET stock = stock - $1, 
+               updated_at = CURRENT_TIMESTAMP 
+           WHERE id = $2`,
+          [item.quantity, item.product_id]
+        );
+      } else if (item.item_type === 'package') {
+        const packageRes = await client.query("SELECT name, price FROM packages WHERE id = $1", [item.package_id]);
+
+        if (packageRes.rows.length === 0) {
+          throw new Error(`Package with ID ${item.package_id} not found`);
+        }
+
+        const { name: package_name, price: package_price } = packageRes.rows[0];
+      
+        // Handle package
+        await client.query(
+          `INSERT INTO order_packages (
+            order_id, package_id, quantity
+          ) VALUES ($1, $2, $3)`,
+          [orderId, item.package_id, item.quantity]
+        );
+
+        const packageItemsRes = await client.query(
+          `SELECT product_id, quantity FROM package_items WHERE package_id = $1`,
+          [item.package_id]
+        );
+      }
+    }
+
+    // Handle additional packages if they exist in the order data
+    if (req.body.packages && req.body.packages.length > 0) {
+      for (const packageItem of req.body.packages) {
+        // Create order package entry
+        await client.query(
+          `INSERT INTO order_packages (
+            order_id, package_id, quantity
+          ) VALUES ($1, $2, $3)`,
+          [orderId, packageItem.package_id, packageItem.quantity]
+        );
+        
+        // Package stock will be reduced automatically by the trigger
+      }
+    }
+
+    // Deduct from user balance and update total spent (only for authenticated users)
+    if (userId) {
+      await client.query(
+        `UPDATE user_balance 
+         SET balance = balance - $1, 
+             total_spent = total_spent + $1, 
+             last_updated = CURRENT_TIMESTAMP 
+         WHERE user_id = $2`,
+        [total, userId]
+      );
+
+      // Clear the user's cart (both products and packages)
+      await client.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
+    } else {
+      console.log('Guest checkout - skipping balance deduction and cart clearing');
+    }
 
     await client.query('COMMIT');
 
-    // Get updated balance
-    const updatedBalanceResult = await client.query(
-      "SELECT balance, total_spent FROM user_balance WHERE user_id = $1",
-      [userId]
-    );
-
-    res.status(201).json({
+    // Prepare response
+    let response = {
       message: "Order created successfully",
       order: {
         id: orderId,
@@ -812,12 +1342,25 @@ app.post("/api/orders", authenticateToken, async (req, res) => {
         total: total,
         shippingMethod: shippingMethod,
         shippingCost: shippingCost || shipping
-      },
-      balance: {
+      }
+    };
+
+    // Add balance info for authenticated users
+    if (userId) {
+      const updatedBalanceResult = await client.query(
+        "SELECT balance, total_spent FROM user_balance WHERE user_id = $1",
+        [userId]
+      );
+      
+      response.balance = {
         remaining: parseFloat(updatedBalanceResult.rows[0].balance),
         totalSpent: parseFloat(updatedBalanceResult.rows[0].total_spent)
-      }
-    });
+      };
+    } else {
+      response.message = "Guest order created successfully";
+    }
+
+    res.status(201).json(response);
 
   } catch (error) {
     await client.query('ROLLBACK');
@@ -961,7 +1504,7 @@ app.put("/api/order-status", async (req, res) => {
   }
 });
 
-app.get("/api/order-details/:orderNumber", async (req, res) => {
+app.get("/api/order-details/:orderNumber", authenticateToken, async (req, res) => {
   const { orderNumber } = req.params;
 
   if (!orderNumber) {
@@ -969,27 +1512,37 @@ app.get("/api/order-details/:orderNumber", async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      `SELECT o.*, 
-              json_agg(json_build_object(
-                'product_id', oi.product_id,
-                'product_name', oi.product_name,
-                'product_price', oi.product_price,
-                'quantity', oi.quantity,
-                'subtotal', oi.subtotal
-              )) AS items
-       FROM orders o
-       LEFT JOIN order_items oi ON o.id = oi.order_id
-       WHERE o.order_number = $1
-       GROUP BY o.id`,
+    const orderRes = await pool.query(
+      `SELECT * FROM orders WHERE order_number = $1`,
       [orderNumber]
     );
 
-    if (result.rows.length === 0) {
+    if (orderRes.rows.length === 0) {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    res.json({ order: result.rows[0] });
+    const order = orderRes.rows[0];
+
+    console.log("Order ID:", order.id);
+
+    const productItems = await pool.query(
+      `SELECT 'product' AS item_type, product_name AS name, product_price AS price, quantity
+       FROM order_items
+       WHERE order_id = $1`,
+      [order.id]
+    );
+
+    const packageItems = await pool.query(
+      `SELECT 'package' AS item_type, p.name, p.price, op.quantity
+       FROM order_packages op
+       JOIN packages p ON op.package_id = p.id
+       WHERE op.order_id = $1`,
+      [order.id]
+    );
+
+    order.items = [...productItems.rows, ...packageItems.rows];
+
+    res.json({ order });
   } catch (error) {
     console.error("Error fetching order details:", error);
     res.status(500).json({ error: "Failed to fetch order details" });
@@ -1093,38 +1646,31 @@ app.delete('/api/admin/ambassadors/:id', authenticateToken, async (req, res) => 
   }
 });
 
-export async function autoUpdatePackageStock(packageId) {
-  const itemsResult = await pool.query(
-    `SELECT product_id, quantity FROM package_items WHERE package_id = $1`,
-    [packageId]
-  );
-  if (!itemsResult.rows || itemsResult.rows.length === 0) return;
+async function autoUpdatePackageStock(packageId, clientArg) {
+  const client = clientArg || (await pool.connect());
+  let releaseClient = false;
+  if (!clientArg) releaseClient = true;
 
-  const productIds = itemsResult.rows.map(row => row.product_id);
-  const stockResult = await pool.query(
-    `SELECT id, stock FROM products WHERE id = ANY($1)`,
-    [productIds]
-  );
-  const stockMap = {};
-  for (const row of stockResult.rows) stockMap[row.id] = Number(row.stock);
+  try {
+    const { rows } = await client.query(`
+      SELECT p.stock, pi.quantity
+      FROM package_items pi
+      JOIN products p ON pi.product_id = p.id
+      WHERE pi.package_id = $1
+    `, [packageId]);
 
-  let maxPossible = Infinity;
-  for (const item of itemsResult.rows) {
-    const pStock = stockMap[item.product_id];
-    if (pStock === undefined) return;
-    const need = Number(item.quantity);
-    if (!need) return;
-    const canMake = Math.floor(pStock / need);
-    if (canMake < maxPossible) maxPossible = canMake;
+    if (rows.length === 0) {
+      return;
+    }
+
+    const minStock = Math.min(...rows.map(r => Math.floor(r.stock / r.quantity)));
+    await client.query(`UPDATE packages SET stock = $1 WHERE id = $2`, [minStock, packageId]);
+  } catch (err) {
+    console.error("autoUpdatePackageStock error:", err);
+  } finally {
+    if (releaseClient) client.release();
   }
-
-  await pool.query(
-    `UPDATE packages SET stock = $1 WHERE id = $2`,
-    [maxPossible, packageId]
-  );
 }
-
-
 
 // Get all products
 app.get("/api/admin/products", authenticateToken, async (req, res) => {
@@ -1155,6 +1701,7 @@ app.get("/api/admin/products", authenticateToken, async (req, res) => {
 // Add a new product
 app.post("/api/admin/products", authenticateToken, async (req, res) => {
   const { name, price, category, description, image_url, size, color, stock, active } = req.body;
+  const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
   try {
     const result = await pool.query(
       `INSERT INTO products (name, price, category, description, image_url, size, color, stock, active)
@@ -1171,7 +1718,7 @@ app.post("/api/admin/products", authenticateToken, async (req, res) => {
          color,
          stock,
          active`,
-      [name, price, category, description, image_url, size, color, stock ?? 0, active ?? true]
+      [name, price, formattedCategory, description, image_url, size, color, stock ?? 0, active ?? true]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -1302,34 +1849,70 @@ app.get("/api/admin/dashboard/summary", authenticateToken, async (req, res) => {
   }
 });
 
-// Update a product by ID
+async function updateAllRelatedPackageStocks(productId) {
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query(
+      `SELECT DISTINCT package_id FROM package_items WHERE product_id = $1`,
+      [productId]
+    );
+
+    for (const row of rows) {
+      await autoUpdatePackageStock(row.package_id);
+    }
+  } catch (err) {
+    console.error("updateAllRelatedPackageStocks error:", err);
+  } finally {
+    client.release();
+  }
+}
+
+// PUT route
 app.put("/api/admin/products/:id", authenticateToken, async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const { name, price, category, description, image_url, size, color, stock, active } = req.body;
+  const {
+    name,
+    price,
+    category,
+    description,
+    image_url,
+    size,
+    color,
+    stock,
+    active
+  } = req.body;
+
   try {
     const result = await pool.query(
       `UPDATE products
-         SET name = $1, price = $2, category = $3, description = $4, image_url = $5,
-             size = $6, color = $7, stock = $8, active = $9
+         SET name = $1,
+             price = $2,
+             category = $3,
+             description = $4,
+             image_url = $5,
+             size = $6,
+             color = $7,
+             stock = $8,
+             active = $9
        WHERE id = $10
-       RETURNING id, name, price, category, description, rating, image_url AS "imageUrl", size, color, stock, active`,
+       RETURNING id, name, price, category, description, rating,
+                 image_url AS "imageUrl", size, color, stock, active`,
       [name, price, category, description, image_url, size, color, stock ?? 0, active ?? true, id]
     );
+
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Product not found" });
     }
-    const pkgIdsResult = await pool.query(
-      `SELECT DISTINCT package_id FROM package_items WHERE product_id = $1`, [id]
-    );
-    for (const row of pkgIdsResult.rows) {
-      await autoUpdatePackageStock(row.package_id);
-    }
+
+    await updateAllRelatedPackageStocks(id);
+
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("PUT /api/products/:id error:", err);
+    console.error("PUT /api/admin/products/:id error:", err);
     res.status(500).json({ error: "Failed to update product" });
   }
 });
+
 
 // Get all packages
 app.get("/api/admin/packages", authenticateToken, async (req, res) => {
@@ -1357,29 +1940,70 @@ app.get("/api/admin/packages", authenticateToken, async (req, res) => {
   }
 });
 
-// Add a new package with package_items
 app.post("/api/admin/packages", authenticateToken, async (req, res) => {
-  const { name, price, category, description, image_url, rating, size, color, stock, active, items } = req.body;
+  const {
+    name, price, category, description, image_url,
+    rating, size, color, stock, active, items
+  } = req.body;
+
+  const cleanedItems = Array.isArray(items)
+    ? items
+        .filter(x => x && x.product_id && x.quantity > 0)
+        .map(x => ({
+          product_id: Number(x.product_id),
+          quantity: Number(x.quantity)
+        }))
+    : [];
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const useAutoStock = cleanedItems.length > 0;
     const pkgResult = await client.query(
-      `INSERT INTO packages (name, price, category, description, image_url, rating, size, color, stock, active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id, name, price, category, description, rating, image_url AS "imageUrl", size, color, stock, active`,
-      [name, price, category, description, image_url, rating || 0, size, color, stock ?? 0, active ?? true]
+      `INSERT INTO packages
+         (name, price, category, description, image_url, rating, size, color, stock, active)
+       VALUES
+         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING
+         id, name, price, category, description, rating,
+         image_url AS "imageUrl", size, color, stock, active`,
+      [
+        name,
+        price,
+        category,
+        description,
+        image_url,
+        rating || 0,
+        size,
+        color,
+        useAutoStock ? 0 : stock ?? 0, 
+        active ?? true
+      ]
     );
+
     const packageId = pkgResult.rows[0].id;
-    if (Array.isArray(items) && items.length > 0) {
-      for (const item of items) {
+    if (useAutoStock) {
+      for (const item of cleanedItems) {
         await client.query(
-          `INSERT INTO package_items (package_id, product_id, quantity) VALUES ($1, $2, $3)`,
+          `INSERT INTO package_items (package_id, product_id, quantity)
+           VALUES ($1, $2, $3)`,
           [packageId, item.product_id, item.quantity]
         );
       }
+
+      await autoUpdatePackageStock(packageId, client);
     }
+
     await client.query("COMMIT");
-    res.status(201).json(pkgResult.rows[0]);
+    const finalResult = await pool.query(
+      `SELECT id, name, price, category, description, rating,
+              image_url AS "imageUrl", size, color, stock, active
+         FROM packages WHERE id = $1`,
+      [packageId]
+    );
+
+    res.status(201).json(finalResult.rows[0]);
+
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("POST /api/packages error:", err);
@@ -1388,6 +2012,7 @@ app.post("/api/admin/packages", authenticateToken, async (req, res) => {
     client.release();
   }
 });
+
 
 // Get all products in a package
 app.get("/api/admin/packages/:id/items", authenticateToken, async (req, res) => {
@@ -1619,21 +2244,39 @@ app.get("/api/admin/orders/:id", async (req, res) => {
     }
     const order = orderResult.rows[0];
 
+    // Get order_items (products)
     const itemsResult = await pool.query(
       `SELECT product_id, product_name, product_price, quantity, subtotal
-         FROM order_items WHERE order_id = $1 ORDER BY id ASC`,
+       FROM order_items WHERE order_id = $1 ORDER BY id ASC`,
+      [orderId]
+    );
+
+    // Get order_packages (packages)
+    const packagesResult = await pool.query(
+      `SELECT
+         op.package_id,
+         p.name AS package_name,
+         p.price AS package_price,
+         op.quantity,
+         (p.price * op.quantity) AS subtotal
+       FROM order_packages op
+       JOIN packages p ON op.package_id = p.id
+       WHERE op.order_id = $1
+       ORDER BY op.id ASC`,
       [orderId]
     );
 
     res.json({
       ...order,
-      items: itemsResult.rows
+      items: itemsResult.rows,
+      packages: packagesResult.rows
     });
   } catch (err) {
     console.error("Error fetching order:", err);
     res.status(500).json({ error: "Failed to fetch order" });
   }
 });
+
 
 // GET /api/admin/order_items?order_id=1
 app.get('/api/admin/order_items', async (req, res) => {
@@ -1801,5 +2444,4 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-export { pool };
-export default app;
+export { app, pool };

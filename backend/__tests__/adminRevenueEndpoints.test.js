@@ -1,141 +1,109 @@
-import express from 'express';
-import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import request from 'supertest';
+import { app, pool } from '../server.js';
 import { jest } from '@jest/globals';
 
-// Create a minimal express app for testing
-function createTestApp(pool) {
-  const app = express();
-  app.use(express.json());
+let testUserId;
+let testToken;
+let testOrderIds = [];
 
-  // Middleware to simulate authentication
-  app.use((req, res, next) => {
-    const auth = req.headers['authorization'];
-    if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
-    next();
+beforeAll(async () => {
+  await pool.query(`
+  DELETE FROM orders WHERE user_id = (
+    SELECT id FROM users WHERE email = 'revenueuser@example.com'
+  )
+`);
+await pool.query(`DELETE FROM users WHERE email = 'revenueuser@example.com'`);
+  const userRes = await pool.query(
+    `INSERT INTO users (email, password, first_name, last_name)
+     VALUES ('revenueuser@example.com', 'pass123', 'Revenue', 'User')
+     RETURNING id`
+  );
+  testUserId = userRes.rows[0].id;
+
+  const mockUser = { userId: testUserId, role: 'admin' };
+  testToken = `Bearer ${jwt.sign(mockUser, process.env.JWT_SECRET, { expiresIn: '1h' })}`;
+  const ranges = [1, 10, 200]; 
+  for (const days of ranges) {
+    const res = await pool.query(
+      `INSERT INTO orders (
+        user_id, order_number, order_status, email,
+        first_name, last_name, address, phone, city, province, postal_code, subtotal, tax, shipping, total, created_at
+       ) VALUES (
+         $1, $2, 'Paid', 'revenueuser@example.com',
+         'Revenue', 'User', '123 Lane', '555-0000', 'Testville', 'ON', 'A1A1A1', '99.99', '11.11', '11.11', '122.21'
+         , CURRENT_DATE - $3 * INTERVAL '1 day'
+       ) RETURNING id`,
+      [testUserId, `REV${days}`, days]
+    );
+    testOrderIds.push(res.rows[0].id);
+  }
+});
+
+afterAll(async () => {
+  for (const id of testOrderIds) {
+    await pool.query(`DELETE FROM orders WHERE id = $1`, [id]);
+  }
+  await pool.query(`DELETE FROM users WHERE id = $1`, [testUserId]);
+  await pool.end();
+});
+
+describe('GET /api/admin/revenue', () => {
+  it('should return revenue data for range 7', async () => {
+    const res = await request(app)
+      .get('/api/admin/revenue?range=7')
+      .set('Authorization', testToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('totalRevenue');
+    expect(res.body).toHaveProperty('totalOrders');
+    expect(res.body).toHaveProperty('averageOrderValue');
+    expect(res.body.timeRange).toBe("7");
   });
 
-  // Revenue endpoint
-  app.get('/api/admin/revenue', async (req, res) => {
-    const { range } = req.query;
-    try {
-      const result = await pool.query(
-        'SELECT 1000 as total_revenue, 5 as total_orders, 200 as average_order_value',
-        []
-      );
-      res.json({
-        totalRevenue: result.rows[0].total_revenue,
-        totalOrders: result.rows[0].total_orders,
-        averageOrderValue: result.rows[0].average_order_value,
-        timeRange: range
-      });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch revenue data' });
-    }
+  it('should return revenue data for range 30', async () => {
+    const res = await request(app)
+      .get('/api/admin/revenue?range=30')
+      .set('Authorization', testToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.timeRange).toBe("30");
   });
 
-  // Active orders endpoint
-  app.get('/api/admin/orders/active', async (req, res) => {
-    try {
-      const result = await pool.query('', []);
-      res.json({
-        activeOrders: result.rows.map(order => ({
-          orderNumber: order.order_number,
-          customerName: `${order.first_name} ${order.last_name}`,
-          total: order.total,
-          status: order.order_status,
-          createdAt: order.created_at
-        }))
-      });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch active orders' });
-    }
+  it('should return revenue data for range 365', async () => {
+    const res = await request(app)
+      .get('/api/admin/revenue?range=365')
+      .set('Authorization', testToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.timeRange).toBe("365");
   });
 
-  return app;
-}
+  it('should return data with default range when range is missing', async () => {
+    const res = await request(app)
+      .get('/api/admin/revenue')
+      .set('Authorization', testToken);
 
-describe('Admin Revenue & Recent Orders Endpoints', () => {
-  const SECRET = 'secret-key';
-  const adminToken = jwt.sign({ userId: 1 }, SECRET);
-  let pool;
-  let app;
-
-  beforeEach(() => {
-    pool = { query: jest.fn() };
-    app = createTestApp(pool);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.timeRange).toBeUndefined(); 
   });
 
-  describe('GET /api/admin/revenue', () => {
-    it('returns revenue data for a given range', async () => {
-      pool.query.mockResolvedValue({
-        rows: [{ total_revenue: 1000, total_orders: 5, average_order_value: 200 }]
-      });
-      const res = await request(app)
-        .get('/api/admin/revenue?range=7')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
-      expect(res.body).toEqual({
-        totalRevenue: 1000,
-        totalOrders: 5,
-        averageOrderValue: 200,
-        timeRange: '7',
-      });
+  it('should return 500 on DB failure', async () => {
+    const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
+    pool.query = jest.fn(() => {
+      throw new Error('Simulated DB error');
     });
 
-    it('returns 500 on db error', async () => {
-      pool.query.mockRejectedValue(new Error('DB error'));
-      const res = await request(app)
-        .get('/api/admin/revenue?range=7')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(500);
-      expect(res.body).toHaveProperty('error', 'Failed to fetch revenue data');
-    });
-  });
+    const res = await request(app)
+      .get('/api/admin/revenue?range=7')
+      .set('Authorization', testToken);
 
-  describe('GET /api/admin/orders/active', () => {
-    it('returns recent active orders', async () => {
-      pool.query.mockResolvedValue({
-        rows: [
-          {
-            order_number: '1001',
-            first_name: 'Alice',
-            last_name: 'Smith',
-            total: 100,
-            order_status: 'Processing',
-            created_at: '2024-07-01'
-          },
-          {
-            order_number: '1002',
-            first_name: 'Bob',
-            last_name: 'Lee',
-            total: 200,
-            order_status: 'Shipped',
-            created_at: '2024-07-02'
-          },
-        ]
-      });
-      const res = await request(app)
-        .get('/api/admin/orders/active')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
-      expect(res.body.activeOrders).toHaveLength(2);
-      expect(res.body.activeOrders[0]).toMatchObject({
-        orderNumber: '1001',
-        customerName: 'Alice Smith',
-        total: 100,
-        status: 'Processing',
-        createdAt: '2024-07-01',
-      });
-    });
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/failed to fetch/i);
 
-    it('returns 500 on db error', async () => {
-      pool.query.mockRejectedValue(new Error('DB error'));
-      const res = await request(app)
-        .get('/api/admin/orders/active')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(500);
-      expect(res.body).toHaveProperty('error', 'Failed to fetch active orders');
-    });
+    pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });

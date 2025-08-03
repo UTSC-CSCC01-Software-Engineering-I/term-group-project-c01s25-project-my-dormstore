@@ -91,7 +91,6 @@ export default function NavBar({ isLoggedIn }) {
               {isLoggedIn && <Link to="/checklist" className="nav-link">Move-in Checklist</Link>}
               <Link to="/order-status#order-status">Order Status</Link>
               <Link to="/order-status#order-tracking">Track My Orders</Link>
-              <Link to="/live-chat">Live Chat</Link>
               <Link to="/contact">Contact Us</Link>
             </div>
           )}

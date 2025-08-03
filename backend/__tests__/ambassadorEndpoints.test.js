@@ -1,102 +1,80 @@
-import { jest } from '@jest/globals';
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
-import app, { pool } from '../server.js';
+import { app, pool } from '../server.js';
+import { jest } from '@jest/globals';
 
-beforeAll(() => {
-  jest.spyOn(console, 'log').mockImplementation(() => {});
-  jest.spyOn(console, 'error').mockImplementation(() => {});
-});
-afterAll(() => {
-  console.log.mockRestore();
-  console.error.mockRestore();
-});
+describe('POST /api/ambassador/register', () => {
+  const testEmail = 'ambassador_test@example.com';
 
-process.env.SECRET = 'secret-key';
-const adminToken = jwt.sign({ userId: 1 }, process.env.SECRET);
-
-beforeEach(() => {
-  pool.query = jest.fn();
-});
-
-describe('GET /api/admin/ambassadors', () => {
-  it('should return list of ambassadors when authorized', async () => {
-    const fakeRows = [
-      { id: 1, firstName: 'John',  lastName: 'Doe',   email: 'john@example.com' },
-      { id: 2, firstName: 'Jane',  lastName: 'Smith', email: 'jane@example.com' }
-    ];
-    pool.query.mockResolvedValue({ rows: fakeRows });
-
-    const res = await request(app)
-      .get('/api/admin/ambassadors')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200);
-
-    expect(res.body).toEqual(fakeRows);
-    expect(pool.query).toHaveBeenCalledWith(
-      expect.stringContaining('SELECT')
-    );
+  afterAll(async () => {
+    // Clean up test ambassador if inserted
+    await pool.query('DELETE FROM ambassadors WHERE email = $1', [testEmail]);
+    await pool.end();
   });
 
-  it('should respond with 500 on database error', async () => {
-    pool.query.mockRejectedValue(new Error('Database failure'));
-
+  test('should fail with missing fields', async () => {
     const res = await request(app)
-      .get('/api/admin/ambassadors')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(500);
+      .post('/api/ambassador/register')
+      .send({ firstName: 'A', lastName: 'B', email: testEmail }); // Missing password fields
 
-    expect(res.body).toEqual({ error: 'Failed to fetch ambassadors' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('error', 'All fields are required.');
   });
 
-  it('should respond with 401 if no token is provided', async () => {
-    await request(app)
-      .get('/api/admin/ambassadors')
-      .expect(401);
+  test('should fail when passwords do not match', async () => {
+    const res = await request(app)
+      .post('/api/ambassador/register')
+      .send({
+        firstName: 'Test',
+        lastName: 'User',
+        email: testEmail,
+        password: '123456',
+        confirmPassword: 'abcdef'
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('error', 'Passwords do not match.');
+  });
+
+  test('should register ambassador successfully', async () => {
+    const res = await request(app)
+      .post('/api/ambassador/register')
+      .send({
+        firstName: 'Test',
+        lastName: 'Ambassador',
+        email: testEmail,
+        password: '123456',
+        confirmPassword: '123456'
+      });
+
+    expect(res.statusCode).toBe(201);
+    expect(res.body).toHaveProperty('message', 'Ambassador registered');
+    expect(res.body).toHaveProperty('ambassador');
+    expect(res.body.ambassador.email).toBe(testEmail);
   });
 });
 
-describe('DELETE /api/admin/ambassadors/:id', () => {
-  it('should delete ambassador when it exists', async () => {
-    pool.query.mockResolvedValueOnce({ rowCount: 1 });
+describe('Ambassador Register Endpoint - Error Handling', () => {
+  test('should return 500 if database fails during ambassador registration', async () => {
+    const originalQuery = pool.query;
+    pool.query = jest.fn(() => {
+      throw new Error('DB insert error');
+    });
+
+    const payload = {
+      firstName: 'Test',
+      lastName: 'Ambassador',
+      email: 'errorcase@example.com',
+      password: 'password123',
+      confirmPassword: 'password123'
+    };
 
     const res = await request(app)
-      .delete('/api/admin/ambassadors/123')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200);
+      .post('/api/ambassador/register')
+      .send(payload);
 
-    expect(res.body).toEqual({ message: 'Ambassador deleted successfully' });
-    expect(pool.query).toHaveBeenCalledWith(
-      'DELETE FROM ambassadors WHERE id = $1 RETURNING id',
-      [123]
-    );
-  });
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/failed to register ambassador/i);
 
-  it('should respond with 404 if ambassador is not found', async () => {
-    pool.query.mockResolvedValueOnce({ rowCount: 0 });
-
-    const res = await request(app)
-      .delete('/api/admin/ambassadors/999')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(404);
-
-    expect(res.body).toEqual({ error: 'Ambassador not found' });
-  });
-
-  it('should respond with 500 on database error during deletion', async () => {
-    pool.query.mockRejectedValue(new Error('Deletion error'));
-
-    const res = await request(app)
-      .delete('/api/admin/ambassadors/5')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(500);
-
-    expect(res.body).toEqual({ error: 'Failed to delete ambassador' });
-  });
-
-  it('should respond with 401 if attempting deletion without a token', async () => {
-    await request(app)
-      .delete('/api/admin/ambassadors/1')
-      .expect(401);
+    pool.query = originalQuery;
   });
 });

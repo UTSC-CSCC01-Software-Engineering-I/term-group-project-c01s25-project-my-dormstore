@@ -4,6 +4,8 @@ import "./CartScreen.css";
 import { useCart } from "../contexts/CartContext.tsx";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUserBedSize } from "../utils/bedSizeHelper";
+import { Link } from "react-router-dom";
+import { RemovedItemsNotification } from "./RemovedItemsNotification";
 
 // Simple compatibility warning
 const CartCompatibilityWarning = ({ cartItems }) => {
@@ -51,7 +53,7 @@ const CartCompatibilityWarning = ({ cartItems }) => {
 };
 
 export default function CartScreen() {
-  const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { items, removedItems, removeFromCart, updateQuantity, totalPrice, clearRemovedItems } = useCart();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
@@ -64,6 +66,11 @@ export default function CartScreen() {
       <div className="cart-main">
         <h2 className="cart-title">My Cart</h2>
         
+        <RemovedItemsNotification 
+          removedItems={removedItems} 
+          onClose={clearRemovedItems} 
+        />
+        
         <CartCompatibilityWarning cartItems={items} />
         
         <div className="cart-items-list">
@@ -72,13 +79,17 @@ export default function CartScreen() {
           ) : (
             items.map((item) => (
               <div className="cart-item-row" key={item.id}>
-                <img
-                  className="cart-item-image"
-                  src={item.image}
-                  alt={item.name}
-                />
+                <Link to={`/products/${item.id}`} className="cart-item-link">
+                  <img
+                    className="cart-item-image"
+                    src={item.image}
+                    alt={item.name}
+                  />
+                </Link>
                 <div className="cart-item-info">
-                  <div className="cart-item-name">{item.name}</div>
+                  <Link to={`/products/${item.id}`} className="cart-item-name-link">
+                    <div className="cart-item-name">{item.name}</div>
+                  </Link>
                   
                   {/* Size and Color Options */}
                   {(item.selectedSize || item.selectedColor) && (
@@ -136,7 +147,7 @@ export default function CartScreen() {
           </div>
           <div className="summary-row">
             <span>Shipping</span>
-            <span>Free</span>
+            <span>Calculated at checkout</span>
           </div>
           <div className="summary-row">
             <span>Tax</span>

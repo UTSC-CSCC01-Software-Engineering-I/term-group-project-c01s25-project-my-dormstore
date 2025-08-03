@@ -32,8 +32,26 @@ export default function ProductDetail()  {
         
         if (isPackage) {
           // Fetch package details with included products
-          const packageData = await packageService.getPackageDetails(Number(id))
-          setProduct(packageData)
+          const packageData = await packageService.getPackageDetails(Number(id));          
+          console.log(packageData.included_products);
+          // Transform package data to match Product interface
+          const transformedPackage = {
+            id: packageData.id,
+            name: packageData.name,
+            price: parseFloat(packageData.price),
+            category: 'package',
+            description: packageData.description,
+            rating: parseFloat(packageData.rating),
+            image: packageData.image_url,
+            image_url: packageData.image_url,
+            size: packageData.size,
+            color: packageData.color,
+            stock: packageData.stock !== undefined ? packageData.stock : null,
+            created_at: packageData.created_at,
+            updated_at: packageData.updated_at,
+            isPackage: true
+          }
+          setProduct(transformedPackage)
           setPackageDetails(packageData)
         } else {
           const fetchedItem = await productService.getProductById(Number(id))
@@ -72,28 +90,33 @@ export default function ProductDetail()  {
       </div>
     )
   }
+  const hasSizes = !!product.size && product.size.split(',').length > 0 && product.size.split(',')[0].trim() !== '';
+  const hasColors = !!product.color && product.color.split(',').length > 0 && product.color.split(',')[0].trim() !== '';
+
   const handleAddToCart = () => {
+    console.log('handleAddToCart clicked');
+    console.log('Product:', product);
+    console.log('Is Package:', isPackage);
+    
     if (product) {
-      // For bedding products, check if size is selected
-      const availableSizes = product.size ? product.size.split(',') : []
-      const availableColors = product.color ? product.color.split(',') : []
-      
-      if (product.category?.toLowerCase() === 'bedding') {
-        if (availableSizes.length > 1 && !selectedSize) {
-          alert('Please select a size');
-          return;
-        }
-        if (availableColors.length > 1 && !selectedColor) {
-          alert('Please select a color');
-          return;
-        }
+      // Check if size/color selection is required
+      const availableSizes = product.size ? product.size.split(',') : [];
+      const availableColors = product.color ? product.color.split(',') : [];
+      if (hasSizes && availableSizes.length > 1 && !selectedSize) {
+        alert('Please select a size');
+        return;
       }
-      
+      if (hasColors && availableColors.length > 1 && !selectedColor) {
+        alert('Please select a color');
+        return;
+      }
       // Determine final size and color
       const finalSize = selectedSize || (availableSizes.length === 1 ? availableSizes[0] : undefined);
       const finalColor = selectedColor || (availableColors.length === 1 ? availableColors[0] : undefined);
-      
-      addToCart(product, quantity, finalSize, finalColor)
+      console.log('Calling addToCart with:', { product, quantity, finalSize, finalColor });
+      addToCart(product, quantity, finalSize, finalColor);
+    } else {
+      console.log('Product is null');
     }
   }
 
@@ -144,8 +167,8 @@ export default function ProductDetail()  {
           </span>
         </div>
 
-        <p className="product-price">
-          ${product.price.toFixed(2)} CAD
+        <p className="product-price-p">
+          ${(product.price || 0).toFixed(2)} CAD
         </p>
 
         {product.shippingInfo && (
@@ -157,12 +180,12 @@ export default function ProductDetail()  {
           </p>
         )}
 
-        {/* Size Selection for Bedding */}
-        {product.category?.toLowerCase() === 'bedding' && product.size && (
+        {/* Size Selection (for both products and packages) */}
+        {hasSizes && (
           <>
             <p className="section-subtitle">Size</p>
             <div className="size-options">
-              {product.size.split(',').map(size => (
+              {product.size!.split(',').map(size => (
                 <button 
                   key={size.trim()} 
                   className={`size-button ${selectedSize === size.trim() ? 'selected' : ''}`}
@@ -175,12 +198,12 @@ export default function ProductDetail()  {
           </>
         )}
 
-        {/* Color Selection for Bedding */}
-        {product.category?.toLowerCase() === 'bedding' && product.color && (
+        {/* Color Selection (for both products and packages) */}
+        {hasColors && (
           <>
             <p className="section-subtitle">Color</p>
             <div className="color-options">
-              {product.color.split(',').map(color => (
+              {product.color!.split(',').map(color => (
                 <button 
                   key={color.trim()} 
                   className={`color-button ${selectedColor === color.trim() ? 'selected' : ''}`}
@@ -200,16 +223,25 @@ export default function ProductDetail()  {
             <span>{quantity}</span>
             <button onClick={() => setQuantity(q => q + 1)}>+</button>
           </div>
-          <button onClick={handleAddToCart}
-          className="add-to-cart-button">
+          <button 
+            onClick={() => {
+              console.log('Add to Cart button clicked');
+              handleAddToCart();
+            }}
+            className="add-to-cart-button"
+          >
             Add To Cart
           </button>
         </div>
+
+        {product.stock === 0 && (
+          <p className="out-of-stock-message">Out of stock</p>
+          )}
       </div>
 
       {isPackage && packageDetails?.included_products && packageDetails.included_products.length > 0 && (
         <div className="package-included-products">
-          <h2 className="section-title">What's Included in This Package</h2>
+          <h2 className="section-title-p">What's Included in This Package</h2>
           <div className="included-products-grid">
             {packageDetails.included_products.map((includedProduct: any) => {
               // show as non-clickable card w
@@ -235,7 +267,7 @@ export default function ProductDetail()  {
                 >
                   <div className="included-product-info">
                     <h3 className="included-product-name">{includedProduct.name}</h3>
-                    <p className="included-product-price">${parseFloat(includedProduct.price).toFixed(2)} CAD</p>
+                    <p className="included-product-price">${(parseFloat(includedProduct.price) || 0).toFixed(2)} CAD</p>
                     <p className="included-product-quantity">Quantity: {includedProduct.quantity}</p>
                     <p className="included-product-description">{includedProduct.description}</p>
                   </div>
@@ -249,7 +281,7 @@ export default function ProductDetail()  {
 
       {/* Product/Package Details */}
       <div className="product-details-list">
-        <h2 className="section-title">{isPackage ? 'Package' : 'Product'} Details</h2>
+        <h2 className="section-title-p">{isPackage ? 'Package' : 'Product'} Details</h2>
         <p className="section-text">{product.description}</p>
         
         {/* Show includes for products only (packages show detailed products above) */}
@@ -265,7 +297,7 @@ export default function ProductDetail()  {
         )}
 
         <div className="delivery-section">
-          <p className="section-subtitle">Delivery</p>
+          <p className="section-subtitle-p">Delivery</p>
           <p>
             My Dorm Store offers delivery across Canada and the United States.
             We are partnering with select university and college residences to
