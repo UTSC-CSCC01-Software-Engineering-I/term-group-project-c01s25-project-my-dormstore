@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1754249026000" clover="3.2.0">
-  <project timestamp="1754249026000" name="All files">
+<coverage generated="1754249217903" clover="3.2.0">
+  <project timestamp="1754249217903" name="All files">
     <metrics statements="882" coveredstatements="719" conditionals="408" coveredconditionals="321" methods="77" coveredmethods="69" elements="1367" coveredelements="1109" complexity="0" loc="882" ncloc="882" packages="1" files="1" classes="1"/>
     <file name="server.js" path="/Users/ashleylin/term-group-project-c01s25-project-my-dormstore/backend/server.js">
       <metrics statements="882" coveredstatements="719" conditionals="408" coveredconditionals="321" methods="77" coveredmethods="69"/>
