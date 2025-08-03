@@ -118,6 +118,8 @@ describe('Products Routes', () => {
   });
   test('GET /api/products/:id - should return 500 on DB failure', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB failure');
     });
@@ -128,9 +130,12 @@ describe('Products Routes', () => {
     expect(res.body.error).toMatch(/failed to fetch product/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
   test('GET /api/products - should return 500 on DB failure', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB failure');
     });
@@ -141,5 +146,6 @@ describe('Products Routes', () => {
     expect(res.body.error).toMatch(/failed to fetch products/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });

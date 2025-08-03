@@ -445,6 +445,8 @@ test('POST /cart with no size or color', async () => {
 describe('DELETE /cart - simulate DB error', () => {
   test('should return 500 on DB failure', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB failure');
     });
@@ -457,5 +459,6 @@ describe('DELETE /cart - simulate DB error', () => {
     expect(res.body.error).toMatch(/failed to clear cart/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });

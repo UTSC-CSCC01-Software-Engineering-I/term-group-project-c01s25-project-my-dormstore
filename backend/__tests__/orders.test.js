@@ -216,6 +216,9 @@ describe('Orders Routes', () => {
   });
   test('should return 500 if database throws error when fetching order', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
+    
     pool.query = jest.fn(() => {
       throw new Error("Simulated DB error");
     });
@@ -228,5 +231,6 @@ describe('Orders Routes', () => {
     expect(res.body.error).toMatch(/failed to fetch order/i);
   
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });

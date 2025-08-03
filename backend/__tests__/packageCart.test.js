@@ -189,6 +189,8 @@ describe('PUT /package-cart/:itemId - simulate DB error', () => {
 
   test('should return 500 on DB failure', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB failure');
     });
@@ -202,5 +204,6 @@ describe('PUT /package-cart/:itemId - simulate DB error', () => {
     expect(res.body.error).toMatch(/failed to update package cart item/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });

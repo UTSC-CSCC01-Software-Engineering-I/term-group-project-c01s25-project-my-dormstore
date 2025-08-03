@@ -91,6 +91,8 @@ describe('GET /api/admin/revenue', () => {
 
   it('should return 500 on DB failure', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB error');
     });
@@ -103,5 +105,6 @@ describe('GET /api/admin/revenue', () => {
     expect(res.body.error).toMatch(/failed to fetch/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });
