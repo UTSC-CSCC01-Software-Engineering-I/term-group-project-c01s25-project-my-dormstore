@@ -32,6 +32,8 @@ describe('Contact Us Routes', () => {
   });
   test('should return 500 if database insert fails', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB insert failure');
     });
@@ -46,5 +48,6 @@ describe('Contact Us Routes', () => {
     expect(res.body.error).toMatch(/database error/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });

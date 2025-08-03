@@ -180,6 +180,8 @@ describe('Package Routes', () => {
   });
   test('GET /api/packages/:id - should return 500 on DB error', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB error');
     });
@@ -190,5 +192,6 @@ describe('Package Routes', () => {
     expect(res.body.error).toMatch(/failed to fetch package/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });

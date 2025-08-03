@@ -91,6 +91,8 @@ describe('GET /api/order-tracking', () => {
   });
   test('GET /api/order-tracking - simulate DB failure', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn(); 
     
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB error');
@@ -102,5 +104,6 @@ describe('GET /api/order-tracking', () => {
     expect(res.body.error || res.body.message).toMatch(/server error/i);
   
     pool.query = originalQuery; 
+    console.error = originalConsoleError;
   });
 });

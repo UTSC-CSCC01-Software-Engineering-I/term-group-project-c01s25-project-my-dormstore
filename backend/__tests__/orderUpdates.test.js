@@ -92,6 +92,8 @@ describe('PATCH /api/admin/update-status', () => {
   });
   test('PATCH /api/admin/update-status - simulate DB failure', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated update failure');
     });
@@ -104,12 +106,15 @@ describe('PATCH /api/admin/update-status', () => {
     expect(res.body.error).toMatch(/failed to update status/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError; 
   });
 });
 
 describe('GET /api/order-updates - simulate DB error', () => {
   test('should return 500 when DB fails', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB failure');
     });
@@ -121,12 +126,16 @@ describe('GET /api/order-updates - simulate DB error', () => {
     expect(res.body.error).toMatch(/fetch updates/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError; 
   });
 });
 
 describe('GET /api/admin/all-order-updates - simulate DB error', () => {
   test('should return 500 when DB fails', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
+
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB error');
     });
@@ -137,11 +146,14 @@ describe('GET /api/admin/all-order-updates - simulate DB error', () => {
     expect(res.body.error).toMatch(/fetch order updates/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });
 describe('POST /api/admin/order-updates - simulate DB insert error', () => {
   test('should return 500 when DB insert fails', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated insert failure');
     });
@@ -158,5 +170,6 @@ describe('POST /api/admin/order-updates - simulate DB insert error', () => {
     expect(res.body.error).toMatch(/database error/i);
 
     pool.query = originalQuery; 
+    console.error = originalConsoleError;
   });
 });

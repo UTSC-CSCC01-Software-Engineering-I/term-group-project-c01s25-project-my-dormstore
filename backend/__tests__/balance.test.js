@@ -62,6 +62,8 @@ describe('Balance Routes', () => {
   });
   test('GET /api/user/balance should return 500 on database error', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error("Simulated DB failure");
     });
@@ -74,6 +76,7 @@ describe('Balance Routes', () => {
     expect(res.body.error).toMatch(/failed to fetch balance/i);
   
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
   
 });

@@ -66,6 +66,8 @@ describe('PUT /api/admin/orders/:id/status', () => {
 
   it('should return 500 if DB fails', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB error');
     });
@@ -78,5 +80,6 @@ describe('PUT /api/admin/orders/:id/status', () => {
     expect(res.body.error).toMatch(/failed to update/i);
 
     pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });

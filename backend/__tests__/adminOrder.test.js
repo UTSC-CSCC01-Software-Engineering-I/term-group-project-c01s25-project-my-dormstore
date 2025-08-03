@@ -74,6 +74,8 @@ describe('GET /api/admin/order_items', () => {
 
   it('should return 500 on DB failure', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
     pool.query = jest.fn(() => {
       throw new Error('Simulated DB failure');
     });
@@ -86,5 +88,6 @@ describe('GET /api/admin/order_items', () => {
     expect(res.body.error).toMatch(/database error/i);
 
     pool.query = originalQuery; 
+    console.error = originalConsoleError;
   });
 });
