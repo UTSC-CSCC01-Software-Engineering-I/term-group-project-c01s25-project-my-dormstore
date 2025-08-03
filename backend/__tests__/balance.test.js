@@ -1,6 +1,6 @@
 import request from 'supertest';
-import app from '../server.js';
-import { pool } from '../server.js';
+import { app, pool } from '../server.js';
+import { jest } from '@jest/globals';
 
 describe('Balance Routes', () => {
   const testUser = {
@@ -54,9 +54,28 @@ describe('Balance Routes', () => {
     const res = await request(app)
       .post('/api/user/balance/add')
       .set('Authorization', `Bearer ${token}`)
-      .send({ amount: 0 }); // or -5
+      .send({ amount: 0 });
 
     expect(res.statusCode).toBe(400);
     expect(res.body.error).toMatch(/Invalid amount/i);
   });
+  test('GET /api/user/balance should return 500 on database error', async () => {
+    const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
+    pool.query = jest.fn(() => {
+      throw new Error("Simulated DB failure");
+    });
+  
+    const res = await request(app)
+      .get('/api/user/balance')
+      .set('Authorization', `Bearer ${token}`); 
+  
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/failed to fetch balance/i);
+  
+    pool.query = originalQuery;
+    console.error = originalConsoleError;
+  });
+  
 });

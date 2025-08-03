@@ -1,5 +1,7 @@
 import request from 'supertest';
-import app, { pool } from '../server.js';
+import { app, pool } from '../server.js';
+import { jest } from '@jest/globals';
+
 
 describe('Order Details Endpoint', () => {
   const user = {
@@ -12,7 +14,6 @@ describe('Order Details Endpoint', () => {
   let productId;
   let orderNumber;
 
-  // ✅ Define basePayload at the top-level scope
   const basePayload = {
     email: user.email,
     firstName: "Test",
@@ -41,7 +42,15 @@ describe('Order Details Endpoint', () => {
   };
 
   beforeAll(async () => {
-    await pool.query(`DELETE FROM users WHERE email = $1`, [user.email]);
+    const cleanupRes = await pool.query('SELECT id FROM users WHERE email = $1', [user.email]);
+    if (cleanupRes.rows.length > 0) {
+      const existingUserId = cleanupRes.rows[0].id;
+      await pool.query(`DELETE FROM order_packages WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [existingUserId]);
+      await pool.query(`DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE user_id = $1)`, [existingUserId]);
+      await pool.query(`DELETE FROM orders WHERE user_id = $1`, [existingUserId]);
+      await pool.query(`DELETE FROM user_balance WHERE user_id = $1`, [existingUserId]);
+      await pool.query(`DELETE FROM users WHERE id = $1`, [existingUserId]);
+    }
 
     const res = await request(app).post('/registerUser').send(user);
     token = res.body.token;
@@ -117,5 +126,67 @@ if (userRes.rows.length > 0) {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.statusCode).toBe(404);
+  });
+});
+
+describe('GET /api/order-details/:orderNumber - simulate DB error', () => {
+  let testOrderNumber = `TEMP_ORDER_${Date.now()}`;
+  let token = '';
+
+  let userId;
+beforeAll(async () => {
+  await request(app)
+  .post('/registerUser')
+  .send({ email: 'test@example.com', password: 'testpass' });
+
+// Then login
+const loginRes = await request(app)
+  .post('/loginUser')
+  .send({ email: 'test@example.com', password: 'testpass' });
+
+token = loginRes.body.token;
+
+// Now get the ID
+const emailParam = 'test@example.com';
+const userRes = await pool.query(
+  'SELECT id FROM users WHERE email = $1',
+  [emailParam]
+);
+userId = userRes.rows[0].id;
+const orderRes = await pool.query(`
+INSERT INTO orders (
+  user_id, order_number, email, first_name, last_name, phone,
+  address, city, province, postal_code, move_in_date,
+  subtotal, tax, shipping, total,
+  shipping_method, payment_method, payment_status
+)
+VALUES (
+  $1, $2, 'test@example.com', 'Test', 'User', '1234567890',
+  '123 Test St', 'Toronto', 'ON', 'A1A1A1', CURRENT_DATE,
+  100.00, 13.00, 10.00, 123.00,
+  'Canada Post', 'Credit Card', 'pending'
+)
+RETURNING order_number
+`, [userId, testOrderNumber]);
+testOrderNumber = orderRes.rows[0].order_number;
+  });
+  afterAll(async () => {
+    await pool.query(`DELETE FROM orders WHERE order_number = $1`, [testOrderNumber]);
+  });
+
+  test('should return 500 on DB failure', async () => {
+    const originalQuery = pool.query;
+    pool.query = jest.fn(() => {
+      throw new Error('Simulated DB failure');
+    });
+
+    const res = await request(app)
+      .get(`/api/order-details/${testOrderNumber}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/failed to fetch order details/i);
+
+    pool.query = originalQuery;
   });
 });

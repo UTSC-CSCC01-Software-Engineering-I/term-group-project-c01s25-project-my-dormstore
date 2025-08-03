@@ -1,17 +1,16 @@
-// backend/__tests__/ambassadorEndpoints.test.js
 import process from 'process';
 process.env.NODE_ENV = 'test';
 import request from 'supertest';
 import { jest } from '@jest/globals';
 import jwt from 'jsonwebtoken';
-import app, { pool} from '../server.js';
+import { app, pool } from '../server.js';
 
-// Dummy test to ensure SECRET isn't tree-shaken
+
+
 test('setup secret-key', () => {});
 const SECRET = 'secret-key';
 const adminToken = jwt.sign({ userId: 1 }, SECRET);
 
-// Silence server logs and errors during tests
 let consoleLogSpy;
 let consoleErrorSpy;
 beforeAll(() => {
@@ -25,7 +24,6 @@ afterAll(() => {
 });
 
 beforeEach(() => {
-  // Reset pool.query to a Jest mock before each test
   pool.query = jest.fn();
 });
 
@@ -43,7 +41,6 @@ describe('GET /api/admin/ambassadors', () => {
       .expect(200);
 
     expect(res.body).toEqual(fakeRows);
-    // verify SQL call: first arg includes SELECT, second arg is undefined or an array
     const callArgs = pool.query.mock.calls[0];
     expect(callArgs[0]).toMatch(/SELECT/);
     const params = Array.isArray(callArgs[1]) ? callArgs[1] : [];

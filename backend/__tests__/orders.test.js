@@ -1,6 +1,7 @@
 import request from 'supertest';
-import app from '../server.js';
-import { pool } from '../server.js';
+import { app, pool } from '../server.js';
+import { jest } from '@jest/globals';
+
 
 describe('Orders Routes', () => {
   const testUser = {
@@ -182,7 +183,8 @@ describe('Orders Routes', () => {
 
   test('GET /api/order-details/:orderNumber', async () => {
     const res = await request(app)
-      .get(`/api/order-details/${orderNumber}`);
+      .get(`/api/order-details/${orderNumber}`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.order.items.length).toBeGreaterThan(0);
@@ -210,5 +212,24 @@ describe('Orders Routes', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body.orders.length).toBeGreaterThan(0);
+  });
+  test('should return 500 if database throws error when fetching order', async () => {
+    const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
+    
+    pool.query = jest.fn(() => {
+      throw new Error("Simulated DB error");
+    });
+  
+    const res = await request(app)
+      .get('/api/orders/1')
+      .set('Authorization', `Bearer ${token}`);
+  
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/failed to fetch order/i);
+  
+    pool.query = originalQuery;
+    console.error = originalConsoleError;
   });
 });

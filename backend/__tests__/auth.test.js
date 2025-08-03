@@ -1,6 +1,7 @@
 import request from 'supertest';
-import app from '../server.js';
-import { pool } from '../server.js'; 
+import { app, pool } from '../server.js';
+import jwt from 'jsonwebtoken';
+import { jest } from '@jest/globals';
 
 describe('Auth Routes', () => {
   const baseUser = {
@@ -28,7 +29,7 @@ describe('Auth Routes', () => {
     const res = await request(app).post('/registerUser').send(baseUser);
     expect(res.statusCode).toBe(201);
     expect(res.body.token).toBeDefined();
-    token = res.body.token; // Save for later
+    token = res.body.token;
   });
 
   test('Missing fields on register', async () => {
@@ -39,7 +40,7 @@ describe('Auth Routes', () => {
 
   test('Duplicate email register fails', async () => {
     const res = await request(app).post('/registerUser').send(duplicateUser);
-    expect(res.statusCode).toBe(500); // constraint violation
+    expect(res.statusCode).toBe(500); 
     expect(res.body.error).toBeDefined();
   });
 
@@ -70,6 +71,24 @@ describe('Auth Routes', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.email).toBe(baseUser.email);
+  });
+
+  test('GET /me with valid token but deleted user returns 404', async () => {
+    // Create user and token
+    const tempUser = { email: 'tempuser@test.com', password: 'temp123' };
+    const register = await request(app).post('/registerUser').send(tempUser);
+    const tempToken = register.body.token;
+  
+    // Delete user
+    await pool.query(`DELETE FROM users WHERE email = $1`, [tempUser.email]);
+  
+    // Now try to get /me with the token
+    const res = await request(app)
+      .get('/me')
+      .set('Authorization', `Bearer ${tempToken}`);
+  
+    expect(res.statusCode).toBe(404);
+    expect(res.body.error).toMatch(/User not found/i);
   });
 
   test('Invalid token fails (GET /me)', async () => {
@@ -153,5 +172,18 @@ describe('Auth Routes', () => {
   
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
+  });
+  test('Login - DB error triggers 500', async () => {
+    const originalQuery = pool.query.bind(pool); 
+    pool.query = jest.fn().mockImplementation(() => {
+      throw new Error('Simulated DB error');
+    });
+  
+    const res = await request(app).post('/loginUser').send(baseUser);
+  
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toMatch(/Simulated DB error/i);
+  
+    pool.query = originalQuery; 
   });
 });

@@ -1,6 +1,5 @@
 import request from 'supertest';
-import app from '../server.js';
-import { pool } from '../server.js';
+import { app, pool } from '../server.js';
 import jwt from 'jsonwebtoken';
 import { jest } from '@jest/globals';
 
@@ -44,16 +43,20 @@ describe('GET /me', () => {
 
   test('handles DB failure gracefully', async () => {
     const originalQuery = pool.query;
+    const originalConsoleError = console.error;
+    console.error = jest.fn(); 
+  
     pool.query = jest.fn(() => Promise.reject(new Error('Simulated DB error')));
-
+  
     const res = await request(app)
       .get('/me')
       .set('Authorization', `Bearer ${token}`);
-
+  
     expect(res.statusCode).toBe(500);
     expect(res.body.error).toMatch(/something went wrong/i);
-
+  
     pool.query = originalQuery;
+    console.error = originalConsoleError; 
   });
 });
 

@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../server.js'; 
+import { app } from '../server.js';
 
 describe('POST /api/admin/login', () => {
   test('should login successfully with correct credentials', async () => {
