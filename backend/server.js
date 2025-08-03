@@ -59,9 +59,10 @@ function authenticateToken(req, res, next) {
 }
 
 // Start server
-app.listen(PORT, () => {
+/*app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+*/
 
 // Simple health check endpoint
 app.get("/", (req, res) => {
@@ -74,10 +75,22 @@ app.get("/", (req, res) => {
 });
 
 // Initialize database connection after server starts
-setTimeout(() => {
+/*setTimeout(() => {
     connectToPG();
 }, 1000);
-  
+ */ 
+
+const startServer = async () => {
+  await connectToPG();
+
+  if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  }
+};
+
+startServer();
 
 // Register a new user
 app.post("/registerUser", async (req, res) => {
@@ -2431,5 +2444,4 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-export { pool };
-export default app;
+export { app, pool };

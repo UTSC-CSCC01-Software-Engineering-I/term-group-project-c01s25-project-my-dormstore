@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app, { pool } from '../server.js';
+import { app, pool } from '../server.js';
 
 describe('Checkout Endpoint', () => {
   const user = {

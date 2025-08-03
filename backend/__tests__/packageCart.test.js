@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
-import app from '../server.js';
-import { pool } from '../server.js';
+import { app, pool } from '../server.js';
 import { jest } from '@jest/globals';
 
 
