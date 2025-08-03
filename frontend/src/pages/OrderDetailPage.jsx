@@ -7,14 +7,24 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/api/order-details/${orderId}`)
-    .then(res => res.json())
-    .then(data => {
-      console.log("Fetched order:", data.order);
-      setOrder(data.order);
+    const token = localStorage.getItem('token'); 
+  
+    fetch(`${process.env.REACT_APP_API_URL}/api/order-details/${orderId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
     })
-    .catch(err => console.error("Failed to load order details", err));
-}, [orderId]);
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        console.log("Fetched order:", data.order);
+        setOrder(data.order);
+      })
+      .catch(err => console.error("Failed to load order details", err));
+  }, [orderId]);
 
   if (!order) return <p className="loading-text">Loading order details...</p>;
 
