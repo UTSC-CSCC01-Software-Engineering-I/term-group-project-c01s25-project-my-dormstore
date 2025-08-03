@@ -42,55 +42,19 @@ Admins can now view revenue summaries over different time ranges (e.g., 7, 30, 3
 
 #### Goals and/or tasks that were met/completed:
 
-- **Dorm Checklist Auto-Check (SCRUM-37)**
+- **Checklist**
 
-![addedtocart](./images/addedtocart.png)
+![addedtocart](./images/checklist.png)
 
-![livechecklist](./images/livechecklist.png)
+- **Inventory logic (user)**
 
-- **Order Status Page with Tracking (SCRUM-35, SCRUM-39)**
+![contactus](./images/stocklimit.png)
 
-![ordertracking](./images/ordertrackingpage.png)
+![contactus](./images/notification.png)
 
-![orderdetail](./images/orderstatus.png)
+- **Inventory logic (admin)**
 
-- **Purchase History in Profile (SCRUM-38)**
-
-![userprofile](./images/userprofile.png)
-
-![orderhistory](./images/orderhistory.png)
-
-![orderdetail](./images/orderdetail.png)
-
-- **cart/checklist notification and warning**
-
-![ambassador](./images/requirement.png)
-
-![ambassador-db](./images/recommended.png)
-
-![ambassador-db](./images/cartnotifi.png)
-
-
-- **checkout progress and shipping service**
-
-![contactus](./images/checkoutprogress.png)
-
-![contactus](./images/shippingservice.png)
-
-- **admin dashboard**
-
-![contactus](./images/adminhome.png)
-
-![contactus](./images/adminorders.png)
-
-![contactus](./images/adminorderupdate.png)
-
-![contactus](./images/adminproduct.png)
-
-![contactus](./images/adminambass.png)
-
-![contactus](./images/adminuser.png)
-
+![contactus](./images/adminstock.png)
 
 
 #### Goals and/or tasks that were planned but not met/completed:
