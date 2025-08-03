@@ -5,44 +5,38 @@
  > _Suggestion:_ Have your review meeting a day or two before the due date. This way you will have some time to go over (and edit) this document, and all team members should have a chance to make their contribution.
 
 
-## Iteration 3 - Review & Retrospect
+## Iteration 34 - Review & Retrospect
 
- * When: July 19th, 2025
+ * When: Aug 3rd, 2025
  * Where: Online (Discord)
 
 ## Process - Reflection
 
-During Sprint 3, our team maintained consistent collaboration and made significant improvements in both user experience and backend functionality. Our workflow benefited from the clearer task ownership established last sprint, and we adhered more closely to our mid-sprint integration checkpoints. This resulted in fewer merge conflicts and a more stable develop branch throughout.
+In Sprint 4, our team focused heavily on finalizing and polishing features to ensure a stable MVP for demo and submission. We benefited from clearer task prioritization and continued strong collaboration via Discord and GitHub. Improvements in test coverage and CI/CD integration helped us catch bugs earlier, contributing to a more stable development environment.
 
-One challenge was testing coordination—while some team members started implementing unit tests, our coverage varied across components. Additionally, final integrations and styling still concentrated toward the end of the sprint, which compressed QA and polishing time. We aim to smooth this out in Sprint 4 by integrating visual/UI work earlier.
+That said, there were still moments of time pressure, especially around deployment and UI responsiveness on mobile. This sprint also highlighted the importance of post-merge validation, as a few regressions emerged during late-stage testing.
 
 #### Decisions that turned out well
 
-- **Dorm Checklist Auto-Check Integration**
-We implemented a feature that automatically checks off items in the dorm checklist when users add matching products to their cart. This creates a seamless planning experience without requiring users to track manually.
+- **CI/CD Setup via GitHub Actions**
+Our automated pipeline now runs linting and unit tests on every push or PR to main. This added reliability and reduced manual errors during last-minute merges.
 
-- **Purchase History View in Profile**
-Users can now view their past orders, including order dates and product details. This boosts transparency and offers a basic order archive for reference.
+- **User Balance Integration for Orders**
+We finalized the logic for balance deduction during checkout and exposed remaining balance in the user profile. This added a gamified, budgeting aspect for our student users.
 
-- **Order Tracking via Order Number and Email**
-Even non-logged-in users can now track their orders using just their order number and email. This opens up flexible access to order status updates without account friction.
+- **Admin Revenue & Metrics Dashboards**
+Admins can now view revenue summaries over different time ranges (e.g., 7, 30, 365 days), along with user counts and order breakdowns. These insights enhance the app’s business-facing value.
 
 
 #### Decisions that did not turn out as well as we hoped
 
-- We are still in the process of determining the best approach for implementing the cart checkout logic, particularly around residence-based validation and cart content re-evaluation. This caused inconsistent behaviors, such as mismatch between shipping cost and selected residence, and occasional bugs when switching residences mid-checkout.
-
-  Additionally, while we completed all 14 work items in this sprint, we deprioritized mobile screen optimization, which has impacted the mobile usability of several key pages (e.g., profile, admin dashboard, and order summary).
+- Despite identifying mobile optimization as a priority in Sprint 3, we still did not fully address responsiveness across all pages. While the homepage and product list improved, the admin dashboard and checkout remain challenging to navigate on smaller screens. Also, some regressions slipped through due to lack of time for full end-to-end retesting after merges. We realized that relying solely on unit tests is not sufficient for integration issues.
 
 #### Planned changes
 
-- **Enforce PR Deadlines**
+- **Add End-to-End Testing with Cypress or Playwright**
   
-  Although our merging process was smoother than previous sprints, we will implement a stricter pull request policy—no PRs merged within 24 hours of the sprint deadline—to improve code quality and allow time for full team reviews.
-
-- **Assign Task Owners and Priorities**
-
-  To enhance accountability and ensure focus on the most impactful features, we will assign a clear owner and priority level (High, Medium, Low) to   each task going forward.
+  To prevent future regressions, we’ll adopt E2E tests for key user flows like login → cart → checkout.
 
 ## Product - Review
 
@@ -101,23 +95,16 @@ Even non-logged-in users can now track their orders using just their order numbe
 
 #### Goals and/or tasks that were planned but not met/completed:
 
-- **Inventory Management Functionality**
-
-  We had initially planned to implement inventory tracking for products and packages, allowing admins to view and manage stock levels. However, due to time constraints and a focus on completing higher-priority user-facing features (e.g., cart validation, order tracking, and admin dashboards), this functionality was postponed and will be revisited in a future sprint.
+- **N/A**
 
 
 ## Meeting Highlights
 
 Going into the next iteration, our main insights are:
 
-- **Align early on shared components to prevent duplication**
-Several components (e.g., status indicators, modals) were reimplemented or styled inconsistently—next sprint we’ll coordinate shared visual components earlier.
+- **Maintain Code Freeze Policy Before Demo**
 
-- **Set a consistent pattern for unit testing structure**
-We'll standardize test folder locations and frameworks used (e.g., Jest for frontend, Mocha or Jest for backend) so each dev knows where and how to test.
-
-- **Avoid last-minute merges and styling**
-While our logic is often done early, styling and integration still happen late. We'll prioritize visual integration checkpoints before the final few days.
+To reduce regressions, we’ll enter a "code freeze" period with only bug fixes allowed after a set date.
 
 
 
