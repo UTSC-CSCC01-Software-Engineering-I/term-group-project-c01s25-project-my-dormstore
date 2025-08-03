@@ -64,11 +64,9 @@ Admins can now view revenue summaries over different time ranges (e.g., 7, 30, 3
 
 ## Meeting Highlights
 
-Going into the next iteration, our main insights are:
-
 - **Maintain Code Freeze Policy Before Demo**
 
-To reduce regressions, we’ll enter a "code freeze" period with only bug fixes allowed after a set date.
+  To reduce regressions, we’ll enter a "code freeze" period with only bug fixes allowed after a set date.
 
 
 
