@@ -62,6 +62,7 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
 5. **Initialize Database Table and Functions**
 
     ```bash
+    cd backend
     npm run setup-db
     npm run setup-functions
     npm run setup

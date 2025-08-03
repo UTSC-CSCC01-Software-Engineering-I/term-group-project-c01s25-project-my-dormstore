@@ -43,11 +43,10 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
     ```env
     PORT=5001
     PG_USER=your_db_user
-    PG_PASSWORD=your_db_password
+    PG_PWD=your_db_password
     PG_DATABASE=your_db_name
     PG_HOST=localhost
     PG_PORT=5432
-    JWT_SECRET=your_jwt_secret
     ```
 
   - If you're using a custom port (e.g., 5002 instead of 5001), make sure:
@@ -55,15 +54,15 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
     - In `frontend/.env`: set `REACT_APP_API_URL=http://localhost:5002`
   
 4. **Create PostgreSQL Database**
-  - Ensure PostgreSQL is running, then create the database:
-   
-    ```bash
-    createdb -U postgres mydormstore
-    ```
-    
-6. **Initialize Database Tables and Seed Data**
 
     ```bash
+   createdb -U postgres mydormstore
+    ```
+    
+5. **Initialize Database Table and Functions**
+
+    ```bash
+    cd backend
     npm run setup-db
     npm run setup-functions
     npm run setup
@@ -72,7 +71,7 @@ My Dorm Store is an e-commerce platform that which designed to simplify the dorm
 
     - Create all necessary tables from schema.sql
 
-7. **Run the Application**
+6. **Run the Application**
 
   - Open two separate terminals to run the backend and frontend servers
 
