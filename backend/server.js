@@ -12,7 +12,10 @@ const PORT = process.env.PORT || 5001;
 
 // CORS setup
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'https://sparkling-kulfi-40bf81.netlify.app'
+  ],
   credentials: true,
 }));
     
@@ -23,13 +26,23 @@ let pool;
 
 async function connectToPG() {
   try {
-    pool = new Pool({
-      user: process.env.PG_USER,
-      host: process.env.PG_HOST,
-      database: process.env.PG_DATABASE,
-      password: process.env.PG_PWD,
-      port: process.env.PG_PORT,
-    });
+    if (process.env.DATABASE_URL) {
+      pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      });
+    } else {
+      pool = new Pool({
+        user: process.env.PG_USER,
+        host: process.env.PG_HOST,
+        database: process.env.PG_DATABASE,
+        password: process.env.PG_PWD,
+        port: process.env.PG_PORT,
+      });
+    }
+
     console.log("Database connection established");
   } catch (error) {
     console.error("Error connecting to PostgreSQL:", error);
