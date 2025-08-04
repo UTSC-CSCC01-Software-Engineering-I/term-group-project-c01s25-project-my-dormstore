@@ -23,7 +23,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Pull Docker Image
-        run: docker pull ashleylinn/mydormstore:latest
+        run: docker pull ashleylinn/mydormstore:1.0.41
 
       - name: Deploy with Docker Compose
         run: |
