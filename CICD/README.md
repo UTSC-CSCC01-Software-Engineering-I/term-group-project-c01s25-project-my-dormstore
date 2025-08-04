@@ -10,7 +10,8 @@ This repository includes Docker/Compose assets and helper scripts to deploy **My
   - **Compose version:** `3.8`
   - **Services**
     - **`app`**
-      - **Image:** `ashleylinn/mydormstore:latest`
+      - **Image:** `ashleylinn/mydormstore:1.0.41`
+      Note: the image is tagged as both `latest` and versioned `1.0.<run_number>`
       - **Ports:** `5001:5000` (host → container)
       - **Environment:**
         - `PORT=5000`
@@ -34,7 +35,7 @@ This repository includes Docker/Compose assets and helper scripts to deploy **My
 
 - **`deploy.sh`**
   - Prints start messages.
-  - Pulls `ashleylinn/mydormstore:latest`.
+  - Pulls the image tagged `ashleylinn/mydormstore:<version>` (e.g., `1.0.41`)
   - Changes into `CICD/` and runs `docker compose up -d`.
   - Waits **15 seconds**.
   - Health checks `http://localhost:5001/` (root path). Exits non-zero on failure.
@@ -95,7 +96,7 @@ chmod +x deploy.sh test-script.sh
 ```
 
 What it does:
-1. Pulls `ashleylinn/mydormstore:latest`
+1. Pulls `ashleylinn/mydormstore:<version>` (e.g., 1.0.41), as defined in your deploy pipeline.
 2. Runs `docker compose up -d` in `CICD/`
 3. Waits ~15s
 4. Health checks `http://localhost:5001/`
@@ -120,7 +121,8 @@ curl -f http://localhost:5001/
 
 ## Build the image locally (optional)
 
-The Compose setup uses the prebuilt image `ashleylinn/mydormstore:latest`.  
+The Compose setup uses the prebuilt image tagged as `ashleylinn/mydormstore:<version>` (e.g., 1.0.41).
+A latest tag is also available but not used by default in deployment.  
 If you want to build your own image (and then update Compose to use it):
 
 ```bash
